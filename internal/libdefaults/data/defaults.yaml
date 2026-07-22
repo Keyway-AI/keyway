@@ -1,0 +1,59 @@
+# Keyway library-behaviour database.
+#
+# This is PRODUCT DATA, not config (PRD §7.5). It is the ONLY source for
+# RefreshesOnUnknownKID when probing is unavailable — the mechanism behind the
+# OpenFGA-class rotation outage — so it must be able to produce a finding with
+# zero probes. Add entries with a source link in `notes`.
+libraries:
+  - name: MicahParks/keyfunc
+    lang: go
+    versions:
+      - constraint: ">=1.0.0 <2.0.0"
+        jwks_behavior:
+          refresh_interval_sec: 3600
+          refreshes_on_unknown_kid: false   # documented outage cause
+          cache_ttl_sec: null
+        notes: "RefreshUnknownKID defaults false; unknown kid rejected without refetch"
+        risk: high
+      - constraint: ">=2.0.0"
+        jwks_behavior:
+          refresh_interval_sec: 3600
+          refreshes_on_unknown_kid: true
+        notes: "v2 refreshes on unknown kid by default"
+        risk: low
+
+  - name: auth0/node-jsonwebtoken
+    lang: node
+    versions:
+      - constraint: ">=9.0.0"
+        jwks_behavior:
+          refreshes_on_unknown_kid: false
+        notes: "Requires jwks-rsa; caching configured separately"
+        risk: medium
+
+  - name: spring-security-oauth2-jose
+    lang: java
+    versions:
+      - constraint: ">=5.7.0"
+        jwks_behavior:
+          cache_ttl_sec: 300
+          refreshes_on_unknown_kid: true
+        risk: low
+
+  - name: golang-jwt/jwt
+    lang: go
+    versions:
+      - constraint: ">=5.0.0"
+        jwks_behavior:
+          refreshes_on_unknown_kid: false
+        notes: "No built-in JWKS client; behaviour depends on the keyfunc wired in"
+        risk: medium
+
+  - name: PyJWT
+    lang: python
+    versions:
+      - constraint: ">=2.0.0"
+        jwks_behavior:
+          refreshes_on_unknown_kid: false
+        notes: "PyJWKClient caches by kid; no auto-refresh on miss before 2.9"
+        risk: high

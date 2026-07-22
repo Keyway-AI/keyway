@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/* Keyway design tokens. Dark-first; the <html> element carries `.dark`. */
+@theme {
+  --color-bg: #0b0f14;
+  --color-surface: #121821;
+  --color-surface-2: #1a222e;
+  --color-border: #253143;
+  --color-text: #e6edf3;
+  --color-muted: #8b98a9;
+  --color-brand: #4f9cf9;
+  --color-brand-strong: #2f7fe0;
+
+  --color-critical: #f26d6d;
+  --color-high: #f5a34f;
+  --color-medium: #f5d76e;
+  --color-low: #6ee7b7;
+  --color-info: #8b98a9;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

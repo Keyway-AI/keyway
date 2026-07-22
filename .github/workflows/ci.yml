@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    name: Go build, lint & test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: keyway
+          POSTGRES_PASSWORD: keyway
+          POSTGRES_DB: keyway
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U keyway"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      KEYWAY_DB_URL: postgres://keyway:keyway@localhost:5432/keyway?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+      - name: Verify modules are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+      - name: Vet
+        run: go vet ./...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+      - name: Test (race)
+        run: go test -race -count=1 ./...
+
+  web:
+    name: Web build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci || npm install
+      - run: npm run lint --if-present
+      - run: npm run build
+
+  bench:
+    name: Accuracy benchmark gate
+    runs-on: ubuntu-latest
+    needs: go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+      # Runs the corpus and fails the build if any scorecard metric drops below
+      # the thresholds in PRD §13.4.
+      - name: Run benchmark corpus
+        run: go run ./bench/harness --corpus ./bench/corpus --out ./bench/out --ci-gate

@@ -1,0 +1,21 @@
+# Reference benchmark scenario (PRD §13.2). A true negative / no-op: an unrelated
+# dependency is bumped and the service redeployed. The contract is unchanged, so
+# Keyway must emit ZERO change events (AC-8). Without the no-op half of the corpus
+# the FPR number is meaningless.
+id: "0201"
+name: dependency-bump-noop
+compose: docker-compose.yaml
+issuer: { type: keycloak, realm: bench }
+consumers:
+  - stable_id: "k8s://bench/default/api-a"
+    expects:
+      issuers: ["http://kc:8080/realms/bench"]
+      audiences: ["api-a"]
+      algorithms: ["RS256"]
+mutation:
+  target: "k8s://bench/default/api-a"
+  field: dependencies
+  operation: noop
+  value: "bump some-lib 1.2.3 -> 1.2.4"
+expected:
+  detected: false

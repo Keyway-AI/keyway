@@ -1,0 +1,47 @@
+# Binaries
+/bin/
+*.exe
+*.dll
+*.so
+*.dylib
+keyway
+keyway-runner
+
+# Test & coverage
+*.test
+*.out
+coverage.*
+/testdata/tmp/
+
+# Go workspace
+go.work
+go.work.sum
+
+# Env & secrets
+.env
+.env.local
+*.pem
+*.key
+!testdata/**/*.pem
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Web
+web/node_modules/
+web/dist/
+web/.vite/
+*.log
+npm-debug.log*
+
+# Docker / local data
+/.data/
+/pgdata/
+
+# Benchmark artifacts
+/bench/out/
+scorecard.json
+roc.svg

@@ -1,0 +1,14 @@
+.git
+.github
+bin
+web/node_modules
+web/dist
+*.md
+!README.md
+.env
+.env.local
+coverage.out
+bench/out
+.data
+pgdata
+testdata/tmp

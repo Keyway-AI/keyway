@@ -6,7 +6,9 @@ package libdefaults
 import (
 	_ "embed"
 	"fmt"
+	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/architsharma/keyway/internal/model"
 	"gopkg.in/yaml.v3"
 )
@@ -57,25 +59,57 @@ func Load() (*DB, error) {
 	return db, nil
 }
 
-// Match returns the JWKS behaviour and metadata for a library at a version.
-//
-// TODO(M5): apply the semver constraint in VersionEntry.Constraint. For now the
-// first entry for a known library is returned so callers can wire the flow; the
-// constraint solver lands with the detection code.
+// Match returns the JWKS behaviour and metadata for a library at a version. The
+// library name is matched exactly or by path suffix (so a go.mod module path
+// "github.com/MicahParks/keyfunc" matches the DB entry "MicahParks/keyfunc").
+// The version is matched against each entry's semver constraint; an empty or
+// unparseable version falls back to the first entry.
 func (db *DB) Match(name, version string) (model.JWKSBehavior, VersionEntry, bool) {
-	lib, ok := db.byName[name]
+	lib, ok := db.lookup(name)
 	if !ok || len(lib.Versions) == 0 {
 		return model.JWKSBehavior{}, VersionEntry{}, false
 	}
-	_ = version
+
+	ver, verErr := semver.NewVersion(strings.TrimPrefix(version, "v"))
+
+	for _, entry := range lib.Versions {
+		if entry.Constraint == "" {
+			return behaviorOf(entry), entry, true
+		}
+		c, err := semver.NewConstraint(entry.Constraint)
+		if err != nil {
+			continue
+		}
+		if verErr == nil && c.Check(ver) {
+			return behaviorOf(entry), entry, true
+		}
+	}
+	// No constraint matched (or version unknown): fall back to the first entry so
+	// the flow still produces a finding.
 	entry := lib.Versions[0]
-	behavior := model.JWKSBehavior{
+	return behaviorOf(entry), entry, true
+}
+
+// lookup finds a library by exact name or by "/"-suffix match.
+func (db *DB) lookup(name string) (Library, bool) {
+	if lib, ok := db.byName[name]; ok {
+		return lib, true
+	}
+	for dbName, lib := range db.byName {
+		if strings.HasSuffix(name, "/"+dbName) || strings.EqualFold(name, dbName) {
+			return lib, true
+		}
+	}
+	return Library{}, false
+}
+
+func behaviorOf(entry VersionEntry) model.JWKSBehavior {
+	return model.JWKSBehavior{
 		CacheTTLSec:           entry.JWKSBehavior.CacheTTLSec,
 		RefreshIntervalSec:    entry.JWKSBehavior.RefreshIntervalSec,
 		RefreshesOnUnknownKID: entry.JWKSBehavior.RefreshesOnUnknownKID,
 		Source:                model.SrcLibraryDefault,
 	}
-	return behavior, entry, true
 }
 
 // Names lists the libraries in the database (useful for diagnostics).

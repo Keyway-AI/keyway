@@ -3,6 +3,7 @@ module github.com/architsharma/keyway
 go 1.25.0
 
 require (
+	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-jose/go-jose/v4 v4.0.5
 	github.com/golang-migrate/migrate/v4 v4.19.1

@@ -18,7 +18,7 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 | **M2** | `issuer/keycloak` (describe + mint), `discovery/istio`, `discovery/k8s` | AC-3 | ✅ |
 | **M3** | `probe` engine, probes 1–12, CLI `probe` | AC-4 | ✅ |
 | **M4** | `contract/build`, snapshot, baseline flow, `diff` + `classify` | AC-1,2,7,8 | ✅ |
-| **M5** | `libdefaults` DB + detection | AC-6 | 🚧 |
+| **M5** | `libdefaults` DB + detection | AC-6 | ✅ |
 | **M6** | `AnnounceKey`, probe 13, `canary` CLI | AC-5 | ⬜ |
 | **M7** | `blastradius` + grace period, CLI + API | AC-9 | ⬜ |
 | **M8** | `bench/harness`, 400-scenario corpus, scorecard | AC-10 | ⬜ |
@@ -92,9 +92,9 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 ## M5 — Library defaults (Gate: AC-6)
 
 - [x] `internal/libdefaults/data/defaults.yaml` — seed DB (keyfunc, node-jsonwebtoken, spring, pyjwt…)
-- [x] `internal/libdefaults/db.go` — embedded load + lookup by name (semver constraint pending), tested
-- [ ] Detection from `go.mod`/`package.json`/`pom.xml`/`build.gradle`/`requirements.txt`/`Cargo.toml`
-- [ ] AC-6: keyfunc v1.9.0 consumer → `will_break` for rotate_key with **zero probes** (lib finding tested)
+- [x] `internal/libdefaults/db.go` — embedded load + semver-constraint matching (Masterminds/semver) + path-suffix lookup, tested
+- [x] Detection from `go.mod`/`package.json`/`pom.xml`/`build.gradle`/`requirements.txt`/`Cargo.toml` (`DetectDir`, `DetectFor`, `Enrich`)
+- [x] AC-6: keyfunc v1.9.0 → `refreshes_on_unknown_kid=false` from library defaults with **zero probes** (tested); v2 band → true
 
 ## M6 — Canary (Gate: AC-5)
 

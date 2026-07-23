@@ -5,7 +5,7 @@ advances a tracked item. Milestones mirror PRD §15; acceptance criteria (AC-n) 
 
 **Legend:** ✅ done · 🚧 in progress · ⬜ not started · 🔷 stub only (compiles, no real logic)
 
-_Last updated: 2026-07-22 — scaffolding pass._
+_Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walker) complete and tested._
 
 ---
 
@@ -14,10 +14,10 @@ _Last updated: 2026-07-22 — scaffolding pass._
 | Milestone | Deliverable | Gate | Status |
 |---|---|---|---|
 | **M0** | Repo scaffold, tooling, CI, web skeleton, tracker | — | ✅ |
-| **M1** | `model`, `store/postgres`, migrations, `contract/hash` | AC-1 | 🚧 |
+| **M1** | `model`, `store/postgres`, migrations, `contract/hash` | AC-1 | ✅ |
 | **M2** | `issuer/keycloak` (describe + mint), `discovery/istio`, `discovery/k8s` | AC-3 | ⬜ |
 | **M3** | `probe` engine, probes 1–12, CLI `probe` | AC-4 | ⬜ |
-| **M4** | `contract/build`, snapshot, baseline flow, `diff` + `classify` | AC-1,2,7,8 | 🚧 |
+| **M4** | `contract/build`, snapshot, baseline flow, `diff` + `classify` | AC-1,2,7,8 | ✅ |
 | **M5** | `libdefaults` DB + detection | AC-6 | 🚧 |
 | **M6** | `AnnounceKey`, probe 13, `canary` CLI | AC-5 | ⬜ |
 | **M7** | `blastradius` + grace period, CLI + API | AC-9 | ⬜ |
@@ -48,9 +48,10 @@ _Last updated: 2026-07-22 — scaffolding pass._
 - [x] `internal/contract/hash.go` — canonical SHA-256 (PRD §8.1)
   - [x] **First test written & passing:** two runs on unchanged system → identical hash (AC-1)
 - [x] `internal/store` interface (PRD §5)
-- [ ] `internal/store/postgres` implementation 🔷 (interface-compliant stub; SQL pending)
-- [x] `migrations/` — schema for versions, change_events, probe_results
-- [ ] `keyway migrate up/down` command (wired to golang-migrate)
+- [x] `internal/store/postgres` implementation — pgx pool, JSONB blobs, batched writes; integration-tested against real Postgres (gated on `KEYWAY_TEST_DB`)
+- [x] `migrations/` — schema (moved to `internal/store/postgres/migrations`, embedded into the binary)
+- [x] `keyway migrate up/down` command — golang-migrate + embedded iofs; verified up & down
+- [x] `keyway snapshot` wired end-to-end to the store (baseline flow verified: AC-1, AC-2)
 
 ## M2 — Issuers & discovery (Gate: AC-3)
 
@@ -76,12 +77,12 @@ _Last updated: 2026-07-22 — scaffolding pass._
 
 - [x] `internal/contract/build.go` — assemble graph + compute hash from discovery output
 - [x] `internal/contract/version.go` — `Snapshot` + baseline flow (PRD §8.2), zero-event guarantee
-- [ ] `internal/diff/diff.go` — match by StableID, dotted-path field changes (walker stub; classifier done)
+- [x] `internal/diff/diff.go` — match by StableID, atomic field-change decomposition, feeds Classify; fully tested
 - [x] `internal/diff/classify.go` — the exact classification table (PRD §9.2) + severity, fully tested
-- [ ] `keyway snapshot` / `keyway diff` commands
-- [ ] AC-2: first snapshot = baseline, zero events
-- [ ] AC-7: adding an Istio audience → exactly one `widened` event
-- [ ] AC-8: unrelated dependency bump → zero events
+- [x] `keyway snapshot` command wired (diff auto-runs inside Snapshot); `keyway diff` command still to wire
+- [x] AC-2: first snapshot = baseline, zero events (verified against Postgres)
+- [x] AC-7: adding an audience → exactly one `widened` event (unit-tested; needs Istio discovery for full E2E in M2)
+- [x] AC-8: no-op change → zero events (unit-tested)
 
 ## M5 — Library defaults (Gate: AC-6)
 

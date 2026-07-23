@@ -58,7 +58,8 @@ Keyway is organised as four measurable layers (the benchmark harness scores each
 
 PostgreSQL. Contract versions are stored as canonical JSON blobs (JSONB) with hot query
 columns (`hash`, `is_baseline`, `created_at`) promoted alongside. Change events and probe
-results are first-class tables. Schema: [`migrations/`](../migrations).
+results are first-class tables. Schema: [`internal/store/postgres/migrations/`](../internal/store/postgres/migrations)
+(embedded into the binary so no external migration files ship).
 
 ## Deployment shape
 

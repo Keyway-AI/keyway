@@ -25,9 +25,7 @@ func newInitCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "init",
 		Short: "Write config and test connectivity",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M1", "init")
-		},
+		RunE:  func(cmd *cobra.Command, _ []string) error { return runInit(cmd) },
 	}
 }
 
@@ -36,11 +34,10 @@ func newIssuerCmd() *cobra.Command {
 
 	add := &cobra.Command{
 		Use:   "add",
-		Short: "Register an issuer",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M2", "issuer add")
-		},
+		Short: "Register an issuer in the config file",
+		RunE:  func(cmd *cobra.Command, _ []string) error { return runIssuerAdd(cmd) },
 	}
+	add.Flags().String("name", "", "issuer name (defaults to the type)")
 	add.Flags().String("type", "", "issuer type: keycloak|k8s_sa|generic_oidc")
 	add.Flags().String("url", "", "issuer URL")
 	add.Flags().String("admin-credential-env", "", "env var holding admin credentials")
@@ -50,9 +47,7 @@ func newIssuerCmd() *cobra.Command {
 	list := &cobra.Command{
 		Use:   "list",
 		Short: "List registered issuers",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M2", "issuer list")
-		},
+		RunE:  func(cmd *cobra.Command, _ []string) error { return runIssuerList(cmd) },
 	}
 
 	cmd.AddCommand(add, list)
@@ -84,12 +79,10 @@ func newDiffCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "diff",
 		Short: "Diff two contract versions",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M4", "diff")
-		},
+		RunE:  func(cmd *cobra.Command, _ []string) error { return runDiff(cmd) },
 	}
-	cmd.Flags().String("from", "", "from version (default: baseline)")
-	cmd.Flags().String("to", "", "to version (default: latest)")
+	cmd.Flags().String("from", "", "from version ID (default: baseline)")
+	cmd.Flags().String("to", "", "to version ID (default: latest)")
 	return cmd
 }
 

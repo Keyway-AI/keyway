@@ -23,7 +23,7 @@ _Last updated: 2026-07-24 — M1–M7 + M9 complete and tested; API daemon + web
 | **M7** | `blastradius` + grace period, CLI + API | AC-9 | ✅ |
 | **M8** | `bench/harness`, 400-scenario corpus, scorecard | AC-10 | ✅ |
 | **M9** | `attribution`, `notify/slack`, `api/server` | full | ✅ |
-| **UI** | React dashboard over the HTTP API (PRD §12) | — | 🚧 |
+| **UI** | React dashboard over the HTTP API (PRD §12) | — | ✅ |
 
 ---
 
@@ -84,7 +84,7 @@ _Last updated: 2026-07-24 — M1–M7 + M9 complete and tested; API daemon + web
 - [x] `internal/contract/version.go` — `Snapshot` + baseline flow (PRD §8.2), zero-event guarantee
 - [x] `internal/diff/diff.go` — match by StableID, atomic field-change decomposition, feeds Classify; fully tested
 - [x] `internal/diff/classify.go` — the exact classification table (PRD §9.2) + severity, fully tested
-- [x] `keyway snapshot` command wired (diff auto-runs inside Snapshot); `keyway diff` command still to wire
+- [x] `keyway snapshot` wired; `keyway diff` wired (resolves --from/--to or baseline→latest)
 - [x] AC-2: first snapshot = baseline, zero events (verified against Postgres)
 - [x] AC-7: adding an audience → exactly one `widened` event (unit-tested; needs Istio discovery for full E2E in M2)
 - [x] AC-8: no-op change → zero events (unit-tested)
@@ -134,7 +134,7 @@ _Last updated: 2026-07-24 — M1–M7 + M9 complete and tested; API daemon + web
 - [x] Changes feed (filter by severity, old→new value, evidence pills)
 - [x] Blast-radius interactive form → result view (client-side resolver mirrors §10)
 - [x] Canary status board (announce action pending M6)
-- [ ] Wire to live API (currently mock-backed; falls back automatically on 501/network)
+- [x] Wired to live API (mock fallback only when API unreachable; `keyway.live=1` forces live) — verified in-browser against the daemon
 - [ ] Consumer detail drawer (provenance, confidence, probe history)
 
 ---

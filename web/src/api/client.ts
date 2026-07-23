@@ -1,4 +1,5 @@
 import type {
+  BlastRadiusResult,
   ChangeEvent,
   Consumer,
   CoverageResponse,
@@ -76,15 +77,20 @@ export const api = {
   coverage: () =>
     withMock<CoverageResponse>(() => request("/v1/coverage"), mock.coverage),
 
+  // GET /v1/snapshots/latest returns the full contract version; map to the
+  // compact SnapshotResponse the dashboard shows.
   latestSnapshot: () =>
-    withMock<SnapshotResponse>(() => request("/v1/snapshots/latest"), mock.latestSnapshot),
+    withMock<SnapshotResponse>(async () => {
+      const v = await request<{ id: string; hash: string; is_baseline: boolean }>("/v1/snapshots/latest");
+      return { version_id: v.id, hash: v.hash, is_baseline: v.is_baseline };
+    }, mock.latestSnapshot),
 
   createSnapshot: () =>
     request<SnapshotResponse>("/v1/snapshots", { method: "POST" }),
 
   consumers: () =>
     withMock<Consumer[]>(
-      async () => (await request<{ consumers: Consumer[] }>("/v1/consumers")).consumers,
+      async () => (await request<{ consumers: Consumer[] }>("/v1/consumers")).consumers ?? [],
       mock.consumers,
     ),
 
@@ -92,6 +98,14 @@ export const api = {
     withMock<ChangeEvent[]>(async () => {
       const q = new URLSearchParams(params as Record<string, string>).toString();
       const r = await request<{ changes: ChangeEvent[] }>(`/v1/changes${q ? `?${q}` : ""}`);
-      return r.changes;
+      return r.changes ?? [];
     }, mock.changes),
+
+  // POST /v1/blast-radius — live resolution. Callers fall back to the local
+  // resolver when the API is unavailable.
+  blastRadius: (proposal: BlastRadiusResult["proposal"]) =>
+    request<BlastRadiusResult>("/v1/blast-radius", {
+      method: "POST",
+      body: JSON.stringify({ proposal }),
+    }),
 };

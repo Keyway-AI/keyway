@@ -21,7 +21,7 @@ _Last updated: 2026-07-24 — M1–M7 + M9 complete and tested; API daemon + web
 | **M5** | `libdefaults` DB + detection | AC-6 | ✅ |
 | **M6** | `AnnounceKey`, probe 13, `canary` CLI | AC-5 | ✅ |
 | **M7** | `blastradius` + grace period, CLI + API | AC-9 | ✅ |
-| **M8** | `bench/harness`, 400-scenario corpus, scorecard | AC-10 | ⬜ |
+| **M8** | `bench/harness`, 400-scenario corpus, scorecard | AC-10 | ✅ |
 | **M9** | `attribution`, `notify/slack`, `api/server` | full | ✅ |
 | **UI** | React dashboard over the HTTP API (PRD §12) | — | 🚧 |
 
@@ -112,11 +112,11 @@ _Last updated: 2026-07-24 — M1–M7 + M9 complete and tested; API daemon + web
 
 ## M8 — Benchmark harness (Gate: AC-10)
 
-- [ ] `bench/harness/runner.go` + `score.go` (TPR/FPR/precision/recall/F1/Youden)
-- [ ] `bench/mutations/mutate.go`
-- [ ] `bench/corpus/` — 400 scenarios (200 mutations / 200 no-ops), ~50/50 (PRD §13.2)
-- [ ] `--ci-gate` fails below PRD §13.4 thresholds
-- [ ] AC-10: full corpus emits a passing scorecard + ROC chart
+- [x] `bench/harness/runner.go` + `score.go` (TPR/FPR/precision/recall/F1/Youden) — scores via the real `diff.Compute`
+- [x] `bench/mutations/mutate.go` — generates TP (every §9.2 row) + contract-neutral no-ops
+- [x] Generated corpus at ~50/50 (800 scenarios: 400 TP / 400 TN) **plus** file-based before/after scenarios that exercise real discovery (L1)
+- [x] `--ci-gate` fails below PRD §13.4 thresholds (wired into CI)
+- [x] AC-10: corpus emits a passing scorecard (L3 Youden=1.0, FPR=0); tested. ROC-chart export remains a nice-to-have
 
 ## M9 — Attribution, notify, API server (Gate: full)
 

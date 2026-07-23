@@ -1,22 +1,11 @@
-# Reference benchmark scenario (PRD §13.1). A true positive: an audience is added
-# to a consumer's contract, which Keyway must detect and classify as `widened`.
+# True positive: an audience is added to api-a's Istio policy. Discovery must
+# find api-a in both states and the diff must classify the change as `widened`.
 id: "0042"
 name: audience-widened
-compose: docker-compose.yaml
-issuer: { type: keycloak, realm: bench }
-consumers:
-  - stable_id: "k8s://bench/default/api-a"
-    expects:
-      issuers: ["http://kc:8080/realms/bench"]
-      audiences: ["api-a"]
-      algorithms: ["RS256"]
-mutation:
-  target: "k8s://bench/default/api-a"
-  field: expects.audiences
-  operation: add
-  value: "api-b"
+before: before
+after: after
 expected:
   detected: true
   class: widened
   severity: medium
-  consumer: "k8s://bench/default/api-a"
+  consumer: "k8s://local/default/api-a"

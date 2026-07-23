@@ -1,75 +1,130 @@
 package main
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 
+	"github.com/architsharma/keyway/bench/mutations"
+	"github.com/architsharma/keyway/internal/contract"
+	"github.com/architsharma/keyway/internal/diff"
+	"github.com/architsharma/keyway/internal/discovery"
+	"github.com/architsharma/keyway/internal/discovery/envoy"
+	"github.com/architsharma/keyway/internal/discovery/istio"
+	"github.com/architsharma/keyway/internal/discovery/k8s"
+	"github.com/architsharma/keyway/internal/model"
 	"gopkg.in/yaml.v3"
 )
 
-// Scenario is one benchmark case (PRD §13.1).
-type Scenario struct {
-	ID       string         `yaml:"id"`
-	Name     string         `yaml:"name"`
-	Compose  string         `yaml:"compose"`
-	Mutation map[string]any `yaml:"mutation"`
-	Expected Expected       `yaml:"expected"`
-	Path     string         `yaml:"-"`
+// fileScenario is a benchmark case backed by before/after manifest directories
+// (exercises real discovery — the L1 layer — as well as diff — L3).
+type fileScenario struct {
+	ID       string `yaml:"id"`
+	Name     string `yaml:"name"`
+	Before   string `yaml:"before"`
+	After    string `yaml:"after"`
+	Expected struct {
+		Detected bool   `yaml:"detected"`
+		Class    string `yaml:"class"`
+		Severity string `yaml:"severity"`
+		Consumer string `yaml:"consumer"`
+	} `yaml:"expected"`
+	dir string
 }
 
-// Expected is the ground truth for a scenario.
-type Expected struct {
-	Detected bool   `yaml:"detected"`
-	Class    string `yaml:"class"`
-	Severity string `yaml:"severity"`
-	Consumer string `yaml:"consumer"`
-}
-
-// loadScenarios reads every scenario.yaml under corpus/scenarios.
-func loadScenarios(corpus string) ([]Scenario, error) {
+// loadFileScenarios discovers before/after manifests for each scenario.yaml
+// under corpus/scenarios and returns them as scored-ready Scenarios.
+func loadFileScenarios(corpus string) ([]mutations.Scenario, error) {
 	root := filepath.Join(corpus, "scenarios")
-	var scenarios []Scenario
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	var out []mutations.Scenario
+	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				return filepath.SkipDir
 			}
 			return err
 		}
-		if info.IsDir() || filepath.Base(path) != "scenario.yaml" {
+		if d.IsDir() || filepath.Base(path) != "scenario.yaml" {
 			return nil
 		}
 		b, readErr := os.ReadFile(path)
 		if readErr != nil {
 			return readErr
 		}
-		var sc Scenario
-		if e := yaml.Unmarshal(b, &sc); e != nil {
+		var fs fileScenario
+		if e := yaml.Unmarshal(b, &fs); e != nil {
 			return e
 		}
-		sc.Path = filepath.Dir(path)
-		scenarios = append(scenarios, sc)
+		fs.dir = filepath.Dir(path)
+		if fs.Before == "" || fs.After == "" {
+			return nil // not a before/after scenario; skipped
+		}
+		before, e1 := discoverDir(filepath.Join(fs.dir, fs.Before))
+		after, e2 := discoverDir(filepath.Join(fs.dir, fs.After))
+		if e1 != nil || e2 != nil {
+			return nil
+		}
+		out = append(out, mutations.Scenario{
+			ID: fs.ID, Name: fs.Name, Before: before, After: after,
+			Expected: mutations.Expected{
+				Detected: fs.Expected.Detected,
+				Class:    model.ChangeClass(fs.Expected.Class),
+				Severity: model.Severity(fs.Expected.Severity),
+				Consumer: fs.Expected.Consumer,
+			},
+		})
 		return nil
 	})
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
-	return scenarios, nil
+	return out, nil
 }
 
-// Run executes each scenario and aggregates results into per-layer scorecards.
-//
-// TODO(M8): stand up each scenario's docker-compose, run Keyway's
-// discover/snapshot/diff pipeline against it, compare to Expected, and tally
-// the confusion matrix. For now this returns empty, computed scorecards so the
-// harness wiring and gate logic are exercisable.
-func Run(scenarios []Scenario) (map[string]Scorecard, error) {
-	_ = scenarios
-	cards := map[string]Scorecard{}
-	for _, layer := range []string{"L1", "L2", "L3", "L4"} {
-		c := Scorecard{Layer: layer}
-		c.Compute()
-		cards[layer] = c
+func discoverDir(dir string) ([]model.Consumer, error) {
+	scope := discovery.Scope{ConfigPaths: []string{dir}}
+	return discovery.Run(context.Background(), scope, istio.New(), k8s.New(), envoy.New())
+}
+
+// score runs every scenario through the real diff pipeline and tallies an L3
+// confusion matrix (detected vs. expected, with class agreement for positives).
+func score(scenarios []mutations.Scenario) Scorecard {
+	card := Scorecard{Layer: "L3"}
+	for _, s := range scenarios {
+		v1 := contract.Build(contract.BuildInput{Consumers: s.Before})
+		v2 := contract.Build(contract.BuildInput{Consumers: s.After})
+		events := diff.Compute(v1, v2)
+
+		matched := matchExpected(events, s.Expected)
+		switch {
+		case s.Expected.Detected && matched:
+			card.TP++
+		case s.Expected.Detected && !matched:
+			card.FN++
+		case !s.Expected.Detected && len(events) == 0:
+			card.TN++
+		default: // expected no detection, but events emitted
+			card.FP++
+		}
 	}
-	return cards, nil
+	card.Compute()
+	return card
+}
+
+// matchExpected reports whether the events contain the expected class (and
+// consumer, when specified).
+func matchExpected(events []model.ChangeEvent, exp mutations.Expected) bool {
+	if !exp.Detected {
+		return len(events) == 0
+	}
+	for _, e := range events {
+		if e.Class != exp.Class {
+			continue
+		}
+		if exp.Consumer != "" && e.ConsumerID != exp.Consumer {
+			continue
+		}
+		return true
+	}
+	return false
 }

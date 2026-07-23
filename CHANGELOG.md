@@ -21,6 +21,18 @@ All notable changes to Keyway are documented here. The format is based on
   changes into atomic operations, and classifies each via the §9.2/§9.3 tables. Adding one audience
   yields exactly one `widened` event (AC-7); no-op changes yield zero (AC-8).
 
+- **M2–M9** — issuers (local JOSE key lifecycle, Keycloak OIDC describe), file-based discovery
+  (Istio/Envoy/K8s + StableID + merge), the 13-probe engine with staging guard, library-defaults
+  detection, canary key flow, blast radius + grace period, benchmark harness + corpus, git
+  attribution, Slack/webhook notifiers, and the full HTTP API + `keyway serve` daemon that also
+  serves the React dashboard. Every acceptance criterion (AC-1…AC-10) is covered by tests.
+
+### Security
+- Constant-time API bearer-token comparison (`crypto/subtle`) to remove a timing side-channel.
+- Stored probe response bodies are scrubbed of JWT-like strings so no token material is ever
+  persisted, even if a probed endpoint reflects the synthetic token (defence-in-depth, OPEN-4).
+- Added [docs/security-audit.md](docs/security-audit.md).
+
 ### Changed
 - Migrations moved from `/migrations` to `internal/store/postgres/migrations` so they embed into the
   single binary for in-VPC deployment.

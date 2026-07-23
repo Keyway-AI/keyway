@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -13,6 +14,13 @@ import (
 	"github.com/architsharma/keyway/internal/model"
 	"github.com/google/uuid"
 )
+
+// jwtLike matches a compact JWS (three base64url segments). Response bodies are
+// scrubbed of these before storage so no token material is ever persisted, even
+// if a probed endpoint reflects the synthetic token back (PRD OPEN-4).
+var jwtLike = regexp.MustCompile(`[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*`)
+
+func scrubTokens(s string) string { return jwtLike.ReplaceAllString(s, "[REDACTED-JWT]") }
 
 // EngineConfig controls probe execution (PRD §6.3).
 type EngineConfig struct {
@@ -302,7 +310,7 @@ func (e *Engine) execute(ctx context.Context, p Probe, mc MintContext, ep model.
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
 	res.StatusCode = resp.StatusCode
-	res.RawResponse = truncate(string(body), 512)
+	res.RawResponse = truncate(scrubTokens(string(body)), 512)
 	res.Passed = p.Expect.Accepts(resp.StatusCode)
 	return res, resp.StatusCode
 }

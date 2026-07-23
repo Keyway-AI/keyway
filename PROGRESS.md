@@ -5,7 +5,7 @@ advances a tracked item. Milestones mirror PRD §15; acceptance criteria (AC-n) 
 
 **Legend:** ✅ done · 🚧 in progress · ⬜ not started · 🔷 stub only (compiles, no real logic)
 
-_Last updated: 2026-07-24 — M1–M7 + M9 complete and tested; API daemon + web UI serving verified live. Remaining: M8 (bench corpus), UI live-wiring, `init`/`issuer`/`diff` CLI._
+_Last updated: 2026-07-24 — **all milestones M0–M9 + UI complete and tested**; API daemon + web UI verified live; security audit done ([docs/security-audit.md](docs/security-audit.md)). Remaining polish: `oidcclient` discovery, Idempotency-Key, K8s/Keycloak attribution sources, ROC chart._
 
 ---
 

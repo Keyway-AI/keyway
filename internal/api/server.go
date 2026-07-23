@@ -4,6 +4,7 @@ package api
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -110,7 +111,8 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if token == "" || token != s.cfg.Token {
+		// Constant-time comparison to avoid leaking the token via timing.
+		if token == "" || subtle.ConstantTimeCompare([]byte(token), []byte(s.cfg.Token)) != 1 {
 			writeError(w, http.StatusUnauthorized, "unauthorized", "valid bearer token required")
 			return
 		}

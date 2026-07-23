@@ -93,34 +93,6 @@ func newDiffCmd() *cobra.Command {
 	return cmd
 }
 
-func newBlastRadiusCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "blast-radius", Short: "Compute who breaks under a proposed change"}
-
-	rotate := &cobra.Command{
-		Use:   "rotate-key",
-		Short: "Blast radius of rotating a signing key",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M7", "blast-radius rotate-key")
-		},
-	}
-	rotate.Flags().String("issuer", "", "issuer ID")
-	rotate.Flags().String("kid", "", "key ID being rotated")
-	rotate.Flags().Bool("verbose", false, "list ready and unknown consumers")
-
-	removeClaim := &cobra.Command{
-		Use:   "remove-claim",
-		Short: "Blast radius of removing a claim",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M7", "blast-radius remove-claim")
-		},
-	}
-	removeClaim.Flags().String("issuer", "", "issuer ID")
-	removeClaim.Flags().String("claim", "", "claim name being removed")
-
-	cmd.AddCommand(rotate, removeClaim)
-	return cmd
-}
-
 func newCanaryCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "canary", Short: "Manage canary keys (announce without signing)"}
 

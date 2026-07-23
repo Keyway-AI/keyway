@@ -20,7 +20,7 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 | **M4** | `contract/build`, snapshot, baseline flow, `diff` + `classify` | AC-1,2,7,8 | ✅ |
 | **M5** | `libdefaults` DB + detection | AC-6 | ✅ |
 | **M6** | `AnnounceKey`, probe 13, `canary` CLI | AC-5 | ⬜ |
-| **M7** | `blastradius` + grace period, CLI + API | AC-9 | ⬜ |
+| **M7** | `blastradius` + grace period, CLI + API | AC-9 | ✅ |
 | **M8** | `bench/harness`, 400-scenario corpus, scorecard | AC-10 | ⬜ |
 | **M9** | `attribution`, `notify/slack`, `api/server` | full | ⬜ |
 | **UI** | React dashboard over the HTTP API (PRD §12) | — | 🚧 |
@@ -105,10 +105,10 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 
 ## M7 — Blast radius & grace period (Gate: AC-9)
 
-- [ ] `internal/blastradius/query.go` — 4 proposal kinds (PRD §10.2)
-- [ ] `internal/blastradius/graceperiod.go` — window calc, max×1.5, floor 1h ceil 30d (PRD §10.3)
-- [ ] `keyway blast-radius rotate-key / remove-claim` commands + JSON output
-- [ ] AC-9: <10s on a 50-consumer graph, named bounding consumer
+- [x] `internal/blastradius/query.go` — all 4 proposal kinds (rotate_key/retire_key, remove_claim, change_issuer, drop_algorithm) per §10.2, with canary/library/cache evidence tiers
+- [x] `internal/blastradius/graceperiod.go` — window calc, max×1.5, floor 1h ceil 30d (PRD §10.3), tested
+- [x] `keyway blast-radius rotate-key / remove-claim` commands + JSON output; enriches via libdefaults; reads probe history
+- [x] AC-9: <10s on a 50-consumer graph, named bounding consumer (tested); verified E2E via CLI
 
 ## M8 — Benchmark harness (Gate: AC-10)
 

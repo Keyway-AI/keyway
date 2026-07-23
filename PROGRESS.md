@@ -15,7 +15,7 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 |---|---|---|---|
 | **M0** | Repo scaffold, tooling, CI, web skeleton, tracker | — | ✅ |
 | **M1** | `model`, `store/postgres`, migrations, `contract/hash` | AC-1 | ✅ |
-| **M2** | `issuer/keycloak` (describe + mint), `discovery/istio`, `discovery/k8s` | AC-3 | ⬜ |
+| **M2** | `issuer/keycloak` (describe + mint), `discovery/istio`, `discovery/k8s` | AC-3 | ✅ |
 | **M3** | `probe` engine, probes 1–12, CLI `probe` | AC-4 | ⬜ |
 | **M4** | `contract/build`, snapshot, baseline flow, `diff` + `classify` | AC-1,2,7,8 | ✅ |
 | **M5** | `libdefaults` DB + detection | AC-6 | 🚧 |
@@ -55,15 +55,20 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 
 ## M2 — Issuers & discovery (Gate: AC-3)
 
-- [ ] `internal/issuer/adapter.go` interface (PRD §5) 🔷
-- [ ] `internal/issuer/keycloak` — Describe + MintToken
-- [ ] `internal/issuer/k8ssa`, `internal/issuer/generic` 🔷
-- [ ] `internal/discovery/discoverer.go` interface 🔷
-- [ ] `internal/discovery/istio` — RequestAuthentication / AuthorizationPolicy (conf 1.0)
-- [ ] `internal/discovery/k8s` — services, SA token projections, env hints
-- [ ] `internal/discovery/envoy`, `internal/discovery/oidcclient`
-- [ ] `keyway discover` command
-- [ ] AC-3: ≥85% consumer discovery on the reference stack, zero config files
+- [x] `internal/issuer/adapter.go` interface (PRD §5)
+- [x] `internal/issuer/localkeys` — JOSE key lifecycle (generate/sign/promote/retire/JWKS), tested
+- [x] `internal/issuer/generic` — full local-key OIDC issuer (mint + canary), tested
+- [x] `internal/issuer/keycloak` — real OIDC Describe (discovery + JWKS over HTTP) + Keyway-operated mint/canary
+- [x] `internal/issuer/k8ssa` — local-key SA issuer
+- [x] `internal/issuer/oidc` — shared OIDC discovery + JWKS fetch helper
+- [x] `internal/discovery/discoverer.go` interface + `StableID` derivation (§4.2) + aggregator (merge by StableID)
+- [x] `internal/discovery/istio` — RequestAuthentication parsing (conf 1.0)
+- [x] `internal/discovery/k8s` — Services + workloads, SA token projections, env hints (conf 0.5), owner labels, endpoints
+- [x] `internal/discovery/envoy` — jwt_authn providers incl. `cache_duration` → JWKS TTL
+- [ ] `internal/discovery/oidcclient` — Keycloak client registry (HTTP admin) 🔷 (still stub)
+- [x] `keyway discover` command (table/json) + `keyway snapshot` wired to discovery
+- [x] AC-3: ≥85% consumer discovery on the reference stack, zero config files (tested); verified E2E via CLI
+- [x] AC-7 end-to-end: adding an Istio audience → exactly one `widened` event through the real pipeline
 
 ## M3 — Probe engine (Gate: AC-4)
 

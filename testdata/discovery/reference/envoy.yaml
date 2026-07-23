@@ -1,0 +1,20 @@
+http_filters:
+  - name: envoy.filters.http.jwt_authn
+    typed_config:
+      "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+      providers:
+        edge-gateway:
+          issuer: "https://kc/realms/main"
+          audiences:
+            - "edge-gateway"
+          remote_jwks:
+            http_uri:
+              uri: "https://kc/realms/main/protocol/openid-connect/certs"
+              timeout: 5s
+            cache_duration: "600s"
+          forward: true
+      rules:
+        - match:
+            prefix: "/"
+          requires:
+            provider_name: "edge-gateway"

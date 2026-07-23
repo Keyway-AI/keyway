@@ -1,11 +1,9 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	"github.com/architsharma/keyway/internal/contract"
 	"github.com/architsharma/keyway/internal/store/postgres"
 	"github.com/spf13/cobra"
 )
@@ -61,57 +59,18 @@ func newIssuerCmd() *cobra.Command {
 	return cmd
 }
 
-func newDiscoverCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "discover",
-		Short: "Derive the consumer inventory from cluster and config sources",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M2", "discover")
-		},
-	}
-	cmd.Flags().StringSlice("namespace", nil, "Kubernetes namespaces to scan")
-	cmd.Flags().String("output", "table", "output format: json|table")
-	return cmd
-}
-
 func newSnapshotCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "snapshot",
 		Short: "Build and store a contract version (first run establishes a baseline)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			dsn := dbURL(cmd)
-			if dsn == "" {
-				return fmt.Errorf("no database configured (set --db or KEYWAY_DB_URL)")
-			}
-			ctx := context.Background()
-			st, err := postgres.Open(ctx, dsn)
-			if err != nil {
-				return err
-			}
-			defer st.Close()
-
-			// TODO(M2): populate BuildInput from the discovery adapters. Until
-			// discovery is wired, snapshot builds from the currently-known graph
-			// (empty on a fresh install), which still exercises the baseline flow.
-			v := contract.Build(contract.BuildInput{TriggerKind: "manual"})
-			res, err := contract.Snapshot(ctx, st, v)
-			if err != nil {
-				return err
-			}
-
-			out := cmd.OutOrStdout()
-			switch {
-			case res.IsBaseline:
-				fmt.Fprintf(out, "Baseline established: %d consumers, %d edges (hash %s)\n",
-					len(res.Version.Consumers), len(res.Version.Edges), short(res.Version.Hash))
-			case res.Unchanged:
-				fmt.Fprintf(out, "No change since latest version (hash %s)\n", short(res.Version.Hash))
-			default:
-				fmt.Fprintf(out, "New version %s: %d change event(s)\n", short(res.Version.Hash), len(res.Events))
-			}
-			return nil
+			return runSnapshot(cmd)
 		},
 	}
+	cmd.Flags().StringSlice("namespace", nil, "Kubernetes namespaces to scan")
+	cmd.Flags().StringSlice("path", nil, "manifest files or directories to scan for consumers")
+	cmd.Flags().String("kube-context", "", "cluster name used in StableIDs")
+	return cmd
 }
 
 func short(hash string) string {

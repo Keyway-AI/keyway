@@ -16,7 +16,7 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 | **M0** | Repo scaffold, tooling, CI, web skeleton, tracker | — | ✅ |
 | **M1** | `model`, `store/postgres`, migrations, `contract/hash` | AC-1 | ✅ |
 | **M2** | `issuer/keycloak` (describe + mint), `discovery/istio`, `discovery/k8s` | AC-3 | ✅ |
-| **M3** | `probe` engine, probes 1–12, CLI `probe` | AC-4 | ⬜ |
+| **M3** | `probe` engine, probes 1–12, CLI `probe` | AC-4 | ✅ |
 | **M4** | `contract/build`, snapshot, baseline flow, `diff` + `classify` | AC-1,2,7,8 | ✅ |
 | **M5** | `libdefaults` DB + detection | AC-6 | 🚧 |
 | **M6** | `AnnounceKey`, probe 13, `canary` CLI | AC-5 | ⬜ |
@@ -72,11 +72,11 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 
 ## M3 — Probe engine (Gate: AC-4)
 
-- [ ] `internal/probe/mint.go` — token construction incl. `alg=none` raw build (PRD §6.2 note)
-- [ ] `internal/probe/probes.go` — the 13 probe definitions
-- [ ] `internal/probe/engine.go` — concurrency, staging guard, kill switch, 5xx abort (PRD §6.3)
-- [ ] `keyway probe` command (`--consumer`, `--probe`, `--dry-run`)
-- [ ] AC-4: all 13 probes execute; probe 12 flags a service trusting `X-User-Id`
+- [x] `internal/probe/mint.go` — baseline claims, raw `alg=none` build, HS256-confusion secret, signature tamper
+- [x] `internal/probe/probes.go` — all 13 probe definitions with Mutate logic
+- [x] `internal/probe/engine.go` — concurrency (global sem), staging guard (default deny), kill switch, inter-probe delay, consecutive-5xx abort, baseline-5xx→unverified, probe-9 expansion (cap 8)
+- [x] `keyway probe` command (`--consumer`, `--probe`, `--dry-run`, `--allow`, `--i-know-this-is-production`); persists results
+- [x] AC-4: all probes execute against a real JWT validator; `header_bypass` flags a service trusting `X-User-Id`; staging guard, 5xx-skip, sibling-token all tested
 
 ## M4 — Contract build, baseline, diff (Gate: AC-1,2,7,8)
 

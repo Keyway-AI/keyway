@@ -80,21 +80,6 @@ func short(hash string) string {
 	return hash
 }
 
-func newProbeCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "probe",
-		Short: "Run verification probes against probeable consumers",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M3", "probe")
-		},
-	}
-	cmd.Flags().String("consumer", "", "limit to a single consumer ID")
-	cmd.Flags().String("probe", "", "limit to a single probe ID")
-	cmd.Flags().Bool("dry-run", false, "construct tokens but do not send requests")
-	cmd.Flags().Bool("i-know-this-is-production", false, "override the staging-only guard (dangerous)")
-	return cmd
-}
-
 func newDiffCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "diff",

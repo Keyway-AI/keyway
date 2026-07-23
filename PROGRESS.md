@@ -5,7 +5,7 @@ advances a tracked item. Milestones mirror PRD §15; acceptance criteria (AC-n) 
 
 **Legend:** ✅ done · 🚧 in progress · ⬜ not started · 🔷 stub only (compiles, no real logic)
 
-_Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walker) complete and tested._
+_Last updated: 2026-07-24 — M1–M7 + M9 complete and tested; API daemon + web UI serving verified live. Remaining: M8 (bench corpus), UI live-wiring, `init`/`issuer`/`diff` CLI._
 
 ---
 
@@ -19,10 +19,10 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 | **M3** | `probe` engine, probes 1–12, CLI `probe` | AC-4 | ✅ |
 | **M4** | `contract/build`, snapshot, baseline flow, `diff` + `classify` | AC-1,2,7,8 | ✅ |
 | **M5** | `libdefaults` DB + detection | AC-6 | ✅ |
-| **M6** | `AnnounceKey`, probe 13, `canary` CLI | AC-5 | ⬜ |
+| **M6** | `AnnounceKey`, probe 13, `canary` CLI | AC-5 | ✅ |
 | **M7** | `blastradius` + grace period, CLI + API | AC-9 | ✅ |
 | **M8** | `bench/harness`, 400-scenario corpus, scorecard | AC-10 | ⬜ |
-| **M9** | `attribution`, `notify/slack`, `api/server` | full | ⬜ |
+| **M9** | `attribution`, `notify/slack`, `api/server` | full | ✅ |
 | **UI** | React dashboard over the HTTP API (PRD §12) | — | 🚧 |
 
 ---
@@ -98,10 +98,10 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 
 ## M6 — Canary (Gate: AC-5)
 
-- [ ] `issuer.AnnounceKey` / `PromoteKey` / `RetireKey`
-- [ ] Probe 13 `canary_key` (2xx expected)
-- [ ] `keyway canary start/status/promote` commands
-- [ ] AC-5: announced key not used to sign; probe 13 separates ready from not-ready
+- [x] `issuer.AnnounceKey` / `PromoteKey` / `RetireKey` (localkeys lifecycle; one active signer at a time)
+- [x] Probe 13 `canary_key` (2xx expected) — wired in the engine
+- [x] `keyway canary start/status/promote` commands (via the daemon API; canary state owned by `serve`)
+- [x] AC-5: announced key not used to sign; probe 13 separates ready from not-ready (tested); canary flow verified over the live API
 
 ## M7 — Blast radius & grace period (Gate: AC-9)
 
@@ -120,11 +120,11 @@ _Last updated: 2026-07-23 — M1 (Postgres store + migrations) and M4 (diff walk
 
 ## M9 — Attribution, notify, API server (Gate: full)
 
-- [ ] `internal/attribution` — git blame/commit + K8s deploy + Keycloak admin events (PRD §16 OPEN-5)
-- [ ] `internal/notify/slack.go`, `internal/notify/webhook.go`
-- [ ] `internal/api/server.go` + `handlers.go` — all §12 endpoints, bearer auth, idempotency
-- [ ] `keyway serve` — API + scheduler; embeds & serves the web UI
-- [ ] Coverage endpoint + scheduled canary tightening (PRD §10.3)
+- [x] `internal/attribution` — git commit attributor (last commit touching the evidence file), tested; K8s deploy + Keycloak admin events remain future (OPEN-5)
+- [x] `internal/notify/slack.go` (Block Kit, medium+ only), `internal/notify/webhook.go` (JSON POST) — real HTTP
+- [x] `internal/api/server.go` + `handlers.go` — all §12 endpoints wired to store/engines, bearer auth; tested via httptest
+- [x] `keyway serve` — API + issuer registry; embeds & serves the web UI (SPA fallback); verified live
+- [x] Coverage endpoint (resolved/low-confidence/unresolved); scheduled canary tightening remains future
 
 ## Web UI (PRD §12 surface)
 

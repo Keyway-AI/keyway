@@ -93,67 +93,6 @@ func newDiffCmd() *cobra.Command {
 	return cmd
 }
 
-func newCanaryCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "canary", Short: "Manage canary keys (announce without signing)"}
-
-	start := &cobra.Command{
-		Use:   "start",
-		Short: "Announce a key in JWKS without using it to sign",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M6", "canary start")
-		},
-	}
-	start.Flags().String("issuer", "", "issuer ID")
-	start.Flags().String("alg", "RS256", "key algorithm")
-
-	status := &cobra.Command{
-		Use:   "status",
-		Short: "Show which consumers have picked up the canary",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M6", "canary status")
-		},
-	}
-	status.Flags().String("issuer", "", "issuer ID")
-
-	promote := &cobra.Command{
-		Use:   "promote",
-		Short: "Promote an announced key to active signing",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M6", "canary promote")
-		},
-	}
-	promote.Flags().String("issuer", "", "issuer ID")
-	promote.Flags().String("kid", "", "key ID to promote")
-
-	cmd.AddCommand(start, status, promote)
-	return cmd
-}
-
-func newReportCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "report",
-		Short: "Summarise recent changes",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M9", "report")
-		},
-	}
-	cmd.Flags().String("since", "7d", "time window, e.g. 7d")
-	cmd.Flags().String("format", "md", "output format: json|md")
-	return cmd
-}
-
-func newServeCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "serve",
-		Short: "Run the HTTP API and scheduler",
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return notImplemented("M9", "serve")
-		},
-	}
-	cmd.Flags().String("addr", ":8080", "listen address")
-	return cmd
-}
-
 func newMigrateCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "migrate", Short: "Apply or roll back database migrations"}
 	up := &cobra.Command{

@@ -1,5 +1,5 @@
-// Package api serves the Keyway HTTP API (PRD §12) and, in production builds,
-// the embedded web dashboard.
+// Package api serves the Keyway HTTP API (PRD §12) and the embedded web
+// dashboard.
 package api
 
 import (
@@ -9,6 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/architsharma/keyway/internal/discovery"
+	"github.com/architsharma/keyway/internal/issuerregistry"
+	"github.com/architsharma/keyway/internal/libdefaults"
+	"github.com/architsharma/keyway/internal/probe"
 	"github.com/architsharma/keyway/internal/store"
 	"github.com/architsharma/keyway/pkg/apitypes"
 	"github.com/go-chi/chi/v5"
@@ -21,15 +25,25 @@ type Config struct {
 	Token string // bearer token required by all /v1 endpoints
 }
 
+// Deps are the runtime dependencies the handlers operate on.
+type Deps struct {
+	Store       store.Store
+	Issuers     *issuerregistry.Registry
+	Libs        *libdefaults.DB
+	Discoverers []discovery.Discoverer
+	Scope       discovery.Scope
+	Probe       probe.EngineConfig
+}
+
 // Server holds server dependencies.
 type Server struct {
-	cfg   Config
-	store store.Store
+	cfg  Config
+	deps Deps
 }
 
 // NewServer constructs an API server.
-func NewServer(cfg Config, st store.Store) *Server {
-	return &Server{cfg: cfg, store: st}
+func NewServer(cfg Config, deps Deps) *Server {
+	return &Server{cfg: cfg, deps: deps}
 }
 
 // Routes builds the HTTP handler.
@@ -38,9 +52,8 @@ func (s *Server) Routes() http.Handler {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(30 * time.Second))
+	r.Use(middleware.Timeout(60 * time.Second))
 
-	// Health is unauthenticated for probes/liveness.
 	r.Get("/v1/health", s.handleHealth)
 
 	r.Group(func(r chi.Router) {
@@ -57,7 +70,6 @@ func (s *Server) Routes() http.Handler {
 		r.Get("/v1/probes/runs/{run_id}", s.handleGetProbeRun)
 
 		r.Get("/v1/changes", s.handleListChanges)
-
 		r.Post("/v1/blast-radius", s.handleBlastRadius)
 
 		r.Post("/v1/canary/announce", s.handleCanaryAnnounce)
@@ -67,11 +79,12 @@ func (s *Server) Routes() http.Handler {
 		r.Get("/v1/coverage", s.handleCoverage)
 	})
 
-	// TODO(M9): serve the embedded web dashboard (web/dist) for non-/v1 paths.
+	// Everything else serves the embedded web dashboard.
+	r.NotFound(spaHandler().ServeHTTP)
 	return r
 }
 
-// ListenAndServe starts the HTTP server.
+// ListenAndServe starts the HTTP server and shuts down on ctx cancellation.
 func (s *Server) ListenAndServe(ctx context.Context) error {
 	srv := &http.Server{
 		Addr:              s.cfg.Addr,
@@ -84,18 +97,19 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 		defer cancel()
 		_ = srv.Shutdown(shutdownCtx)
 	}()
-	return srv.ListenAndServe()
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return err
+	}
+	return nil
 }
 
-// authMiddleware enforces the bearer token on protected routes.
 func (s *Server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if s.cfg.Token == "" {
 			writeError(w, http.StatusInternalServerError, "server_misconfigured", "no API token configured")
 			return
 		}
-		auth := r.Header.Get("Authorization")
-		token := strings.TrimPrefix(auth, "Bearer ")
+		token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if token == "" || token != s.cfg.Token {
 			writeError(w, http.StatusUnauthorized, "unauthorized", "valid bearer token required")
 			return
@@ -103,8 +117,6 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-// --- helpers ----------------------------------------------------------------
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")

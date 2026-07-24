@@ -133,3 +133,51 @@ func TestUIServed(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	assert.Contains(t, w.Body.String(), "Keyway")
 }
+
+// doKey is like do but sets an Idempotency-Key header.
+func doKey(t *testing.T, h http.Handler, method, path, token, key string, body any) *httptest.ResponseRecorder {
+	t.Helper()
+	var r *http.Request
+	if body != nil {
+		b, _ := json.Marshal(body)
+		r = httptest.NewRequest(method, path, strings.NewReader(string(b)))
+	} else {
+		r = httptest.NewRequest(method, path, nil)
+	}
+	r.Header.Set("Authorization", "Bearer "+token)
+	r.Header.Set("Idempotency-Key", key)
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	return w
+}
+
+// TestIdempotencyReplay verifies a repeated Idempotency-Key replays the original
+// response instead of re-executing — canary announce mints a new key each call,
+// so the replayed body must be byte-identical (same kid).
+func TestIdempotencyReplay(t *testing.T) {
+	h := testServer(t).Routes()
+	body := map[string]any{"issuer_id": "default", "alg": "RS256"}
+
+	first := doKey(t, h, "POST", "/v1/canary/announce", "secret", "key-abc", body)
+	require.Equal(t, 200, first.Code)
+	assert.Empty(t, first.Header().Get("Idempotent-Replay"))
+
+	replay := doKey(t, h, "POST", "/v1/canary/announce", "secret", "key-abc", body)
+	require.Equal(t, 200, replay.Code)
+	assert.Equal(t, "true", replay.Header().Get("Idempotent-Replay"))
+	assert.Equal(t, first.Body.String(), replay.Body.String(), "replay must be byte-identical")
+
+	// A different key executes again -> a different kid.
+	other := doKey(t, h, "POST", "/v1/canary/announce", "secret", "key-xyz", body)
+	require.Equal(t, 200, other.Code)
+	assert.NotEqual(t, first.Body.String(), other.Body.String())
+}
+
+// TestIdempotencyNoKeyPassthrough verifies requests without the header are not cached.
+func TestIdempotencyNoKeyPassthrough(t *testing.T) {
+	h := testServer(t).Routes()
+	body := map[string]any{"issuer_id": "default", "alg": "RS256"}
+	a := do(t, h, "POST", "/v1/canary/announce", "secret", body)
+	b := do(t, h, "POST", "/v1/canary/announce", "secret", body)
+	assert.NotEqual(t, a.Body.String(), b.Body.String(), "no key -> each request executes")
+}

@@ -40,11 +40,12 @@ type Deps struct {
 type Server struct {
 	cfg  Config
 	deps Deps
+	idem *idemStore
 }
 
 // NewServer constructs an API server.
 func NewServer(cfg Config, deps Deps) *Server {
-	return &Server{cfg: cfg, deps: deps}
+	return &Server{cfg: cfg, deps: deps, idem: newIdemStore(24 * time.Hour)}
 }
 
 // Routes builds the HTTP handler.
@@ -59,6 +60,7 @@ func (s *Server) Routes() http.Handler {
 
 	r.Group(func(r chi.Router) {
 		r.Use(s.authMiddleware)
+		r.Use(s.idempotency) // replays POSTs that repeat an Idempotency-Key
 
 		r.Post("/v1/snapshots", s.handleCreateSnapshot)
 		r.Get("/v1/snapshots/latest", s.handleLatestSnapshot)

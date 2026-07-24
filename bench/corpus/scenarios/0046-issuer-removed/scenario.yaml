@@ -1,0 +1,11 @@
+# True positive, narrowed: the migration finished and the old issuer was removed.
+# api-a trusts one issuer where it used to trust two — a narrowing.
+id: "0046"
+name: issuer-removed
+before: before
+after: after
+expected:
+  detected: true
+  class: narrowed
+  severity: low
+  consumer: "k8s://local/prod/api-a"

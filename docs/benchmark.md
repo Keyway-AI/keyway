@@ -30,15 +30,20 @@ Two complementary sources, combined into one scorecard (`L3-all`):
    and `after/` directory of real Istio/Envoy/K8s manifests plus a
    `scenario.yaml` ground truth. These run the **actual discovery pipeline**
    (istio + k8s + envoy adapters) into `diff.Compute`, so they exercise L1 as
-   well as L3. The seed set:
+   well as L3. The current set (10 scenarios, ~50/50 real vs. noise):
 
    | ID | Kind | Tests |
    |---|---|---|
-   | `0042-audience-widened` | TP | new audience → widened/medium |
-   | `0043-issuer-migration` | TP | second issuer added → widened/high |
-   | `0044-cache-ttl-raised` | TP | Envoy `cache_duration` 5m→1h → narrowed/medium |
+   | `0042-audience-widened` | TP | Istio: new audience → widened/medium |
+   | `0043-issuer-migration` | TP | Istio: second issuer added → widened/high |
+   | `0044-cache-ttl-raised` | TP | Envoy: `cache_duration` 5m→1h → narrowed/medium |
+   | `0045-audience-removed` | TP | Istio: audience removed → narrowed/low |
+   | `0046-issuer-removed` | TP | Istio: old issuer removed → narrowed/low |
+   | `0047-cache-ttl-lowered` | TP | Envoy: `cache_duration` 1h→5m → narrowed/low |
    | `0201-dependency-bump-noop` | TN | only an owner label changes → silent |
-   | `0202-noisy-redeploy` | TN | 6 things churn (list reorder, replicas, labels, image, env, comments) → silent |
+   | `0202-noisy-redeploy` | TN | Istio+K8s: 6 things churn (reorder, replicas, labels, image, env, comments) → silent |
+   | `0203-k8s-noisy-redeploy` | TN | K8s: scale + relabel + image bump, SA audience unchanged → silent |
+   | `0204-comment-only-noop` | TN | Istio: comments/formatting only → silent |
 
 ## Scoring (PRD §13.3)
 

@@ -5,6 +5,7 @@
 **Know which consumers will break _before_ you rotate a signing key, change an issuer, or drop a claim.**
 
 [![CI](https://github.com/nometria/keyway/actions/workflows/ci.yml/badge.svg)](https://github.com/nometria/keyway/actions/workflows/ci.yml)
+[![Detection: 100% TPR · 0% FPR](https://img.shields.io/badge/detection-100%25_TPR_%C2%B7_0%25_FPR-2f7fe0)](BENCHMARK.md)
 [![Go Reference](https://pkg.go.dev/badge/github.com/nometria/keyway.svg)](https://pkg.go.dev/github.com/nometria/keyway)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nometria/keyway)](https://goreportcard.com/report/github.com/nometria/keyway)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)

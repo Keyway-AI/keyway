@@ -1,0 +1,11 @@
+# True positive, narrowed: an audience is removed from api-a. It now accepts
+# fewer tokens than before — a narrowing (low severity, but real).
+id: "0045"
+name: audience-removed
+before: before
+after: after
+expected:
+  detected: true
+  class: narrowed
+  severity: low
+  consumer: "k8s://local/prod/api-a"

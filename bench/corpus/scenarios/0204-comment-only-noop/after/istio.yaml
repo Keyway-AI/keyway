@@ -1,0 +1,14 @@
+# Reviewed 2026-07-24 — added documentation only, no behavioural change.
+apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata:
+  name: api-a         # public API, edge-facing
+  namespace: prod
+spec:
+  selector:
+    matchLabels:
+      app: api-a
+  jwtRules:
+    # main corporate Keycloak realm
+    - issuer: "https://kc/realms/main"
+      audiences: ["api-a"]   # single audience by design

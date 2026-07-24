@@ -1,6 +1,6 @@
 # Keyway Benchmark — how accurate is it, in plain English?
 
-> **The one-line answer:** on a corpus of **805 changes** to realistic auth
+> **The one-line answer:** on a corpus of **810 changes** to realistic auth
 > configs, Keyway flagged **every real contract change (100%)** and raised
 > **zero false alarms (0%)** on ordinary noise.
 >
@@ -31,7 +31,7 @@ it. That balance is exactly what this benchmark measures.
 ## The test
 
 We took realistic Istio / Envoy / Kubernetes configuration files and produced
-**805 before-and-after pairs**, split roughly 50/50:
+**810 before-and-after pairs**, split roughly 50/50:
 
 | Half | What changed | Should Keyway alert? |
 |---|---|---|

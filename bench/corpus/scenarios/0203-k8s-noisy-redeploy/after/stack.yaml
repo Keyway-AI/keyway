@@ -1,0 +1,50 @@
+# Same service-account audience ("worker") — the token contract is unchanged.
+# Everything else churned: replicas 2->4, team label blue->green, image bump,
+# a new env var. Expected result: zero events.
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+  namespace: prod
+spec:
+  selector:
+    app: worker
+  ports:
+    - name: http
+      port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: prod
+  labels:
+    team: team-green
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      serviceAccountName: worker-sa
+      containers:
+        - name: app
+          image: registry.internal/worker:2.3.1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: LOG_LEVEL
+              value: "warn"
+            - name: MAX_WORKERS
+              value: "8"
+      volumes:
+        - name: token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: "worker"
+                  path: token

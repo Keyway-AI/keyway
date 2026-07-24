@@ -1,0 +1,10 @@
+# No-op / true negative: the only differences are comments and formatting. A
+# line-based diff would show changes; the derived contract is byte-identical, so
+# Keyway must emit zero events.
+id: "0204"
+name: comment-only-noop
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "k8s://local/prod/api-a"

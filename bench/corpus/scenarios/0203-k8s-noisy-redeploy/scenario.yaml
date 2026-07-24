@@ -1,0 +1,11 @@
+# No-op / true negative, exercising the Kubernetes discovery path: a Deployment
+# is scaled and re-labelled and its image bumped, but the projected
+# service-account audience (the only thing that defines the token contract) is
+# unchanged. Keyway must stay silent.
+id: "0203"
+name: k8s-noisy-redeploy
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "k8s://local/prod/worker-sa"

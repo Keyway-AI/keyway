@@ -1,0 +1,12 @@
+# True positive, narrowed: the gateway's JWKS cache_duration is shortened from
+# 1 hour to 5 minutes. A shorter cache means a rotated key is picked up sooner —
+# safer — but it is still a change to the verification behaviour, so it's flagged.
+id: "0047"
+name: cache-ttl-lowered
+before: before
+after: after
+expected:
+  detected: true
+  class: narrowed
+  severity: low
+  consumer: "route://envoy/edge"

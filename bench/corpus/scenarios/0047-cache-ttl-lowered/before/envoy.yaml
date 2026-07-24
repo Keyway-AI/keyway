@@ -1,0 +1,11 @@
+http_filters:
+  - name: envoy.filters.http.jwt_authn
+    typed_config:
+      providers:
+        edge:
+          issuer: "https://kc/realms/main"
+          audiences: ["edge"]
+          remote_jwks:
+            http_uri:
+              uri: "https://kc/realms/main/protocol/openid-connect/certs"
+            cache_duration: "3600s"

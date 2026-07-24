@@ -17,6 +17,13 @@ type SnapshotResult struct {
 	Events     []model.ChangeEvent
 }
 
+// Attributor binds a change event to its cause (a commit, a deploy, an IdP admin
+// action). Implemented by internal/attribution.Chain. Declared here as an
+// interface so the contract package does not import attribution.
+type Attributor interface {
+	Attribute(ctx context.Context, ev model.ChangeEvent) (*model.Attribution, error)
+}
+
 // Snapshot implements the mandatory baseline flow (PRD §8.2):
 //
 //	if no baseline exists:
@@ -28,6 +35,13 @@ type SnapshotResult struct {
 // Violating this produces a wall of findings on first run — the documented
 // pilot-killer — so the zero-events-on-baseline guarantee is load-bearing.
 func Snapshot(ctx context.Context, st store.Store, v model.ContractVersion) (SnapshotResult, error) {
+	return SnapshotWithAttribution(ctx, st, v, nil)
+}
+
+// SnapshotWithAttribution is Snapshot plus a step that attributes each emitted
+// change event to its cause before persistence. A nil attributor is a no-op, so
+// this is behaviour-preserving for callers that don't supply one.
+func SnapshotWithAttribution(ctx context.Context, st store.Store, v model.ContractVersion, attr Attributor) (SnapshotResult, error) {
 	// Ensure the hash reflects the current graph.
 	v.Hash = Hash(v)
 
@@ -57,6 +71,9 @@ func Snapshot(ctx context.Context, st store.Store, v model.ContractVersion) (Sna
 	}
 
 	events := diff.Compute(prev, v)
+	if attr != nil {
+		attributeEvents(ctx, attr, events)
+	}
 	if err := st.SaveContractVersion(ctx, v); err != nil {
 		return SnapshotResult{}, err
 	}
@@ -66,4 +83,17 @@ func Snapshot(ctx context.Context, st store.Store, v model.ContractVersion) (Sna
 		}
 	}
 	return SnapshotResult{Version: v, Events: events}, nil
+}
+
+// attributeEvents fills in each event's Attribution in place. A failure or an
+// unattributed result for one event never blocks the others — attribution is
+// best-effort enrichment, not a gate on recording the change.
+func attributeEvents(ctx context.Context, attr Attributor, events []model.ChangeEvent) {
+	for i := range events {
+		a, err := attr.Attribute(ctx, events[i])
+		if err != nil || a == nil || a.Kind == "unattributed" {
+			continue
+		}
+		events[i].Attribution = a
+	}
 }

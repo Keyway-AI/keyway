@@ -14,10 +14,8 @@ type Attributor interface {
 }
 
 // Unattributed is the fallback used when no source can claim a change. v1 covers
-// git and Keycloak admin events; everything else is unattributed (PRD OPEN-5).
+// git commits, K8s deploy annotations, and Keycloak admin events; everything
+// else is unattributed (PRD OPEN-5).
 func Unattributed() *model.Attribution {
 	return &model.Attribution{Kind: "unattributed", Confidence: 0}
 }
-
-// TODO(M9): git attributor (blame the changed Istio/Envoy config path to a
-// commit/PR), K8s deploy attributor, Keycloak admin-events attributor.

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/nometria/keyway/internal/attribution"
 	"github.com/nometria/keyway/internal/config"
 	"github.com/nometria/keyway/internal/contract"
 	"github.com/nometria/keyway/internal/discovery"
@@ -52,6 +53,34 @@ func configDiscoverers(cfg config.Config) []discovery.Discoverer {
 		}
 	}
 	return ds
+}
+
+// buildAttributor assembles the attribution chain that binds each change event
+// to its cause: git blame on the changed manifest, then the K8s deploy
+// annotation, then (as a fallback for IdP-side changes) the Keycloak admin-event
+// log for each configured Keycloak issuer. File-based sources are more specific,
+// so they come first. `root` is the manifest scan root (git repo + deploy base).
+func buildAttributor(cfg config.Config, root string) contract.Attributor {
+	if root == "" {
+		root = "."
+	}
+	attributors := []attribution.Attributor{
+		attribution.NewGit(root),
+		attribution.NewK8sDeploy(root),
+	}
+	for _, ic := range cfg.Issuers {
+		if model.IssuerType(ic.Type) != model.IssuerKeycloak || ic.AdminCredentialEnv == "" {
+			continue
+		}
+		user, pass := splitCreds(os.Getenv(ic.AdminCredentialEnv))
+		ka, err := attribution.NewKeycloakAdmin(attribution.KeycloakOptions{
+			RealmURL: ic.URL, AdminUser: user, AdminPassword: pass,
+		})
+		if err == nil {
+			attributors = append(attributors, ka)
+		}
+	}
+	return attribution.NewChain(attributors...)
 }
 
 // allDiscoverers combines the file-based sources with any config-driven ones
@@ -138,7 +167,12 @@ func runSnapshot(cmd *cobra.Command) error {
 	defer st.Close()
 
 	v := contract.Build(contract.BuildInput{Consumers: consumers, TriggerKind: "manual"})
-	res, err := contract.Snapshot(ctx, st, v)
+	attrRoot := "."
+	if len(scope.ConfigPaths) > 0 {
+		attrRoot = scope.ConfigPaths[0]
+	}
+	cfg, _ := config.Load(configPath(cmd))
+	res, err := contract.SnapshotWithAttribution(ctx, st, v, buildAttributor(cfg, attrRoot))
 	if err != nil {
 		return err
 	}

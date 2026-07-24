@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/nometria/keyway/internal/contract"
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/issuerregistry"
 	"github.com/nometria/keyway/internal/libdefaults"
@@ -34,6 +35,9 @@ type Deps struct {
 	Discoverers []discovery.Discoverer
 	Scope       discovery.Scope
 	Probe       probe.EngineConfig
+	// Attributor, when set, binds each change event to its cause (commit/deploy/
+	// IdP admin action) as snapshots are taken. Optional.
+	Attributor contract.Attributor
 }
 
 // Server holds server dependencies.

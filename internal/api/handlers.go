@@ -55,7 +55,7 @@ func (s *Server) Snapshot(ctx context.Context, trigger string) (contract.Snapsho
 		}
 	}
 	v := contract.Build(contract.BuildInput{Consumers: consumers, TriggerKind: trigger})
-	return contract.Snapshot(ctx, s.deps.Store, v)
+	return contract.SnapshotWithAttribution(ctx, s.deps.Store, v, s.deps.Attributor)
 }
 
 func (s *Server) handleLatestSnapshot(w http.ResponseWriter, r *http.Request) {

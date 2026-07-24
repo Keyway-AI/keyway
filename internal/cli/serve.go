@@ -92,6 +92,10 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	}
 	addr, _ := cmd.Flags().GetString("addr")
 
+	attrRoot := "."
+	if len(scope.ConfigPaths) > 0 {
+		attrRoot = scope.ConfigPaths[0]
+	}
 	srv := api.NewServer(api.Config{Addr: addr, Token: token}, api.Deps{
 		Store:       st,
 		Issuers:     reg,
@@ -99,6 +103,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		Discoverers: append(defaultDiscoverers(), configDiscoverers(cfg)...),
 		Scope:       scope,
 		Probe:       probeCfg,
+		Attributor:  buildAttributor(cfg, attrRoot),
 	})
 
 	// Optional scheduler: periodically snapshot and notify on change events.

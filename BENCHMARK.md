@@ -82,6 +82,20 @@ category) are **published third-party OWASP Benchmark results**, shown for
 calibration — they were not re-run here. The point is simple: **inference has a
 ceiling; checking with a real token does not infer, it verifies.**
 
+## Validated against real, documented incidents
+
+Beyond the synthetic corpus above, Keyway is checked against a suite of
+**real-world risks with public citations** — each one reproduces the exact
+failure mode from a CVE, a project's own issue tracker, or the JWT best-practices
+RFC, and confirms Keyway flags it. Highlights:
+
+- **`alg=none` bypass** — [CVE-2022-23540](https://nvd.nist.gov/vuln/detail/CVE-2022-23540) → probe `alg_none`
+- **RS256→HS256 confusion** — [CVE-2022-23541](https://nvd.nist.gov/vuln/detail/CVE-2022-23541) → probe `alg_confusion`
+- **JWKS not refreshed on unknown kid → rotation outage** — [openfga/openfga#3099](https://github.com/openfga/openfga/issues/3099) → blast-radius predicts `will_break` *before* the rotation, from library defaults alone
+
+**Keyway detects 8 of 8.** Full table and methodology:
+[docs/realworld-validation.md](docs/realworld-validation.md) · run `make validate`.
+
 ## Reproduce it yourself — no trust required
 
 ```bash

@@ -18,17 +18,32 @@ import (
 	"path/filepath"
 
 	"github.com/nometria/keyway/bench/mutations"
+	rw "github.com/nometria/keyway/bench/realworld"
 )
 
 func main() {
 	var (
-		corpus = flag.String("corpus", "./bench/corpus", "path to file-based scenarios")
-		out    = flag.String("out", "./bench/out", "output directory for the scorecard")
-		rounds = flag.Int("rounds", 50, "generated-corpus rounds (each ~12 scenarios)")
-		ciGate = flag.Bool("ci-gate", false, "exit non-zero if any §13.4 threshold fails")
-		report = flag.Bool("report", false, "also emit report.html + roc.svg (human-readable study)")
+		corpus    = flag.String("corpus", "./bench/corpus", "path to file-based scenarios")
+		out       = flag.String("out", "./bench/out", "output directory for the scorecard")
+		rounds    = flag.Int("rounds", 50, "generated-corpus rounds (each ~12 scenarios)")
+		ciGate    = flag.Bool("ci-gate", false, "exit non-zero if any §13.4 threshold fails")
+		report    = flag.Bool("report", false, "also emit report.html + roc.svg (human-readable study)")
+		realworld = flag.Bool("realworld", false, "validate against documented CVEs/incidents -> docs/realworld-validation.md")
 	)
 	flag.Parse()
+
+	if *realworld {
+		md, detected, total := rw.MarkdownReport()
+		if err := os.WriteFile("docs/realworld-validation.md", []byte(md), 0o644); err != nil {
+			fmt.Fprintln(os.Stderr, "harness: write realworld report:", err)
+			os.Exit(1)
+		}
+		fmt.Printf("harness: real-world validation %d/%d documented risks detected -> docs/realworld-validation.md\n", detected, total)
+		if *ciGate && detected < total {
+			os.Exit(3)
+		}
+		return
+	}
 
 	generated := mutations.Generate(*rounds)
 	fileScenarios, err := loadFileScenarios(*corpus)

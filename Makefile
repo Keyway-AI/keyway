@@ -132,6 +132,10 @@ bench-report: ## Run the benchmark and emit a human-readable report.html + roc.s
 	$(GO) run ./bench/harness --corpus ./bench/corpus --out ./bench/out --report
 	@echo "open bench/out/report.html"
 
+.PHONY: validate
+validate: ## Validate against documented real-world CVEs/incidents (bench/realworld)
+	$(GO) run ./bench/harness --realworld --ci-gate
+
 ## ----------------------------------------------------------------------------
 ## Meta
 ## ----------------------------------------------------------------------------

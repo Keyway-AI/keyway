@@ -81,3 +81,7 @@ jobs:
       # the thresholds in PRD §13.4.
       - name: Run benchmark corpus
         run: go run ./bench/harness --corpus ./bench/corpus --out ./bench/out --ci-gate
+      # Validates against documented real-world CVEs/incidents; fails if Keyway
+      # stops detecting any of them.
+      - name: Validate real-world risks
+        run: go run ./bench/harness --realworld --ci-gate

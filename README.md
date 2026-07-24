@@ -6,6 +6,7 @@
 
 [![CI](https://github.com/nometria/keyway/actions/workflows/ci.yml/badge.svg)](https://github.com/nometria/keyway/actions/workflows/ci.yml)
 [![Detection: 100% TPR · 0% FPR](https://img.shields.io/badge/detection-100%25_TPR_%C2%B7_0%25_FPR-2f7fe0)](BENCHMARK.md)
+[![Real-world: 8/8 documented risks](https://img.shields.io/badge/real--world-8%2F8_CVEs_%26_incidents-16a34a)](docs/realworld-validation.md)
 [![Go Reference](https://pkg.go.dev/badge/github.com/nometria/keyway.svg)](https://pkg.go.dev/github.com/nometria/keyway)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nometria/keyway)](https://goreportcard.com/report/github.com/nometria/keyway)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
@@ -124,7 +125,19 @@ make bench            # scorecard
 make bench-report     # + an interactive report.html
 ```
 
-CI fails the build if accuracy ever drops below the PRD §13.4 thresholds.
+And it's validated against **real, documented incidents** — `alg=none`
+([CVE-2022-23540](https://nvd.nist.gov/vuln/detail/CVE-2022-23540)), RS256→HS256
+confusion ([CVE-2022-23541](https://nvd.nist.gov/vuln/detail/CVE-2022-23541)), and
+the JWKS key-rotation outage from
+[openfga/openfga#3099](https://github.com/openfga/openfga/issues/3099). Keyway
+detects **8 of 8** — see [docs/realworld-validation.md](docs/realworld-validation.md):
+
+```bash
+make validate         # reproduce each cited incident and check Keyway flags it
+```
+
+CI fails the build if accuracy drops below the PRD §13.4 thresholds **or** if
+Keyway stops detecting any documented real-world risk.
 
 ## Project status
 

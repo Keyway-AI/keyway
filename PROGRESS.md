@@ -139,6 +139,17 @@ _Last updated: 2026-07-24 — **all milestones M0–M9 + UI complete and tested*
 
 ---
 
+## Real-world validation (cited incidents)
+
+- [x] `bench/realworld/` — reproduces documented JWT/JWKS failure modes and asserts Keyway flags each, with real citations
+  - [x] RW-01 `alg=none` (CVE-2022-23540) → probe `alg_none`
+  - [x] RW-02 RS256→HS256 confusion (CVE-2022-23541) → probe `alg_confusion`
+  - [x] RW-03 signature not verified (CWE-347) → probe `tampered_signature`
+  - [x] RW-04/05/06 missing aud/iss/exp checks (RFC 8725) → probes `wrong_audience`/`wrong_issuer`/`expired`
+  - [x] RW-07 identity-header trust (CWE-290) → probe `header_bypass`
+  - [x] RW-08 JWKS `RefreshUnknownKID=false` rotation outage (openfga/openfga#3099) → blast-radius `will_break`
+- [x] `docs/realworld-validation.md` report; `make validate`; CI gate (fails if any regress); README badge — **8/8 detected**
+
 ## Open decisions carried from PRD §16
 
 | ID | Decision | Default taken |

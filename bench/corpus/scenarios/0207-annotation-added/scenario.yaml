@@ -1,0 +1,10 @@
+# True negative: GitOps annotations are added to the manifest. Metadata churn is
+# not a contract change -> zero events. (A common FP trap for naive line-diff
+# tools.)
+id: "0207"
+name: annotation-added
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "k8s://local/prod/api-a"

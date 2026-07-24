@@ -1,0 +1,12 @@
+# True positive, widened/medium (Envoy path): the gateway JWT provider adds a
+# second accepted audience. Exercises the Envoy jwt_authn discovery source, not
+# just Istio, so the corpus proves the diff is source-agnostic.
+id: "0053"
+name: envoy-audience-widened
+before: before
+after: after
+expected:
+  detected: true
+  class: widened
+  severity: medium
+  consumer: "route://envoy/gateway"

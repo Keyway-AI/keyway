@@ -1,0 +1,12 @@
+# True positive, narrowed/low, with an unchanged neighbour: svc-a drops a legacy
+# audience while svc-b is untouched. Verifies the diff isolates the changed
+# consumer and does NOT emit a spurious event for svc-b.
+id: "0055"
+name: audience-narrowed-multi
+before: before
+after: after
+expected:
+  detected: true
+  class: narrowed
+  severity: low
+  consumer: "k8s://local/prod/svc-a"

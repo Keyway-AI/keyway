@@ -1,0 +1,10 @@
+# True negative (Envoy path): unrelated provider fields churn (forward flag,
+# payload_in_metadata, JWKS fetch timeout) while issuer, audiences, and
+# cache_duration — the contract-bearing fields — are unchanged -> zero events.
+id: "0208"
+name: envoy-noisy
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "route://envoy/gateway"

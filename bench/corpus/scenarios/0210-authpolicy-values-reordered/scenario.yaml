@@ -1,0 +1,10 @@
+# True negative: the accepted values of a required claim are reordered
+# (finance/legal -> legal/finance). The required-claim set is unchanged -> zero
+# events.
+id: "0210"
+name: authpolicy-values-reordered
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "k8s://local/prod/reports-api"

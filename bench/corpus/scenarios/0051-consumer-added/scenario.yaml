@@ -1,0 +1,12 @@
+# True positive, neutral/low: a brand-new service (api-new) is onboarded. A newly
+# discovered consumer is a real, reportable event (so coverage tracking sees it)
+# but neutral — it does not widen or narrow any existing contract.
+id: "0051"
+name: consumer-added
+before: before
+after: after
+expected:
+  detected: true
+  class: neutral
+  severity: low
+  consumer: "k8s://local/prod/api-new"

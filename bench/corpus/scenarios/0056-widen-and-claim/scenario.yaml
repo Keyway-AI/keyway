@@ -1,0 +1,13 @@
+# True positive, multi-field on one consumer: billing-api simultaneously gains an
+# audience (widened/medium) and loses its required `tier` claim (widened/critical).
+# A realistic messy PR; the diff must surface the widening (we assert the audience
+# widening; the claim drop is an additional critical event on the same consumer).
+id: "0056"
+name: widen-and-claim
+before: before
+after: after
+expected:
+  detected: true
+  class: widened
+  severity: medium
+  consumer: "k8s://local/prod/billing-api"

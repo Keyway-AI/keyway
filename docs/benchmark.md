@@ -30,7 +30,8 @@ Two complementary sources, combined into one scorecard (`L3-all`):
    and `after/` directory of real Istio/Envoy/K8s manifests plus a
    `scenario.yaml` ground truth. These run the **actual discovery pipeline**
    (istio + k8s + envoy adapters) into `diff.Compute`, so they exercise L1 as
-   well as L3. The current set (10 scenarios, ~50/50 real vs. noise):
+   well as L3. The current set (**26 scenarios**, 15 true-positive / 11
+   true-negative, spanning the Istio, Envoy, and K8s discovery sources):
 
    | ID | Kind | Tests |
    |---|---|---|
@@ -40,10 +41,26 @@ Two complementary sources, combined into one scorecard (`L3-all`):
    | `0045-audience-removed` | TP | Istio: audience removed → narrowed/low |
    | `0046-issuer-removed` | TP | Istio: old issuer removed → narrowed/low |
    | `0047-cache-ttl-lowered` | TP | Envoy: `cache_duration` 1h→5m → narrowed/low |
+   | `0048-required-claim-dropped` | TP | Istio AuthPolicy: required claim removed → widened/critical |
+   | `0049-issuer-added` | TP | Istio: second trusted issuer added → widened/high |
+   | `0050-required-claim-added` | TP | Istio AuthPolicy: new required claim → narrowed/low |
+   | `0051-consumer-added` | TP | Istio: new service onboarded → neutral/low |
+   | `0052-consumer-removed` | TP | Istio: service decommissioned → neutral/low |
+   | `0053-envoy-audience-widened` | TP | Envoy: provider gains an audience → widened/medium |
+   | `0054-envoy-issuer-migration` | TP | Envoy: issuer cut over → widened/high |
+   | `0055-audience-narrowed-multi` | TP | Istio: one of two consumers narrows; neighbour stays silent |
+   | `0056-widen-and-claim` | TP | Istio: audience widened + required claim dropped on one consumer |
    | `0201-dependency-bump-noop` | TN | only an owner label changes → silent |
    | `0202-noisy-redeploy` | TN | Istio+K8s: 6 things churn (reorder, replicas, labels, image, env, comments) → silent |
    | `0203-k8s-noisy-redeploy` | TN | K8s: scale + relabel + image bump, SA audience unchanged → silent |
    | `0204-comment-only-noop` | TN | Istio: comments/formatting only → silent |
+   | `0205-audience-reordered` | TN | Istio: audience list reordered, same set → silent |
+   | `0206-jwtrules-reordered` | TN | Istio: two jwtRules reordered → silent |
+   | `0207-annotation-added` | TN | Istio: GitOps annotations added → silent |
+   | `0208-envoy-noisy` | TN | Envoy: unrelated fields churn, contract fields unchanged → silent |
+   | `0209-unrelated-service-added` | TN | K8s: ConfigMap + metrics Service added (non-consumers) → silent |
+   | `0210-authpolicy-values-reordered` | TN | Istio: claim values reordered, same set → silent |
+   | `0211-whitespace-reformat` | TN | Istio: flow→block YAML reformat → silent |
 
 ## Scoring (PRD §13.3)
 

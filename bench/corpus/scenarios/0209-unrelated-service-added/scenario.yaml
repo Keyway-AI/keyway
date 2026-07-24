@@ -1,0 +1,10 @@
+# True negative: a ConfigMap and a metrics Service are added alongside an
+# unchanged RequestAuthentication. Neither is a JWT-validating consumer, so no
+# new consumer appears and no contract changes -> zero events.
+id: "0209"
+name: unrelated-service-added
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "k8s://local/prod/api-a"

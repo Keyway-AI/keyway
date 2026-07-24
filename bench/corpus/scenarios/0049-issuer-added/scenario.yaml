@@ -1,0 +1,12 @@
+# True positive, widened/high: a second trusted issuer is added to api-x. It now
+# accepts tokens from an issuer it previously rejected — a trust-boundary
+# expansion, the highest-severity widening after alg/claim changes.
+id: "0049"
+name: issuer-added
+before: before
+after: after
+expected:
+  detected: true
+  class: widened
+  severity: high
+  consumer: "k8s://local/prod/api-x"

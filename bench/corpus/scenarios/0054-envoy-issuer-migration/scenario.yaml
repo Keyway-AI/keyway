@@ -1,0 +1,12 @@
+# True positive, widened/high (Envoy path): the edge provider is cut over to a
+# new issuer. The new issuer is added (a trust expansion -> high) and the old one
+# removed; the diff must surface the widening.
+id: "0054"
+name: envoy-issuer-migration
+before: before
+after: after
+expected:
+  detected: true
+  class: widened
+  severity: high
+  consumer: "route://envoy/edge2"

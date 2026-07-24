@@ -1,0 +1,9 @@
+# True negative: two jwtRules are reordered. The resulting issuer/audience sets
+# are unchanged, so the token contract is identical -> zero events.
+id: "0206"
+name: jwtrules-reordered
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "k8s://local/prod/api-a"

@@ -1,0 +1,9 @@
+# True negative: the manifest is reformatted (inline/flow style -> block style,
+# same content). A structural reformat is not a contract change -> zero events.
+id: "0211"
+name: whitespace-reformat
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "k8s://local/prod/api-a"

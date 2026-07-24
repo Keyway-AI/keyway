@@ -1,0 +1,12 @@
+# True positive, neutral/low: legacy-api is decommissioned. Its disappearance is
+# a reportable neutral event (a consumer left the contract) — useful for coverage
+# and for closing out its grace-period tracking.
+id: "0052"
+name: consumer-removed
+before: before
+after: after
+expected:
+  detected: true
+  class: neutral
+  severity: low
+  consumer: "k8s://local/prod/legacy-api"

@@ -1,0 +1,9 @@
+# True negative: the audience list is reordered but the SET is identical. A
+# set-valued field must be order-insensitive; Keyway must emit zero events.
+id: "0205"
+name: audience-reordered
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "k8s://local/prod/api-a"

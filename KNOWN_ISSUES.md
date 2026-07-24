@@ -45,7 +45,7 @@ _Last updated: 2026-07-24 (security audit v2)._
 | KI-22 | Benchmark | ~~L4 had no corpus.~~ **Resolved:** the harness now scores L4 (git+deploy chain over a temp git repo + annotated manifest), feeding the §13.4 L4 gate (3/3, Youden 1.0). | 🟡 | resolved | `bench/harness/l4.go` |
 | KI-16 | Real-world | The `bench/realworld` cases are **reproductions** of the cited failure modes, not live scans of the named projects. The citation identifies the real bug class; the code recreates it so detection is deterministic. | 🔵 | by design | `docs/realworld-validation.md` |
 | KI-17 | Benchmark | The market-comparison numbers (Snyk/Semgrep/SonarQube/Kiuwan) are **published third-party OWASP results shown for calibration**, not a head-to-head Keyway ran. Different task. | 🔵 | by design | `BENCHMARK.md` "Honesty note" |
-| KI-18 | Corpus size | The realistic before/after corpus is **10 scenarios**; the PRD target is 400. FPR/TPR are trustworthy but would harden further with breadth. | 🟡 | open | `bench/corpus/scenarios/` |
+| KI-18 | Corpus size | The realistic before/after corpus was expanded from 10 to **26 scenarios** (15 TP / 11 TN) spanning the Istio, Envoy, and K8s sources and all diff classes (widen/narrow/neutral, incl. issuer/audience/claim/cache-TTL and consumer add/remove) plus new FP traps (list reorder, YAML reformat, GitOps annotations, unrelated resources). Still below the PRD's 400 aspiration, but materially broader; L3-all stays TPR=1.0/FPR=0.0. | 🟡 | in progress | `bench/corpus/scenarios/` |
 
 ## Toolchain
 

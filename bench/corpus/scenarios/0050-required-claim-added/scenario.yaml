@@ -1,0 +1,12 @@
+# True positive, narrowed/low: a new AuthorizationPolicy starts requiring the
+# `scope` claim. The service now rejects tokens it used to accept — a safe
+# narrowing, but a real contract change consumers must be told about.
+id: "0050"
+name: required-claim-added
+before: before
+after: after
+expected:
+  detected: true
+  class: narrowed
+  severity: low
+  consumer: "k8s://local/prod/orders-api"

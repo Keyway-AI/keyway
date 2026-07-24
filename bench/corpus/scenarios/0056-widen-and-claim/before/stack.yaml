@@ -1,0 +1,18 @@
+apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata: { name: billing-api, namespace: prod }
+spec:
+  selector: { matchLabels: { app: billing-api } }
+  jwtRules:
+    - issuer: "https://kc/realms/main"
+      audiences: ["billing-api"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: billing-require-tier, namespace: prod }
+spec:
+  selector: { matchLabels: { app: billing-api } }
+  rules:
+    - when:
+        - key: request.auth.claims[tier]
+          values: ["gold"]

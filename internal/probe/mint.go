@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/google/uuid"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // BaselineClaims builds the standard claim set for a minted token (PRD §6.2).

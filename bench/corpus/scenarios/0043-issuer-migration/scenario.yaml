@@ -1,0 +1,11 @@
+# True positive: a second issuer is added to api-a (an IdP migration in progress).
+# Accepting a new issuer widens what api-a trusts — high severity.
+id: "0043"
+name: issuer-migration
+before: before
+after: after
+expected:
+  detected: true
+  class: widened
+  severity: high
+  consumer: "k8s://local/prod/api-a"

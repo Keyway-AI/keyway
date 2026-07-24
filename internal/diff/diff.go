@@ -3,8 +3,8 @@ package diff
 import (
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/google/uuid"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // Compute diffs two contract versions and returns the classified change events

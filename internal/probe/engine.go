@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/google/uuid"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // jwtLike matches a compact JWS (three base64url segments). Response bodies are

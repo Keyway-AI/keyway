@@ -10,14 +10,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/issuerregistry"
 	"github.com/nometria/keyway/internal/libdefaults"
 	"github.com/nometria/keyway/internal/probe"
 	"github.com/nometria/keyway/internal/store"
 	"github.com/nometria/keyway/pkg/apitypes"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 // Config configures the API server.

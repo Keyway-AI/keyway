@@ -127,6 +127,11 @@ web-build: ## Build the production web bundle into web/dist
 bench: ## Run the accuracy benchmark corpus and emit a scorecard
 	$(GO) run ./bench/harness --corpus ./bench/corpus --out ./bench/out
 
+.PHONY: bench-report
+bench-report: ## Run the benchmark and emit a human-readable report.html + roc.svg
+	$(GO) run ./bench/harness --corpus ./bench/corpus --out ./bench/out --report
+	@echo "open bench/out/report.html"
+
 ## ----------------------------------------------------------------------------
 ## Meta
 ## ----------------------------------------------------------------------------

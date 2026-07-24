@@ -1,0 +1,52 @@
+apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata:
+  name: api-a
+  namespace: prod
+  labels:
+    team: team-alpha
+spec:
+  selector:
+    matchLabels:
+      app: api-a
+  jwtRules:
+    - issuer: "https://kc/realms/main"
+      audiences: ["api-a", "api-shared"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-a
+  namespace: prod
+spec:
+  selector:
+    app: api-a
+  ports:
+    - name: http
+      port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-a
+  namespace: prod
+  labels:
+    team: team-alpha
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-a
+  template:
+    metadata:
+      labels:
+        app: api-a
+    spec:
+      containers:
+        - name: app
+          image: registry.internal/api-a:1.4.2
+          ports:
+            - containerPort: 8080
+          env:
+            - name: LOG_LEVEL
+              value: "info"

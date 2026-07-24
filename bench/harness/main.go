@@ -26,6 +26,7 @@ func main() {
 		out    = flag.String("out", "./bench/out", "output directory for the scorecard")
 		rounds = flag.Int("rounds", 50, "generated-corpus rounds (each ~12 scenarios)")
 		ciGate = flag.Bool("ci-gate", false, "exit non-zero if any §13.4 threshold fails")
+		report = flag.Bool("report", false, "also emit report.html + roc.svg (human-readable study)")
 	)
 	flag.Parse()
 
@@ -66,6 +67,18 @@ func main() {
 	fmt.Printf("  L3 diff: TPR=%.3f FPR=%.3f precision=%.3f Youden=%.3f (TP=%d FP=%d TN=%d FN=%d)\n",
 		genCard.TPR, genCard.FPR, genCard.Precision, genCard.Youden, genCard.TP, genCard.FP, genCard.TN, genCard.FN)
 	fmt.Printf("  scorecard -> %s\n", scorePath)
+
+	if *report {
+		rd := reportData{
+			Card: fullCard, Generated: len(generated), FileBased: len(fileScenarios),
+			TruePos: fullCard.TP + fullCard.FN, TrueNeg: fullCard.TN + fullCard.FP,
+		}
+		if err := writeReport(*out, rd); err != nil {
+			fmt.Fprintln(os.Stderr, "harness: write report:", err)
+			os.Exit(1)
+		}
+		fmt.Printf("  report -> %s\n", filepath.Join(*out, "report.html"))
+	}
 
 	if *ciGate {
 		if checkGates(cards) {

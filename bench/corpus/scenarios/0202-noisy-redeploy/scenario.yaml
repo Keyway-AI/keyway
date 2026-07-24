@@ -1,0 +1,12 @@
+# The hardest false-positive test: a big, noisy redeploy where MANY things change
+# — audiences reordered, replica count bumped, owner label renamed, an env var
+# added, a new comment — but the JWT contract is byte-for-byte the same. A naive
+# text/line differ would raise several false alerts here. Keyway must emit ZERO
+# events. This scenario is the evidence behind the "zero-noise alerting" claim.
+id: "0202"
+name: noisy-redeploy
+before: before
+after: after
+expected:
+  detected: false
+  consumer: "k8s://local/prod/api-a"

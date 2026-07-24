@@ -109,6 +109,22 @@ See [`docs/architecture.md`](docs/architecture.md) for the full design and
 [`rollover-prd-v0.2-implementation.md`](rollover-prd-v0.2-implementation.md) for the
 complete buildable specification.
 
+## How accurate is it?
+
+On a corpus of **805 realistic before/after changes** (half real contract
+changes, half ordinary redeploy noise), Keyway catches **100% of real changes**
+with **0% false alarms** — including a "noisy redeploy" that churns six unrelated
+things at once. See [**BENCHMARK.md**](BENCHMARK.md) for the plain-English study
+and market comparison, [docs/benchmark.md](docs/benchmark.md) for methodology, and
+reproduce it yourself:
+
+```bash
+make bench            # scorecard
+make bench-report     # + an interactive report.html
+```
+
+CI fails the build if accuracy ever drops below the PRD §13.4 thresholds.
+
 ## Project status
 
 Keyway is under active construction. Track exactly what is built vs. pending in

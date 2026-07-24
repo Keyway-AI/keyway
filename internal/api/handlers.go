@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/nometria/keyway/internal/blastradius"
 	"github.com/nometria/keyway/internal/contract"
 	"github.com/nometria/keyway/internal/discovery"
@@ -15,8 +17,6 @@ import (
 	"github.com/nometria/keyway/internal/probe"
 	"github.com/nometria/keyway/internal/version"
 	"github.com/nometria/keyway/pkg/apitypes"
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 )
 
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {

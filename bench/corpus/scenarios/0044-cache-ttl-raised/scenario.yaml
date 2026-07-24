@@ -1,0 +1,12 @@
+# True positive, narrowed: the edge gateway's JWKS cache_duration is raised from
+# 5 minutes to 1 hour. A longer cache means a rotated key takes longer to be
+# picked up — it raises the required grace period, so it is a narrowing.
+id: "0044"
+name: cache-ttl-raised
+before: before
+after: after
+expected:
+  detected: true
+  class: narrowed
+  severity: medium
+  consumer: "route://envoy/edge"

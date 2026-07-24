@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/google/uuid"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // rsaBits is the modulus size for generated keys. 2048 is the floor for RS256.

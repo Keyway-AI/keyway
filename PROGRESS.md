@@ -5,7 +5,7 @@ advances a tracked item. Milestones mirror PRD §15; acceptance criteria (AC-n) 
 
 **Legend:** ✅ done · 🚧 in progress · ⬜ not started · 🔷 stub only (compiles, no real logic)
 
-_Last updated: 2026-07-24 — **all milestones M0–M9 + UI complete and tested**; API daemon + web UI verified live; security audit done ([docs/security-audit.md](docs/security-audit.md)). Remaining polish: `oidcclient` discovery, Idempotency-Key, K8s/Keycloak attribution sources, ROC chart._
+_Last updated: 2026-07-24 — **all milestones M0–M9 + UI complete and tested**; verified live; security audit + benchmarking (L1/L2/L3 + real-world CVEs) done. `oidcclient` discovery and the `serve` snapshot scheduler now shipped. Remaining polish tracked in [KNOWN_ISSUES.md](KNOWN_ISSUES.md): Idempotency-Key (KI-05), scheduled canary tightening (KI-06), L4 attribution corpus (KI-22), StableID merge across mesh/OIDC (KI-24)._
 
 ---
 

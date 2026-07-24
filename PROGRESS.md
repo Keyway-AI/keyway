@@ -65,7 +65,7 @@ _Last updated: 2026-07-24 — **all milestones M0–M9 + UI complete and tested*
 - [x] `internal/discovery/istio` — RequestAuthentication parsing (conf 1.0)
 - [x] `internal/discovery/k8s` — Services + workloads, SA token projections, env hints (conf 0.5), owner labels, endpoints
 - [x] `internal/discovery/envoy` — jwt_authn providers incl. `cache_duration` → JWKS TTL
-- [ ] `internal/discovery/oidcclient` — Keycloak client registry (HTTP admin) 🔷 (still stub)
+- [x] `internal/discovery/oidcclient` — Keycloak client registry via admin API (audience mappers → consumers), tested; wired into discover/snapshot/serve
 - [x] `keyway discover` command (table/json) + `keyway snapshot` wired to discovery
 - [x] AC-3: ≥85% consumer discovery on the reference stack, zero config files (tested); verified E2E via CLI
 - [x] AC-7 end-to-end: adding an Istio audience → exactly one `widened` event through the real pipeline

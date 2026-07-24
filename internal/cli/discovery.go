@@ -4,13 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 	"text/tabwriter"
 
+	"github.com/nometria/keyway/internal/config"
 	"github.com/nometria/keyway/internal/contract"
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/discovery/envoy"
 	"github.com/nometria/keyway/internal/discovery/istio"
 	"github.com/nometria/keyway/internal/discovery/k8s"
+	"github.com/nometria/keyway/internal/discovery/oidcclient"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/store/postgres"
 	"github.com/spf13/cobra"
@@ -33,6 +37,40 @@ func defaultDiscoverers() []discovery.Discoverer {
 	return []discovery.Discoverer{istio.New(), k8s.New(), envoy.New()}
 }
 
+// configDiscoverers builds the config-driven sources: one Keycloak client-registry
+// discoverer per configured keycloak issuer that has admin credentials.
+func configDiscoverers(cfg config.Config) []discovery.Discoverer {
+	var ds []discovery.Discoverer
+	for _, ic := range cfg.Issuers {
+		if model.IssuerType(ic.Type) != model.IssuerKeycloak || ic.AdminCredentialEnv == "" {
+			continue
+		}
+		user, pass := splitCreds(os.Getenv(ic.AdminCredentialEnv))
+		d, err := oidcclient.New(oidcclient.Options{RealmURL: ic.URL, AdminUser: user, AdminPassword: pass})
+		if err == nil {
+			ds = append(ds, d)
+		}
+	}
+	return ds
+}
+
+// allDiscoverers combines the file-based sources with any config-driven ones
+// (loading the config file referenced by --config, if present).
+func allDiscoverers(cmd *cobra.Command) []discovery.Discoverer {
+	ds := defaultDiscoverers()
+	if cfg, err := config.Load(configPath(cmd)); err == nil {
+		ds = append(ds, configDiscoverers(cfg)...)
+	}
+	return ds
+}
+
+func splitCreds(s string) (user, pass string) {
+	if i := strings.IndexByte(s, ':'); i >= 0 {
+		return s[:i], s[i+1:]
+	}
+	return s, ""
+}
+
 func newDiscoverCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "discover",
@@ -42,7 +80,7 @@ func newDiscoverCmd() *cobra.Command {
 			if len(scope.ConfigPaths) == 0 {
 				return fmt.Errorf("no --path given; provide manifest files or directories to scan")
 			}
-			consumers, err := discovery.Run(context.Background(), scope, defaultDiscoverers()...)
+			consumers, err := discovery.Run(context.Background(), scope, allDiscoverers(cmd)...)
 			if err != nil {
 				return err
 			}
@@ -85,13 +123,11 @@ func runSnapshot(cmd *cobra.Command) error {
 		return fmt.Errorf("no database configured (set --db or KEYWAY_DB_URL)")
 	}
 	scope := buildScope(cmd)
-	var consumers []model.Consumer
-	if len(scope.ConfigPaths) > 0 {
-		var err error
-		consumers, err = discovery.Run(context.Background(), scope, defaultDiscoverers()...)
-		if err != nil {
-			return err
-		}
+	// File-based sources no-op without --path; config-driven sources (Keycloak
+	// client registry) run regardless, so always invoke discovery.
+	consumers, err := discovery.Run(context.Background(), scope, allDiscoverers(cmd)...)
+	if err != nil {
+		return err
 	}
 
 	ctx := context.Background()

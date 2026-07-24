@@ -27,13 +27,25 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 
 // POST /v1/snapshots — discover, build, and store a contract version.
 func (s *Server) handleCreateSnapshot(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	res, err := s.Snapshot(r.Context(), "manual")
+	if err != nil {
+		writeError(w, http.StatusBadGateway, "snapshot_failed", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, apitypes.SnapshotResponse{
+		VersionID: res.Version.ID, Hash: res.Version.Hash, IsBaseline: res.IsBaseline,
+	})
+}
+
+// Snapshot runs discovery, enriches with library defaults, builds a contract
+// version, and stores it via the baseline flow. Shared by the HTTP handler and
+// the scheduler.
+func (s *Server) Snapshot(ctx context.Context, trigger string) (contract.SnapshotResult, error) {
 	var consumers []model.Consumer
 	if len(s.deps.Discoverers) > 0 {
 		cs, err := discovery.Run(ctx, s.deps.Scope, s.deps.Discoverers...)
 		if err != nil {
-			writeError(w, http.StatusBadGateway, "discovery_failed", err.Error())
-			return
+			return contract.SnapshotResult{}, err
 		}
 		consumers = cs
 	}
@@ -42,15 +54,8 @@ func (s *Server) handleCreateSnapshot(w http.ResponseWriter, r *http.Request) {
 			s.deps.Libs.Enrich(&consumers[i])
 		}
 	}
-	v := contract.Build(contract.BuildInput{Consumers: consumers, TriggerKind: "manual"})
-	res, err := contract.Snapshot(ctx, s.deps.Store, v)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "snapshot_failed", err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, apitypes.SnapshotResponse{
-		VersionID: res.Version.ID, Hash: res.Version.Hash, IsBaseline: res.IsBaseline,
-	})
+	v := contract.Build(contract.BuildInput{Consumers: consumers, TriggerKind: trigger})
+	return contract.Snapshot(ctx, s.deps.Store, v)
 }
 
 func (s *Server) handleLatestSnapshot(w http.ResponseWriter, r *http.Request) {

@@ -15,12 +15,13 @@ _Last updated: 2026-07-24._
 
 | ID | Area | Issue | Impact | Status | Pointer |
 |----|------|-------|--------|--------|---------|
-| KI-01 | Discovery | `discovery/oidcclient` (Keycloak client-registry) is a stub returning no consumers. Consumers registered only as Keycloak clients (not via Istio/Envoy/K8s) are missed. | 🟠 | open | `internal/discovery/oidcclient/oidcclient.go` |
+| KI-01 | Discovery | ~~`discovery/oidcclient` (Keycloak client-registry) stub.~~ **Resolved:** implemented against the Keycloak admin API (admin-cli grant → `GET /admin/realms/{realm}/clients` → audience mappers → consumers), tested with a mocked admin server; wired into `discover`/`snapshot`/`serve` for configured keycloak issuers. Note: OIDC-registry consumers use an `oidc://{realm}/{clientId}` StableID that won't merge with a mesh-discovered id for the same logical service (KI-24). | 🟡 | resolved | `internal/discovery/oidcclient/` |
+| KI-24 | Discovery | The same logical consumer discovered both via the mesh (`k8s://…`) and via the OIDC client registry (`oidc://…`) gets two StableIDs and does not merge. | 🟡 | open | `internal/discovery/oidcclient/oidcclient.go` |
 | KI-02 | Discovery | All discovery is **file/manifest-based**. The in-cluster `client-go` dynamic path (live CRD/Service reads) is not implemented. | 🟠 | deferred | `internal/discovery/istio/istio.go` header |
 | KI-03 | Attribution | Only the **git** attributor exists. K8s-deploy and Keycloak-admin-event sources (PRD OPEN-5) are not built; those changes are `unattributed`. | 🟠 | open | `internal/attribution/attribution.go` |
 | KI-04 | API | `GET /v1/probes/runs/{run_id}` returns 404 — probe results are returned inline from the POST and per-consumer from the store, but there is no run_id index. | 🟡 | open | `internal/api/handlers.go:handleGetProbeRun` |
 | KI-05 | API | **Idempotency-Key** on write endpoints (PRD §12) is not enforced. Retried writes are not de-duplicated. | 🟠 | open | `internal/api/server.go` |
-| KI-06 | Scheduler | `keyway serve` has no scheduler yet: no periodic snapshot and no scheduled **canary tightening** (PRD §10.3 "measured windows"). Runs are manual/triggered. | 🟠 | open | `internal/cli/serve.go` |
+| KI-06 | Scheduler | **Partly resolved:** `keyway serve --snapshot-interval` now periodically snapshots and delivers notifiable change events to the configured notifier. Scheduled **canary tightening** (re-running the canary to tighten measured grace windows, PRD §10.3) is still not automated. | 🟡 | in progress | `internal/cli/serve.go:runScheduler` |
 | KI-07 | Contract | Edge derivation is pass-through: `contract.Build` does not yet synthesise issuer→consumer edges from discovery, so `ContractVersion.Edges` is usually empty and blast-radius keys off `Consumer.Expects.Issuers` instead. | 🟡 | open | `internal/contract/build.go` |
 | KI-08 | Degraded mode | SaaS IdPs where Keyway does **not** control the private key (Auth0/Okta/Entra) — the PRD §1.3 degraded mode (shadow issuer + library-defaults) — is not implemented. v1 is full-mode only. | 🔵 | deferred | PRD §1.3 |
 

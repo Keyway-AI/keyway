@@ -41,11 +41,12 @@ type Server struct {
 	cfg  Config
 	deps Deps
 	idem *idemStore
+	runs *runIndex
 }
 
 // NewServer constructs an API server.
 func NewServer(cfg Config, deps Deps) *Server {
-	return &Server{cfg: cfg, deps: deps, idem: newIdemStore(24 * time.Hour)}
+	return &Server{cfg: cfg, deps: deps, idem: newIdemStore(24 * time.Hour), runs: newRunIndex(256)}
 }
 
 // Routes builds the HTTP handler.

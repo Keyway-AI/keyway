@@ -157,13 +157,19 @@ func (s *Server) handleRunProbes(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "store_error", err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"run_id": uuid.NewString(), "results": results})
+	runID := uuid.NewString()
+	s.runs.put(runID, results)
+	writeJSON(w, http.StatusOK, map[string]any{"run_id": runID, "results": results})
 }
 
 func (s *Server) handleGetProbeRun(w http.ResponseWriter, r *http.Request) {
-	// Probe results are returned inline from POST /v1/probes/run and are also
-	// queryable per consumer via the store; a run_id index is not maintained.
-	writeError(w, http.StatusNotFound, "not_indexed", "probe results are returned inline from POST /v1/probes/run")
+	runID := chi.URLParam(r, "run_id")
+	results, ok := s.runs.get(runID)
+	if !ok {
+		writeError(w, http.StatusNotFound, "not_found", "run not found (results are also queryable per consumer)")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"run_id": runID, "results": results})
 }
 
 func (s *Server) handleListChanges(w http.ResponseWriter, r *http.Request) {

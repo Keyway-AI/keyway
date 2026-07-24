@@ -181,3 +181,25 @@ func TestIdempotencyNoKeyPassthrough(t *testing.T) {
 	b := do(t, h, "POST", "/v1/canary/announce", "secret", body)
 	assert.NotEqual(t, a.Body.String(), b.Body.String(), "no key -> each request executes")
 }
+
+func TestRunIndex(t *testing.T) {
+	idx := newRunIndex(2)
+	idx.put("a", []model.ProbeResult{{ProbeID: "valid_token"}})
+	idx.put("b", nil)
+	idx.put("c", nil) // evicts "a" (FIFO, max 2)
+
+	_, ok := idx.get("a")
+	assert.False(t, ok, "oldest evicted")
+	got, ok := idx.get("b")
+	assert.True(t, ok)
+	_ = got
+	res, ok := idx.get("a")
+	assert.False(t, ok)
+	assert.Nil(t, res)
+}
+
+func TestGetProbeRunNotFound(t *testing.T) {
+	h := testServer(t).Routes()
+	w := do(t, h, "GET", "/v1/probes/runs/does-not-exist", "secret", nil)
+	assert.Equal(t, 404, w.Code)
+}

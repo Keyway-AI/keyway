@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"context"
+	"strings"
 
 	"github.com/nometria/keyway/internal/model"
 )
@@ -45,8 +46,59 @@ func Merge(sets ...[]model.Consumer) []model.Consumer {
 	for _, id := range order {
 		out = append(out, byID[id])
 	}
+	return aliasFold(out)
+}
+
+// aliasFold merges an OIDC client-registry consumer (oidc://…) into a
+// mesh-discovered consumer (k8s://… / route://…) when they share at least one
+// issuer AND one audience — i.e. they are the same logical service seen two
+// ways. The mesh consumer wins (it has endpoints and is probeable); the OIDC
+// view's data is folded in (KI-24). The match requires BOTH issuer and audience
+// to avoid over-merging distinct services that happen to share one.
+func aliasFold(cs []model.Consumer) []model.Consumer {
+	type pair struct{ iss, aud string }
+	meshByPair := map[pair]int{}
+	for i, c := range cs {
+		if isOIDCStableID(c.StableID) {
+			continue
+		}
+		for _, is := range c.Expects.Issuers {
+			for _, au := range c.Expects.Audiences {
+				meshByPair[pair{is, au}] = i
+			}
+		}
+	}
+
+	dropped := make([]bool, len(cs))
+	for i := range cs {
+		c := cs[i]
+		if !isOIDCStableID(c.StableID) {
+			continue
+		}
+		for _, is := range c.Expects.Issuers {
+			for _, au := range c.Expects.Audiences {
+				if j, ok := meshByPair[pair{is, au}]; ok && j != i {
+					cs[j] = mergeConsumers(cs[j], c)
+					dropped[i] = true
+					break
+				}
+			}
+			if dropped[i] {
+				break
+			}
+		}
+	}
+
+	out := cs[:0:0]
+	for i, c := range cs {
+		if !dropped[i] {
+			out = append(out, c)
+		}
+	}
 	return out
 }
+
+func isOIDCStableID(id string) bool { return strings.HasPrefix(id, "oidc://") }
 
 func mergeConsumers(a, b model.Consumer) model.Consumer {
 	a.Name = firstNonEmpty(a.Name, b.Name)

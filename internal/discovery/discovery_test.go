@@ -145,3 +145,31 @@ func TestIstioRequiredClaimsFromAuthzPolicy(t *testing.T) {
 	assert.InDelta(t, 1.0, c.Confidence["expects.required_claims"], 0.001)
 	require.NotEmpty(t, c.Provenance["expects.required_claims"])
 }
+
+func TestAliasFoldMergesOIDCIntoMesh(t *testing.T) {
+	mesh := model.Consumer{
+		StableID: "k8s://local/prod/payments-api", Name: "payments-api", Kind: model.ConsumerService,
+		Endpoints: []model.Endpoint{{URL: "http://payments-api.prod:8080"}},
+		Expects:   model.Expectations{Issuers: []string{"https://kc/realms/main"}, Audiences: []string{"payments-api"}},
+		Probeable: true,
+	}
+	oidc := model.Consumer{
+		StableID: "oidc://main/payments-api", Name: "payments-api", Kind: model.ConsumerService,
+		Expects: model.Expectations{Issuers: []string{"https://kc/realms/main"}, Audiences: []string{"payments-api"}},
+	}
+	// A genuinely distinct OIDC client (different audience) must NOT fold.
+	standalone := model.Consumer{
+		StableID: "oidc://main/reporting", Name: "reporting",
+		Expects: model.Expectations{Issuers: []string{"https://kc/realms/main"}, Audiences: []string{"reporting"}},
+	}
+
+	out := discovery.Merge([]model.Consumer{mesh, oidc, standalone})
+	ids := map[string]bool{}
+	for _, c := range out {
+		ids[c.StableID] = true
+	}
+	assert.NotContains(t, ids, "oidc://main/payments-api", "shared issuer+audience folds into the mesh consumer")
+	assert.Contains(t, ids, "k8s://local/prod/payments-api")
+	assert.Contains(t, ids, "oidc://main/reporting", "distinct audience is not folded")
+	assert.Len(t, out, 2)
+}

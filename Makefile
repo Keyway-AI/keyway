@@ -136,6 +136,15 @@ bench-report: ## Run the benchmark and emit a human-readable report.html + roc.s
 validate: ## Validate against documented real-world CVEs/incidents (bench/realworld)
 	$(GO) run ./bench/harness --realworld --ci-gate
 
+.PHONY: bench-l2
+bench-l2: ## Score the live-probe layer (L2) against real containerized services
+	docker compose -f bench/l2/docker-compose.yml up -d --build
+	@echo "waiting for issuer..."; for i in $$(seq 1 40); do curl -sf localhost:9000/healthz >/dev/null 2>&1 && break; sleep 1; done
+	@sleep 4  # let validators fetch the JWKS
+	@$(GO) run ./bench/l2 score --ci-gate; status=$$?; \
+		docker compose -f bench/l2/docker-compose.yml down; \
+		exit $$status
+
 ## ----------------------------------------------------------------------------
 ## Meta
 ## ----------------------------------------------------------------------------

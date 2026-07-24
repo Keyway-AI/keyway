@@ -1,0 +1,76 @@
+# Live-probe (L2) benchmark rig: one issuer + one real validator service per
+# documented weakness. `make bench-l2` brings this up, runs `l2 score` against
+# it, and tears it down. See bench/l2/README.md.
+
+# Only the issuer carries the build; every other service reuses the resulting
+# image tag (avoids concurrent builds of the same tag).
+x-l2: &l2
+  image: keyway-l2:latest
+
+x-validator-env: &venv
+  ISSUER_JWKS_URL: http://issuer:9000/jwks
+
+services:
+  issuer:
+    <<: *l2
+    build:
+      context: ../..
+      dockerfile: bench/l2/Dockerfile
+    command: ["issuer", "--addr", ":9000"]
+    ports: ["9000:9000"]
+
+  secure:
+    <<: *l2
+    command: ["validator"]
+    environment: { <<: *venv, VULN: secure }
+    ports: ["8081:8080"]
+    depends_on: [issuer]
+
+  vuln-alg-none:
+    <<: *l2
+    command: ["validator"]
+    environment: { <<: *venv, VULN: none }
+    ports: ["8082:8080"]
+    depends_on: [issuer]
+
+  vuln-confusion:
+    <<: *l2
+    command: ["validator"]
+    environment: { <<: *venv, VULN: confusion }
+    ports: ["8083:8080"]
+    depends_on: [issuer]
+
+  vuln-nosig:
+    <<: *l2
+    command: ["validator"]
+    environment: { <<: *venv, VULN: nosig }
+    ports: ["8084:8080"]
+    depends_on: [issuer]
+
+  vuln-no-aud:
+    <<: *l2
+    command: ["validator"]
+    environment: { <<: *venv, VULN: noaud }
+    ports: ["8085:8080"]
+    depends_on: [issuer]
+
+  vuln-no-iss:
+    <<: *l2
+    command: ["validator"]
+    environment: { <<: *venv, VULN: noiss }
+    ports: ["8086:8080"]
+    depends_on: [issuer]
+
+  vuln-no-exp:
+    <<: *l2
+    command: ["validator"]
+    environment: { <<: *venv, VULN: noexp }
+    ports: ["8087:8080"]
+    depends_on: [issuer]
+
+  vuln-header:
+    <<: *l2
+    command: ["validator"]
+    environment: { <<: *venv, VULN: header }
+    ports: ["8088:8080"]
+    depends_on: [issuer]

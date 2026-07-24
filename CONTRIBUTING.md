@@ -28,7 +28,7 @@ make build
 make check           # fmt + vet + lint + test — must be green before you push
 ```
 
-Go 1.22+ and Node 20+ are required.
+Go 1.25+ and Node 20+ are required.
 
 ## Development workflow
 

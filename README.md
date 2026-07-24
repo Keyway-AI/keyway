@@ -136,6 +136,15 @@ detects **8 of 8** — see [docs/realworld-validation.md](docs/realworld-validat
 make validate         # reproduce each cited incident and check Keyway flags it
 ```
 
+And the **live-probe layer** is scored end-to-end against real containerized
+services — one secure, one per weakness (`alg=none`, RS256→HS256 confusion,
+unverified signature, missing `aud`/`iss`/`exp`, header trust). Keyway returns
+the correct verdict on **8/8** (100%):
+
+```bash
+make bench-l2         # docker-compose rig + Keyway's real probe engine (bench/l2)
+```
+
 CI fails the build if accuracy drops below the PRD §13.4 thresholds **or** if
 Keyway stops detecting any documented real-world risk.
 

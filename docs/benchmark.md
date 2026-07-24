@@ -12,7 +12,7 @@ cluster or staging endpoints:
 | Layer | What | Measured here? |
 |---|---|---|
 | **L1 — Derivation** | building the consumer inventory from manifests | ✅ via file-based scenarios (real discovery) |
-| **L2 — Verification** | 13 real-token probes vs. a live service | covered by unit tests (`internal/probe`), not the offline corpus |
+| **L2 — Verification** | 13 real-token probes vs. a live service | ✅ `bench/l2/` docker rig (`make bench-l2`) — probes 8 real containerized services, **100% correct verdicts** |
 | **L3 — Diff** | classifying a contract change (widened/narrowed) with no false positives | ✅ the headline number |
 | **L4 — Attribution** | binding a change to a commit | covered by `internal/attribution` tests |
 

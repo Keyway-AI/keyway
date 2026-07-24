@@ -5,8 +5,8 @@ package oidcclient
 import (
 	"context"
 
-	"github.com/architsharma/keyway/internal/discovery"
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/discovery"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // Discoverer reads registered clients from an OIDC provider.

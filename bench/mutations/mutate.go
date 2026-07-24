@@ -6,7 +6,7 @@ package mutations
 import (
 	"fmt"
 
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // Expected is the ground truth for a scenario.

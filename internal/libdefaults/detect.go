@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // DetectDir scans a directory (non-recursively, then one level into common

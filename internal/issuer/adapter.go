@@ -5,7 +5,7 @@ package issuer
 import (
 	"context"
 
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // Adapter abstracts an issuer Keyway can describe, mint tokens against, and

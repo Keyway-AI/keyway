@@ -3,7 +3,7 @@ package contract
 import (
 	"time"
 
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/model"
 	"github.com/google/uuid"
 )
 

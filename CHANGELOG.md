@@ -37,4 +37,4 @@ All notable changes to Keyway are documented here. The format is based on
 - Migrations moved from `/migrations` to `internal/store/postgres/migrations` so they embed into the
   single binary for in-VPC deployment.
 
-[Unreleased]: https://github.com/architsharma/keyway/commits/main
+[Unreleased]: https://github.com/nometria/keyway/commits/main

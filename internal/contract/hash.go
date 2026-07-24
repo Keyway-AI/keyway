@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // Hash returns the canonical SHA-256 (hex) of a contract version, per PRD §8.1.

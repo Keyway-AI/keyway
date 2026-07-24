@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/architsharma/keyway/internal/discovery"
-	"github.com/architsharma/keyway/internal/issuerregistry"
-	"github.com/architsharma/keyway/internal/libdefaults"
-	"github.com/architsharma/keyway/internal/probe"
-	"github.com/architsharma/keyway/internal/store"
-	"github.com/architsharma/keyway/pkg/apitypes"
+	"github.com/nometria/keyway/internal/discovery"
+	"github.com/nometria/keyway/internal/issuerregistry"
+	"github.com/nometria/keyway/internal/libdefaults"
+	"github.com/nometria/keyway/internal/probe"
+	"github.com/nometria/keyway/internal/store"
+	"github.com/nometria/keyway/pkg/apitypes"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )

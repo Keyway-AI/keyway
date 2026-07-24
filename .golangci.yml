@@ -22,7 +22,7 @@ linters:
 
 linters-settings:
   goimports:
-    local-prefixes: github.com/architsharma/keyway
+    local-prefixes: github.com/nometria/keyway
   revive:
     rules:
       - name: exported

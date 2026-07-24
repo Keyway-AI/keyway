@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/architsharma/keyway/internal/diff"
-	"github.com/architsharma/keyway/internal/model"
-	"github.com/architsharma/keyway/internal/store"
+	"github.com/nometria/keyway/internal/diff"
+	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/store"
 )
 
 // SnapshotResult reports the outcome of storing a contract version.

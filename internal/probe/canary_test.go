@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/architsharma/keyway/internal/issuer/generic"
-	"github.com/architsharma/keyway/internal/model"
-	"github.com/architsharma/keyway/internal/probe"
+	"github.com/nometria/keyway/internal/issuer/generic"
+	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/probe"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/stretchr/testify/assert"

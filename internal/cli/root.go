@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/architsharma/keyway/internal/version"
+	"github.com/nometria/keyway/internal/version"
 	"github.com/spf13/cobra"
 )
 

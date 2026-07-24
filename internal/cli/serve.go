@@ -7,14 +7,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/architsharma/keyway/internal/api"
-	"github.com/architsharma/keyway/internal/config"
-	"github.com/architsharma/keyway/internal/issuerregistry"
-	"github.com/architsharma/keyway/internal/libdefaults"
-	"github.com/architsharma/keyway/internal/model"
-	"github.com/architsharma/keyway/internal/probe"
-	"github.com/architsharma/keyway/internal/store/postgres"
-	"github.com/architsharma/keyway/internal/version"
+	"github.com/nometria/keyway/internal/api"
+	"github.com/nometria/keyway/internal/config"
+	"github.com/nometria/keyway/internal/issuerregistry"
+	"github.com/nometria/keyway/internal/libdefaults"
+	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/probe"
+	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/version"
 	"github.com/spf13/cobra"
 )
 

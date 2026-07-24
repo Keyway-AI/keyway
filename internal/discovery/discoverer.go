@@ -5,7 +5,7 @@ package discovery
 import (
 	"context"
 
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // Scope bounds a discovery run.

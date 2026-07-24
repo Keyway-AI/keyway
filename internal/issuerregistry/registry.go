@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/architsharma/keyway/internal/issuer"
-	"github.com/architsharma/keyway/internal/issuer/generic"
-	"github.com/architsharma/keyway/internal/issuer/k8ssa"
-	"github.com/architsharma/keyway/internal/issuer/keycloak"
-	"github.com/architsharma/keyway/internal/issuer/localkeys"
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/issuer"
+	"github.com/nometria/keyway/internal/issuer/generic"
+	"github.com/nometria/keyway/internal/issuer/k8ssa"
+	"github.com/nometria/keyway/internal/issuer/keycloak"
+	"github.com/nometria/keyway/internal/issuer/localkeys"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // CanaryIssuer is an issuer.Adapter that also exposes its locally-operated key

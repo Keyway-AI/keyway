@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // MintFunc signs claims with the named key (empty kid = active key).

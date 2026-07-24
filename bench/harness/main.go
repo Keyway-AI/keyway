@@ -17,7 +17,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/architsharma/keyway/bench/mutations"
+	"github.com/nometria/keyway/bench/mutations"
 )
 
 func main() {

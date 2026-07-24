@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/architsharma/keyway/internal/model"
-	"github.com/architsharma/keyway/internal/probe"
+	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/probe"
 )
 
 // Proposal kinds.

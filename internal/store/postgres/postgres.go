@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/architsharma/keyway/internal/model"
-	"github.com/architsharma/keyway/internal/store"
+	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/store"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/architsharma/keyway/internal/contract"
-	"github.com/architsharma/keyway/internal/discovery"
-	"github.com/architsharma/keyway/internal/discovery/envoy"
-	"github.com/architsharma/keyway/internal/discovery/istio"
-	"github.com/architsharma/keyway/internal/discovery/k8s"
-	"github.com/architsharma/keyway/internal/model"
-	"github.com/architsharma/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/contract"
+	"github.com/nometria/keyway/internal/discovery"
+	"github.com/nometria/keyway/internal/discovery/envoy"
+	"github.com/nometria/keyway/internal/discovery/istio"
+	"github.com/nometria/keyway/internal/discovery/k8s"
+	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/store/postgres"
 	"github.com/spf13/cobra"
 )
 

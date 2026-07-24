@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/architsharma/keyway/internal/discovery"
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/discovery"
+	"github.com/nometria/keyway/internal/model"
 	"gopkg.in/yaml.v3"
 )
 

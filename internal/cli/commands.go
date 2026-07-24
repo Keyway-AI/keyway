@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/architsharma/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/store/postgres"
 	"github.com/spf13/cobra"
 )
 

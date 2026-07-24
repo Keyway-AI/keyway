@@ -1,4 +1,4 @@
-module github.com/architsharma/keyway
+module github.com/nometria/keyway
 
 go 1.25.0
 

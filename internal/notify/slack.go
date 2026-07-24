@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // Slack posts change events to a Slack incoming webhook.

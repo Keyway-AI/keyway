@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/architsharma/keyway/bench/mutations"
+	"github.com/nometria/keyway/bench/mutations"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

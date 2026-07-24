@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/architsharma/keyway/internal/blastradius"
-	"github.com/architsharma/keyway/internal/libdefaults"
-	"github.com/architsharma/keyway/internal/model"
-	"github.com/architsharma/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/blastradius"
+	"github.com/nometria/keyway/internal/libdefaults"
+	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/store/postgres"
 	"github.com/spf13/cobra"
 )
 

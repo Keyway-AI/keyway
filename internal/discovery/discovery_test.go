@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/architsharma/keyway/internal/discovery"
-	"github.com/architsharma/keyway/internal/discovery/envoy"
-	"github.com/architsharma/keyway/internal/discovery/istio"
-	"github.com/architsharma/keyway/internal/discovery/k8s"
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/discovery"
+	"github.com/nometria/keyway/internal/discovery/envoy"
+	"github.com/nometria/keyway/internal/discovery/istio"
+	"github.com/nometria/keyway/internal/discovery/k8s"
+	"github.com/nometria/keyway/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

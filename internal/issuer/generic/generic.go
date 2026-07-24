@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/architsharma/keyway/internal/issuer"
-	"github.com/architsharma/keyway/internal/issuer/localkeys"
-	"github.com/architsharma/keyway/internal/model"
+	"github.com/nometria/keyway/internal/issuer"
+	"github.com/nometria/keyway/internal/issuer/localkeys"
+	"github.com/nometria/keyway/internal/model"
 )
 
 // Adapter is a locally-keyed OIDC issuer.

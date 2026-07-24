@@ -237,11 +237,16 @@ func audienceMappers(c kcClient) []string {
 	return out
 }
 
-// splitRealmURL parses https://host/realms/{realm} into base + realm.
+// splitRealmURL parses https://host/realms/{realm} into base + realm. It requires
+// https (admin-cli credentials are sent to this host) — plain http is allowed only
+// for a localhost dev instance.
 func splitRealmURL(realmURL string) (base, realm string, err error) {
 	u, perr := url.Parse(realmURL)
 	if perr != nil || u.Host == "" {
 		return "", "", fmt.Errorf("oidcclient: invalid realm URL %q", realmURL)
+	}
+	if u.Scheme != "https" && !isLocalhost(u.Hostname()) {
+		return "", "", fmt.Errorf("oidcclient: realm URL must be https (admin credentials are sent to it): %q", realmURL)
 	}
 	parts := strings.Split(strings.Trim(u.Path, "/"), "/")
 	if len(parts) < 2 || parts[len(parts)-2] != "realms" {
@@ -250,6 +255,12 @@ func splitRealmURL(realmURL string) (base, realm string, err error) {
 	realm = parts[len(parts)-1]
 	base = u.Scheme + "://" + u.Host
 	return base, realm, nil
+}
+
+// isLocalhost reports whether host is a loopback name/address, for which plain
+// http is acceptable in local development.
+func isLocalhost(host string) bool {
+	return host == "localhost" || host == "127.0.0.1" || host == "::1"
 }
 
 func appendUnique(ss []string, v string) []string {

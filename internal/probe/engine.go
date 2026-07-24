@@ -57,12 +57,18 @@ func DefaultEngineConfig() EngineConfig {
 
 // HostAllowed reports whether the engine may target a host (staging guard).
 // Default deny: an empty allowlist without the production override blocks all.
+// Matching is exact or on a dot-delimited suffix boundary — NEVER a bare
+// substring — so an allowlist of "staging.internal" does not match
+// "staging.internal.attacker.com" or "evil-127.0.0.1.attacker.com".
 func (c EngineConfig) HostAllowed(host string) bool {
 	if c.AllowProduction {
 		return true
 	}
 	for _, allowed := range c.Allowlist {
-		if allowed != "" && strings.Contains(host, allowed) {
+		if allowed == "" {
+			continue
+		}
+		if host == allowed || strings.HasSuffix(host, "."+allowed) {
 			return true
 		}
 	}
@@ -92,8 +98,16 @@ func NewEngine(cfg EngineConfig) *Engine {
 	return &Engine{
 		cfg:    cfg,
 		probes: Definitions(),
-		client: &http.Client{Timeout: timeout},
-		now:    time.Now,
+		client: &http.Client{
+			Timeout: timeout,
+			// Do NOT follow redirects: an allowlisted endpoint must not be able
+			// to 302 a probe to an unvalidated (internal) host. The 3xx is
+			// recorded as the probe's observed status instead.
+			CheckRedirect: func(*http.Request, []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		},
+		now: time.Now,
 	}
 }
 

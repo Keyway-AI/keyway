@@ -35,10 +35,10 @@ func runInit(cmd *cobra.Command) error {
 	if _, err := os.Stat(path); err == nil {
 		fmt.Fprintf(out, "Config already exists at %s (leaving it untouched).\n", path)
 	} else {
-		cfg := config.Default()
-		if cfg.DBURL == "" {
-			cfg.DBURL = "postgres://keyway:keyway@localhost:5432/keyway?sslmode=disable"
-		}
+		// Scaffold (not Default) so an ambient KEYWAY_API_TOKEN / webhook / DB URL
+		// is never captured into the plaintext file; secrets stay in the env.
+		cfg := config.Scaffold()
+		cfg.DBURL = "postgres://keyway:keyway@localhost:5432/keyway?sslmode=disable"
 		b, err := yaml.Marshal(cfg)
 		if err != nil {
 			return err
@@ -68,7 +68,9 @@ func runInit(cmd *cobra.Command) error {
 
 func runIssuerAdd(cmd *cobra.Command) error {
 	path := configPath(cmd)
-	cfg, err := config.Load(path)
+	// LoadFile (not Load) so this read-modify-write does not fold ambient env
+	// secrets into the file it writes back.
+	cfg, err := config.LoadFile(path)
 	if err != nil {
 		return err
 	}

@@ -2,20 +2,25 @@ package api
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"io"
 	"net/http"
 	"sync"
 	"time"
 )
 
 // idemStore caches responses to write requests keyed by a client-supplied
-// Idempotency-Key, so a retried write replays the original result instead of
-// re-executing (PRD §12). It is an in-memory, TTL-bounded cache — sufficient for
-// a single daemon; a multi-replica deployment would back this with Postgres
-// (tracked in KNOWN_ISSUES.md KI-05).
+// Idempotency-Key (bound to method+path+body), so a retried write replays the
+// original result instead of re-executing (PRD §12). It is an in-memory,
+// TTL-bounded, hard-capped cache — sufficient for a single daemon; a
+// multi-replica deployment would back this with Postgres (KI-05).
 type idemStore struct {
-	mu  sync.Mutex
-	ttl time.Duration
-	m   map[string]idemEntry
+	mu    sync.Mutex
+	ttl   time.Duration
+	max   int
+	order []string
+	m     map[string]idemEntry
 }
 
 type idemEntry struct {
@@ -26,7 +31,7 @@ type idemEntry struct {
 }
 
 func newIdemStore(ttl time.Duration) *idemStore {
-	return &idemStore{ttl: ttl, m: make(map[string]idemEntry)}
+	return &idemStore{ttl: ttl, max: 4096, m: make(map[string]idemEntry)}
 }
 
 func (s *idemStore) get(key string, now time.Time) (idemEntry, bool) {
@@ -47,15 +52,17 @@ func (s *idemStore) put(key string, e idemEntry, now time.Time) {
 	e.expires = now.Add(s.ttl)
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// Opportunistic sweep so the map cannot grow without bound.
-	if len(s.m) > 4096 {
-		for k, v := range s.m {
-			if now.After(v.expires) {
-				delete(s.m, k)
-			}
-		}
+	if _, exists := s.m[key]; !exists {
+		s.order = append(s.order, key)
 	}
 	s.m[key] = e
+	// Hard FIFO cap: evict oldest entries when over capacity (not just expired
+	// ones), so a burst of distinct keys cannot exhaust memory.
+	for len(s.order) > s.max {
+		oldest := s.order[0]
+		s.order = s.order[1:]
+		delete(s.m, oldest)
+	}
 }
 
 // recorder captures a handler's response so it can be cached and replayed.
@@ -75,21 +82,33 @@ func (r *recorder) Write(b []byte) (int, error) {
 	return r.ResponseWriter.Write(b)
 }
 
-// idempotency replays a cached response when a POST repeats an Idempotency-Key.
-// Requests without the header, and non-POST methods, pass straight through.
-// Only deterministic responses (< 500) are cached, so a transient 5xx can be
-// retried for real.
+// idempotency replays a cached response when a POST repeats an Idempotency-Key
+// for the SAME method, path, and body. Requests without the header, and non-POST
+// methods, pass straight through. Only deterministic responses (< 500) are
+// cached, so a transient 5xx can be retried for real.
 func (s *Server) idempotency(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			next.ServeHTTP(w, r)
 			return
 		}
-		key := r.Header.Get("Idempotency-Key")
-		if key == "" {
+		rawKey := r.Header.Get("Idempotency-Key")
+		if rawKey == "" {
 			next.ServeHTTP(w, r)
 			return
 		}
+
+		// Read the body to bind it into the cache key, then restore it for the
+		// handler. (An upstream MaxBytesReader bounds the read.)
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			writeError(w, http.StatusRequestEntityTooLarge, "body_too_large", "request body too large")
+			return
+		}
+		_ = r.Body.Close()
+		r.Body = io.NopCloser(bytes.NewReader(body))
+
+		key := idemKey(rawKey, r.Method, r.URL.Path, body)
 		now := time.Now()
 		if e, ok := s.idem.get(key, now); ok {
 			if e.contentType != "" {
@@ -110,4 +129,16 @@ func (s *Server) idempotency(next http.Handler) http.Handler {
 			}, now)
 		}
 	})
+}
+
+// idemKey binds the client key to the request identity so the same key on a
+// different endpoint or body cannot replay an unrelated response.
+func idemKey(rawKey, method, path string, body []byte) string {
+	h := sha256.New()
+	for _, part := range []string{rawKey, method, path} {
+		h.Write([]byte(part))
+		h.Write([]byte{0})
+	}
+	h.Write(body)
+	return hex.EncodeToString(h.Sum(nil))
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/nometria/keyway/internal/model"
 	"gopkg.in/yaml.v3"
@@ -30,9 +31,20 @@ func (a *K8sDeployAttributor) Attribute(_ context.Context, ev model.ChangeEvent)
 	if path == "" {
 		return Unattributed(), nil
 	}
-	full := path
-	if !filepath.IsAbs(path) && a.root != "" {
-		full = filepath.Join(a.root, path)
+	// Evidence can carry attacker-influenced manifest names (e.g. a manifest's
+	// metadata.name), so confine the read to the root: reject absolute paths and
+	// `..` escapes, and verify containment after joining.
+	rel := filepath.Clean(path)
+	if filepath.IsAbs(rel) || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+		return Unattributed(), nil
+	}
+	full := rel
+	if a.root != "" {
+		root := filepath.Clean(a.root)
+		full = filepath.Join(root, rel)
+		if full != root && !strings.HasPrefix(full, root+string(os.PathSeparator)) {
+			return Unattributed(), nil
+		}
 	}
 	data, err := os.ReadFile(full)
 	if err != nil {

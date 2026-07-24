@@ -61,7 +61,8 @@ func (s *Server) Routes() http.Handler {
 
 	r.Group(func(r chi.Router) {
 		r.Use(s.authMiddleware)
-		r.Use(s.idempotency) // replays POSTs that repeat an Idempotency-Key
+		r.Use(maxBytes(1 << 20)) // cap request bodies at 1 MiB before they are read
+		r.Use(s.idempotency)     // replays POSTs that repeat an Idempotency-Key
 
 		r.Post("/v1/snapshots", s.handleCreateSnapshot)
 		r.Get("/v1/snapshots/latest", s.handleLatestSnapshot)
@@ -94,6 +95,9 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 		Addr:              s.cfg.Addr,
 		Handler:           s.Routes(),
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      90 * time.Second, // > the 60s request timeout, so slow probes can still respond
+		IdleTimeout:       120 * time.Second,
 	}
 	go func() {
 		<-ctx.Done()
@@ -121,6 +125,21 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// maxBytes caps the size of a request body a handler can read, so a client
+// cannot exhaust memory by streaming an unbounded payload. It sets a hard limit
+// via http.MaxBytesReader; reads past the limit fail and the handler surfaces a
+// 413 through its normal decode-error path.
+func maxBytes(n int64) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Body != nil {
+				r.Body = http.MaxBytesReader(w, r.Body, n)
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

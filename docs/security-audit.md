@@ -43,3 +43,65 @@ in [SECURITY.md](../SECURITY.md) hold.
 
 This audit is reproducible: `go test ./...` covers the auth and scrubbing fixes
 (`internal/api`, `internal/probe`). Run `/security-review` against a PR diff for the automated pass.
+
+---
+
+# Audit v2 — deep pass
+
+_Date: 2026-07-24 · Scope: full codebase at the post-M9 / KI-backlog point._
+_Method: automated (`govulncheck` reachable-CVE scan + `gosec` static analysis) plus three
+parallel manual reviews across the HTTP/API surface, the issuer/probe/crypto surface, and the
+discovery/attribution/store surface._
+
+## Summary
+
+Two **reachable** dependency CVEs were found and fixed by upgrade. Six code-level hardening
+issues were found and fixed — one high (staging-guard bypass), two medium (SSRF via redirects,
+K8s-attributor path traversal), and three low/medium (idempotency key binding + memory cap,
+request-body limits, server timeouts), plus two low config-hygiene fixes (admin creds require
+https; `init` no longer captures ambient env secrets). No issue allowed forging a token Keyway
+would trust, and the [SECURITY.md](../SECURITY.md) invariants continue to hold.
+
+## Dependency CVEs (reachable → fixed)
+
+| CVE | Package | Impact | Fix |
+|---|---|---|---|
+| GO-2026-4945 | `github.com/go-jose/go-jose/v4` | JWE parsing panic (DoS) — reachable via JWKS parsing | Upgrade v4.0.5 → **v4.1.4** |
+| GO-2026-5970 | `golang.org/x/text` | Infinite-loop DoS — reachable via transitive use | Upgrade v0.31.0 → **v0.39.0** |
+
+`govulncheck ./...` now reports **no vulnerabilities**.
+
+## Findings & verdicts
+
+| # | Area | Finding | Severity | Status |
+|---|---|---|---|---|
+| SEC-01 | Staging guard | `HostAllowed` used a substring match, so an allowlist of `example.com` also permitted `example.com.attacker.net` (and `notexample.com`) | **high** | **Fixed** — exact match or dot-boundary suffix (`host == a` or `strings.HasSuffix(host, "."+a)`), `internal/probe/engine.go` |
+| SEC-02 | SSRF (probe) | The probe HTTP client followed redirects, so an allowlisted target could 302 a minted-token request to an internal address | medium | **Fixed** — `CheckRedirect` returns `http.ErrUseLastResponse` (fail-closed), `internal/probe/engine.go` |
+| SEC-03 | SSRF (issuer) | The OIDC discovery/JWKS client followed redirects, so a compromised/misconfigured issuer could redirect a fetch to an internal host | medium | **Fixed** — same fail-closed `CheckRedirect`, `internal/issuer/oidc/oidc.go` |
+| SEC-04 | Path traversal | `K8sDeployAttributor` joined an evidence path (which can carry an attacker-influenced manifest name) under its root with no confinement; an absolute path or `..` escaped it and read arbitrary files | medium | **Fixed** — reject absolute paths and `..`, verify containment after join, `internal/attribution/k8s.go` (test `TestK8sDeployPathTraversal`) |
+| SEC-05 | Idempotency | The cache key was the raw `Idempotency-Key` header only, so the same key on a different endpoint/body could replay an unrelated response; and the map only swept expired entries (no hard cap → unbounded growth) | medium | **Fixed** — key = `sha256(key‖method‖path‖body)`; hard FIFO cap at 4096, `internal/api/idempotency.go` (test `TestIdempotencyBoundToBody`) |
+| SEC-06 | Resource limits | Authenticated request bodies had no size cap (memory-exhaustion DoS) | low | **Fixed** — `maxBytes(1 MiB)` middleware via `http.MaxBytesReader`, `internal/api/server.go` |
+| SEC-07 | Resource limits | `http.Server` set only `ReadHeaderTimeout` (slow-loris on body/response) | low | **Fixed** — added `ReadTimeout`/`WriteTimeout`/`IdleTimeout`, `internal/api/server.go` |
+| SEC-08 | Cleartext creds | The Keycloak client-registry discoverer would send admin-cli credentials over plain `http` | low | **Fixed** — realm URL must be `https` (localhost exempted), `internal/discovery/oidcclient/oidcclient.go` |
+| SEC-09 | Secret capture | `keyway init` / `issuer add` round-tripped `config.Default()`/`Load()`, folding an ambient `KEYWAY_API_TOKEN` / Slack webhook / DB URL into the written file | low | **Fixed** — `config.Scaffold()` (no env secrets) for `init`; `config.LoadFile()` (no env overlay) for read-modify-write, `internal/config/config.go` |
+
+## Surfaces reviewed and cleared (no change needed)
+
+- **SQL injection** — every query is pgx-parameterised; no string interpolation anywhere in `internal/store/postgres`.
+- **Command injection (git attributor)** — `exec.CommandContext("git", …)` with an arg array, evidence passed after `--`; no shell.
+- **Private keys** — held in memory only; JWKS/serialisation emit public material exclusively.
+- **Minted / attack tokens** — never persisted (only `jti` + probe ID); Keyway never verifies tokens itself, so `alg=none`/HS256-confusion tokens cannot be turned against it (OPEN-4).
+- **notify / oidcclient endpoints** — operator-controlled (Slack webhook, realm URL); bounded by config.
+- **SPA / web UI** — React escapes all API data; no `dangerouslySetInnerHTML`; assets embedded, same-origin only.
+- **Auth** — bearer token compared in constant time (`crypto/subtle`).
+
+## Re-run (v2)
+
+```
+go get github.com/go-jose/go-jose/v4@v4.1.4 golang.org/x/text@v0.39.0 && go mod tidy
+go build ./... && go vet ./... && go test ./...
+govulncheck ./...   # expect: No vulnerabilities found.
+```
+
+Regression tests: `TestK8sDeployPathTraversal` (`internal/attribution`) and
+`TestIdempotencyBoundToBody` (`internal/api`) lock in SEC-04 and SEC-05.

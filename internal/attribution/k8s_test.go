@@ -39,6 +39,30 @@ func TestK8sDeployNoAnnotation(t *testing.T) {
 	assert.Equal(t, "unattributed", attr.Kind)
 }
 
+// TestK8sDeployPathTraversal verifies the attributor confines reads to its root:
+// a `..` escape or an absolute path in the evidence must not read outside it,
+// even though the manifest at that location carries a valid change-cause. This
+// guards the fix for the manifest-name path-traversal (SEC-04).
+func TestK8sDeployPathTraversal(t *testing.T) {
+	root := t.TempDir()
+	outside := t.TempDir()
+	secret := "kind: Deployment\nmetadata:\n  annotations:\n    kubernetes.io/change-cause: \"LEAKED\"\n"
+	require.NoError(t, os.WriteFile(filepath.Join(outside, "secret.yaml"), []byte(secret), 0o644))
+
+	a := NewK8sDeploy(root)
+	rel := filepath.Join("..", filepath.Base(outside), "secret.yaml")
+	cases := []string{
+		rel,                                   // ../<sibling>/secret.yaml
+		filepath.Join(outside, "secret.yaml"), // absolute path
+		"../../../../../../etc/hosts",         // deep escape
+	}
+	for _, ev := range cases {
+		attr, err := a.Attribute(context.Background(), model.ChangeEvent{Evidence: []string{ev}})
+		require.NoError(t, err)
+		assert.Equal(t, "unattributed", attr.Kind, "evidence %q must not resolve outside root", ev)
+	}
+}
+
 // TestChainPrefersFirstMatch verifies the chain returns the first source that binds.
 func TestChainPrefersFirstMatch(t *testing.T) {
 	dir := t.TempDir()

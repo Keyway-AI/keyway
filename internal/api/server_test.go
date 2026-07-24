@@ -182,6 +182,26 @@ func TestIdempotencyNoKeyPassthrough(t *testing.T) {
 	assert.NotEqual(t, a.Body.String(), b.Body.String(), "no key -> each request executes")
 }
 
+// TestIdempotencyBoundToBody verifies the cache key includes the request body,
+// so the same Idempotency-Key with a DIFFERENT body executes fresh rather than
+// replaying an unrelated response (SEC-05). Without body binding, the second
+// call would wrongly return the first body.
+func TestIdempotencyBoundToBody(t *testing.T) {
+	h := testServer(t).Routes()
+
+	first := doKey(t, h, "POST", "/v1/canary/announce", "secret", "same-key",
+		map[string]any{"issuer_id": "default", "alg": "RS256"})
+	require.Equal(t, 200, first.Code)
+
+	// Same key, different body: must NOT replay the first response.
+	second := doKey(t, h, "POST", "/v1/canary/announce", "secret", "same-key",
+		map[string]any{"issuer_id": "default", "alg": "RS384"})
+	require.Equal(t, 200, second.Code)
+	assert.Empty(t, second.Header().Get("Idempotent-Replay"),
+		"different body under the same key must not be served from cache")
+	assert.NotEqual(t, first.Body.String(), second.Body.String())
+}
+
 func TestRunIndex(t *testing.T) {
 	idx := newRunIndex(2)
 	idx.put("a", []model.ProbeResult{{ProbeID: "valid_token"}})

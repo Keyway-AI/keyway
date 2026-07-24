@@ -7,7 +7,7 @@ file in the same PR that adds or resolves an item.
 **Legend** — Impact: 🔴 blocks a real use case · 🟠 degrades a feature · 🟡 minor / cosmetic · 🔵 design caveat (not a bug).
 Status: `open` · `in progress` · `deferred` (intentionally not now) · `resolved`.
 
-_Last updated: 2026-07-24._
+_Last updated: 2026-07-24 (security audit v2)._
 
 ---
 
@@ -20,7 +20,7 @@ _Last updated: 2026-07-24._
 | KI-02 | Discovery | All discovery is **file/manifest-based**. The in-cluster `client-go` dynamic path (live CRD/Service reads) is not implemented. | 🟠 | deferred | `internal/discovery/istio/istio.go` header |
 | KI-03 | Attribution | ~~Only git attribution.~~ **Resolved (git + deploy):** added a K8s-deploy attributor (`kubernetes.io/change-cause`) and a `Chain` that tries git then deploy. Keycloak-admin-event source remains future. | 🟡 | in progress | `internal/attribution/{k8s,chain}.go` |
 | KI-04 | API | ~~`GET /v1/probes/runs/{run_id}` had no index.~~ **Resolved:** a bounded in-memory run index (FIFO, 256) returns a run's results by id; durable per-consumer history still in Postgres. | 🟡 | resolved | `internal/api/runs.go` |
-| KI-05 | API | ~~**Idempotency-Key** not enforced.~~ **Resolved:** a POST that repeats an `Idempotency-Key` replays the original response (TTL cache, `Idempotent-Replay: true`), only caching deterministic (<500) results. In-memory today; a multi-replica deployment would back it with Postgres. | 🟡 | resolved | `internal/api/idempotency.go` |
+| KI-05 | API | ~~**Idempotency-Key** not enforced.~~ **Resolved:** a POST that repeats an `Idempotency-Key` replays the original response (TTL cache, `Idempotent-Replay: true`), only caching deterministic (<500) results. Cache key binds method+path+body and the store is hard-capped (SEC-05). In-memory today; a multi-replica deployment would back it with Postgres. | 🟡 | resolved | `internal/api/idempotency.go` |
 | KI-06 | Scheduler | **Resolved (periodic snapshot):** `keyway serve --snapshot-interval` snapshots on an interval and notifies on change events. Automated **measured canary windows** split out as KI-25. | 🟡 | resolved | `internal/cli/serve.go:runScheduler` |
 | KI-25 | Canary | **Measured grace windows** (PRD §10.3): the scheduler does not yet re-run the canary probe to record announce→pickup times, so blast-radius grace windows come from cache-TTL/library defaults, not measurement. Needs single-probe execution + announce-time bookkeeping. | 🟠 | deferred | `internal/blastradius/query.go:readyWindow` |
 | KI-07 | Contract | ~~Edge derivation was pass-through.~~ **Resolved:** `contract.Build` now synthesises a minimal Issuer per trusted issuer URL and one Edge per (issuer, consumer) trust relationship; deterministic hash preserved. | 🟡 | resolved | `internal/contract/build.go` |
@@ -60,6 +60,24 @@ _Last updated: 2026-07-24._
 | KI-19 | Algorithm restrictions | Discovery does **not** populate `Expects.Algorithms` from Istio/Envoy (they don't declare it), so an `alg=none`/algorithm *contract* change is only caught by the **probe** (live), not by the **diff** on manifests. The probe path is covered (RW-01). | 🔵 by design |
 | KI-20 | Required claims | ~~Discovery did not derive `Expects.RequiredClaims`.~~ **Resolved:** the Istio adapter now parses `AuthorizationPolicy` `when` conditions on `request.auth.claims[...]` and merges the required claims into the matching consumer (confidence 1.0), so `remove_claim` blast-radius and the missing-claim diff work from real config. | 🟡 resolved |
 | KI-21 | Env-var hints | K8s env-var issuer/audience hints are confidence **0.5**, so changes to hint-derived fields classify as `unknown` (below the 0.6 floor) and never page — correct, but means low-confidence consumers get less protection until confirmed by a higher-confidence source. | 🔵 by design |
+
+## Security (audit v2 — all resolved)
+
+Full write-up in [docs/security-audit.md](docs/security-audit.md) "Audit v2". Method:
+`govulncheck` + `gosec` + three parallel manual reviews.
+
+| ID | Area | Issue | Impact | Status | Pointer |
+|----|------|-------|--------|--------|---------|
+| SEC-01 | Probe guard | Staging allowlist used a **substring** match, so `example.com` also allowed `example.com.evil.net`. | 🔴 | resolved | `internal/probe/engine.go:HostAllowed` (exact / dot-suffix) |
+| SEC-02 | SSRF | Probe HTTP client **followed redirects**, letting an allowlisted target 302 a minted-token request to an internal host. | 🟠 | resolved | `internal/probe/engine.go` (`CheckRedirect` fail-closed) |
+| SEC-03 | SSRF | OIDC discovery/JWKS client followed redirects (issuer-controlled → internal host). | 🟠 | resolved | `internal/issuer/oidc/oidc.go:DefaultClient` |
+| SEC-04 | Path traversal | K8s-deploy attributor joined an attacker-influenceable manifest path with **no confinement**; `..`/absolute escaped root. | 🟠 | resolved | `internal/attribution/k8s.go` (test `TestK8sDeployPathTraversal`) |
+| SEC-05 | Idempotency | Cache key was the **raw header only** (cross-endpoint/body replay) and the map had **no hard cap** (unbounded growth). | 🟠 | resolved | `internal/api/idempotency.go` (test `TestIdempotencyBoundToBody`) |
+| SEC-06 | DoS | Authenticated request bodies had **no size cap**. | 🟡 | resolved | `internal/api/server.go:maxBytes` (1 MiB) |
+| SEC-07 | DoS | `http.Server` set only `ReadHeaderTimeout` (slow-loris on body/response). | 🟡 | resolved | `internal/api/server.go` (Read/Write/Idle timeouts) |
+| SEC-08 | Cleartext creds | oidcclient would send admin-cli credentials over plain **http**. | 🟡 | resolved | `internal/discovery/oidcclient/oidcclient.go:splitRealmURL` (https required) |
+| SEC-09 | Secret capture | `keyway init` / `issuer add` folded ambient `KEYWAY_API_TOKEN` / webhook / DB URL into the **written file**. | 🟡 | resolved | `internal/config/config.go` (`Scaffold`, `LoadFile`) |
+| SEC-10 | Dependencies | Two **reachable** CVEs: go-jose JWE panic (GO-2026-4945), x/text infinite loop (GO-2026-5970). | 🟠 | resolved | `go.mod` (go-jose v4.1.4, x/text v0.39.0); `govulncheck` clean |
 
 ---
 

@@ -26,9 +26,17 @@ type DiscoveryDoc struct {
 	Raw json.RawMessage `json:"-"`
 }
 
-// DefaultClient is a timeout-bounded HTTP client for discovery.
+// DefaultClient is a timeout-bounded HTTP client for discovery. It does NOT
+// follow redirects: a compromised/misconfigured issuer must not be able to
+// redirect a discovery or JWKS fetch to an internal address (SSRF). Legitimate
+// OIDC providers serve these documents directly.
 func DefaultClient() *http.Client {
-	return &http.Client{Timeout: 10 * time.Second}
+	return &http.Client{
+		Timeout: 10 * time.Second,
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 }
 
 // Discover fetches issuerURL/.well-known/openid-configuration.

@@ -66,6 +66,12 @@ func main() {
 	if len(fileScenarios) > 0 {
 		cards["L1"] = l1Card(fileScenarios)
 	}
+	// L4 attribution (git + deploy chain) over a small realistic fixture.
+	if l4, l4err := l4Score(); l4err == nil {
+		cards["L4"] = l4
+	} else {
+		fmt.Fprintln(os.Stderr, "harness: L4 score skipped:", l4err)
+	}
 
 	if err := os.MkdirAll(*out, 0o755); err != nil {
 		fmt.Fprintln(os.Stderr, "harness: mkdir out:", err)

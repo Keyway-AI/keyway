@@ -57,7 +57,7 @@ _Last updated: 2026-07-24._
 | ID | Risk class | Note | Status |
 |----|-----------|------|--------|
 | KI-19 | Algorithm restrictions | Discovery does **not** populate `Expects.Algorithms` from Istio/Envoy (they don't declare it), so an `alg=none`/algorithm *contract* change is only caught by the **probe** (live), not by the **diff** on manifests. The probe path is covered (RW-01). | 🔵 by design |
-| KI-20 | Required claims | Discovery does not derive `Expects.RequiredClaims` from any adapter, so `remove_claim` blast-radius and the missing-claim diff rely on config/probe evidence, not manifest discovery. | 🟠 open |
+| KI-20 | Required claims | ~~Discovery did not derive `Expects.RequiredClaims`.~~ **Resolved:** the Istio adapter now parses `AuthorizationPolicy` `when` conditions on `request.auth.claims[...]` and merges the required claims into the matching consumer (confidence 1.0), so `remove_claim` blast-radius and the missing-claim diff work from real config. | 🟡 resolved |
 | KI-21 | Env-var hints | K8s env-var issuer/audience hints are confidence **0.5**, so changes to hint-derived fields classify as `unknown` (below the 0.6 floor) and never page — correct, but means low-confidence consumers get less protection until confirmed by a higher-confidence source. | 🔵 by design |
 
 ---

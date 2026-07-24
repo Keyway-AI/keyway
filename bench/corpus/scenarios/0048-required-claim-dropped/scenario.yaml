@@ -1,0 +1,12 @@
+# True positive, critical: an AuthorizationPolicy that required the `dept` claim
+# is removed, so the service now accepts tokens it used to reject. Removing a
+# required claim widens acceptance — the most dangerous kind of claim change.
+id: "0048"
+name: required-claim-dropped
+before: before
+after: after
+expected:
+  detected: true
+  class: widened
+  severity: critical
+  consumer: "k8s://local/prod/reports-api"

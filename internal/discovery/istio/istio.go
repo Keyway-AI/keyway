@@ -5,6 +5,7 @@ package istio
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/nometria/keyway/internal/discovery"
@@ -53,30 +54,141 @@ type requestAuthentication struct {
 	} `yaml:"spec"`
 }
 
-// Discover parses RequestAuthentication resources under scope.ConfigPaths.
+// authorizationPolicy is the subset of the Istio AuthorizationPolicy CRD we read
+// to derive required claims from `when` conditions on request.auth.claims[...].
+type authorizationPolicy struct {
+	Kind     string `yaml:"kind"`
+	Metadata struct {
+		Name      string `yaml:"name"`
+		Namespace string `yaml:"namespace"`
+	} `yaml:"metadata"`
+	Spec struct {
+		Selector struct {
+			MatchLabels map[string]string `yaml:"matchLabels"`
+		} `yaml:"selector"`
+		Rules []struct {
+			When []struct {
+				Key    string   `yaml:"key"`
+				Values []string `yaml:"values"`
+			} `yaml:"when"`
+		} `yaml:"rules"`
+	} `yaml:"spec"`
+}
+
+// Discover parses RequestAuthentication resources under scope.ConfigPaths and
+// enriches them with required claims from AuthorizationPolicy resources that
+// select the same workload.
 func (d *Discoverer) Discover(_ context.Context, scope discovery.Scope) ([]model.Consumer, error) {
 	if len(scope.ConfigPaths) == 0 {
 		return nil, nil
 	}
 	var consumers []model.Consumer
+	claimsByWorkload := map[string][]string{} // "ns/service" -> required claims
+	claimSource := map[string]string{}        // "ns/service" -> AuthorizationPolicy locator
+
 	err := discovery.WalkYAML(scope.ConfigPaths, func(path string, doc []byte) error {
-		var ra requestAuthentication
-		if err := yaml.Unmarshal(doc, &ra); err != nil {
+		var probe struct {
+			Kind string `yaml:"kind"`
+		}
+		if yaml.Unmarshal(doc, &probe) != nil {
 			return nil // tolerate non-Istio documents
 		}
-		if ra.Kind != "RequestAuthentication" || len(ra.Spec.JWTRules) == 0 {
-			return nil
+		switch probe.Kind {
+		case "RequestAuthentication":
+			var ra requestAuthentication
+			if yaml.Unmarshal(doc, &ra) != nil || len(ra.Spec.JWTRules) == 0 {
+				return nil
+			}
+			if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, ra.Metadata.Namespace) {
+				return nil
+			}
+			consumers = append(consumers, d.toConsumer(ra, path, scope))
+		case "AuthorizationPolicy":
+			var ap authorizationPolicy
+			if yaml.Unmarshal(doc, &ap) != nil {
+				return nil
+			}
+			if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, ap.Metadata.Namespace) {
+				return nil
+			}
+			if claims := requiredClaims(ap); len(claims) > 0 {
+				key := workloadKey(ap.Metadata.Namespace, apServiceName(ap))
+				claimsByWorkload[key] = unionAll(claimsByWorkload[key], claims)
+				claimSource[key] = path
+			}
 		}
-		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, ra.Metadata.Namespace) {
-			return nil
-		}
-		consumers = append(consumers, d.toConsumer(ra, path, scope))
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
+
+	// Merge required claims into the matching consumers.
+	for i := range consumers {
+		key := workloadKey(consumers[i].Namespace, consumers[i].Name)
+		claims := claimsByWorkload[key]
+		if len(claims) == 0 {
+			continue
+		}
+		consumers[i].Expects.RequiredClaims = unionAll(consumers[i].Expects.RequiredClaims, claims)
+		consumers[i].Confidence["expects.required_claims"] = 1.0
+		prov := model.ProvenanceRecord{
+			Source: "istio:AuthorizationPolicy", Locator: claimSource[key], ObservedAt: d.now(), Confidence: 1.0,
+		}
+		consumers[i].Provenance["expects.required_claims"] = []model.ProvenanceRecord{prov}
+	}
 	return consumers, nil
+}
+
+// requiredClaims extracts claim names required by an AuthorizationPolicy's
+// when-conditions of the form request.auth.claims[<name>].
+func requiredClaims(ap authorizationPolicy) []string {
+	var out []string
+	for _, rule := range ap.Spec.Rules {
+		for _, w := range rule.When {
+			if name, ok := claimKey(w.Key); ok {
+				out = appendUnique(out, name)
+			}
+		}
+	}
+	return out
+}
+
+// claimKey returns the claim name from "request.auth.claims[<name>]".
+func claimKey(key string) (string, bool) {
+	const prefix = "request.auth.claims["
+	if !strings.HasPrefix(key, prefix) || !strings.HasSuffix(key, "]") {
+		return "", false
+	}
+	name := strings.TrimSuffix(strings.TrimPrefix(key, prefix), "]")
+	if name == "" {
+		return "", false
+	}
+	return name, true
+}
+
+func apServiceName(ap authorizationPolicy) string {
+	for _, k := range []string{"app", "app.kubernetes.io/name"} {
+		if v := ap.Spec.Selector.MatchLabels[k]; v != "" {
+			return v
+		}
+	}
+	return ap.Metadata.Name
+}
+
+func workloadKey(ns, service string) string {
+	if ns == "" {
+		ns = "default"
+	}
+	return ns + "/" + service
+}
+
+func unionAll(a, b []string) []string {
+	out := append([]string{}, a...)
+	for _, v := range b {
+		out = appendUnique(out, v)
+	}
+	return out
 }
 
 func (d *Discoverer) toConsumer(ra requestAuthentication, path string, scope discovery.Scope) model.Consumer {

@@ -133,3 +133,15 @@ func index(cs []model.Consumer) map[string]*model.Consumer {
 	}
 	return m
 }
+
+func TestIstioRequiredClaimsFromAuthzPolicy(t *testing.T) {
+	d := istio.New().WithClock(fixedClock())
+	cs, err := d.Discover(context.Background(), discovery.Scope{ConfigPaths: []string{"../../testdata/discovery/authz/stack.yaml"}})
+	require.NoError(t, err)
+	require.Len(t, cs, 1)
+	c := cs[0]
+	assert.ElementsMatch(t, []string{"dept", "scope"}, c.Expects.RequiredClaims,
+		"required claims derived from AuthorizationPolicy when-conditions")
+	assert.InDelta(t, 1.0, c.Confidence["expects.required_claims"], 0.001)
+	require.NotEmpty(t, c.Provenance["expects.required_claims"])
+}

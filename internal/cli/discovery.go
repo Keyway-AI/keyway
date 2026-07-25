@@ -15,6 +15,7 @@ import (
 	"github.com/nometria/keyway/internal/discovery/envoy"
 	"github.com/nometria/keyway/internal/discovery/istio"
 	"github.com/nometria/keyway/internal/discovery/k8s"
+	"github.com/nometria/keyway/internal/discovery/kube"
 	"github.com/nometria/keyway/internal/discovery/oidcclient"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/store/postgres"
@@ -83,14 +84,35 @@ func buildAttributor(cfg config.Config, root string) contract.Attributor {
 	return attribution.NewChain(attributors...)
 }
 
+// inClusterDiscoverers returns the live client-go discovery source when
+// --in-cluster is set (KI-02). It errors if the Kubernetes client cannot be
+// built, so a misconfigured cluster surfaces loudly rather than silently
+// discovering nothing.
+func inClusterDiscoverers(cmd *cobra.Command) ([]discovery.Discoverer, error) {
+	if on, _ := cmd.Flags().GetBool("in-cluster"); !on {
+		return nil, nil
+	}
+	kctx, _ := cmd.Flags().GetString("kube-context")
+	client, err := kube.DynamicClient(kctx)
+	if err != nil {
+		return nil, err
+	}
+	return []discovery.Discoverer{istio.NewInCluster(client, kctx)}, nil
+}
+
 // allDiscoverers combines the file-based sources with any config-driven ones
-// (loading the config file referenced by --config, if present).
-func allDiscoverers(cmd *cobra.Command) []discovery.Discoverer {
+// (loading the config file referenced by --config, if present) and the live
+// in-cluster source when enabled.
+func allDiscoverers(cmd *cobra.Command) ([]discovery.Discoverer, error) {
 	ds := defaultDiscoverers()
 	if cfg, err := config.Load(configPath(cmd)); err == nil {
 		ds = append(ds, configDiscoverers(cfg)...)
 	}
-	return ds
+	inc, err := inClusterDiscoverers(cmd)
+	if err != nil {
+		return nil, err
+	}
+	return append(ds, inc...), nil
 }
 
 func splitCreds(s string) (user, pass string) {
@@ -106,10 +128,15 @@ func newDiscoverCmd() *cobra.Command {
 		Short: "Derive the consumer inventory from cluster and config sources",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			scope := buildScope(cmd)
-			if len(scope.ConfigPaths) == 0 {
-				return fmt.Errorf("no --path given; provide manifest files or directories to scan")
+			inCluster, _ := cmd.Flags().GetBool("in-cluster")
+			if len(scope.ConfigPaths) == 0 && !inCluster {
+				return fmt.Errorf("no source given; pass --path (manifests) or --in-cluster (live Kubernetes API)")
 			}
-			consumers, err := discovery.Run(context.Background(), scope, allDiscoverers(cmd)...)
+			ds, err := allDiscoverers(cmd)
+			if err != nil {
+				return err
+			}
+			consumers, err := discovery.Run(context.Background(), scope, ds...)
 			if err != nil {
 				return err
 			}
@@ -125,7 +152,8 @@ func newDiscoverCmd() *cobra.Command {
 	}
 	cmd.Flags().StringSlice("namespace", nil, "Kubernetes namespaces to scan")
 	cmd.Flags().StringSlice("path", nil, "manifest files or directories to scan")
-	cmd.Flags().String("kube-context", "", "cluster name used in StableIDs")
+	cmd.Flags().String("kube-context", "", "kube-context for --in-cluster / cluster name used in StableIDs")
+	cmd.Flags().Bool("in-cluster", false, "discover live Istio CRDs from the Kubernetes API (client-go)")
 	cmd.Flags().String("output", "table", "output format: json|table")
 	return cmd
 }
@@ -154,7 +182,11 @@ func runSnapshot(cmd *cobra.Command) error {
 	scope := buildScope(cmd)
 	// File-based sources no-op without --path; config-driven sources (Keycloak
 	// client registry) run regardless, so always invoke discovery.
-	consumers, err := discovery.Run(context.Background(), scope, allDiscoverers(cmd)...)
+	ds, err := allDiscoverers(cmd)
+	if err != nil {
+		return err
+	}
+	consumers, err := discovery.Run(context.Background(), scope, ds...)
 	if err != nil {
 		return err
 	}

@@ -33,6 +33,8 @@ func newServeCmd() *cobra.Command {
 	cmd.Flags().StringSlice("allow", nil, "host substrings the probe engine may target")
 	cmd.Flags().String("issuer-url", "", "register a default generic issuer at this URL")
 	cmd.Flags().Duration("snapshot-interval", 0, "if >0, snapshot+notify on this interval (e.g. 1h)")
+	cmd.Flags().Bool("in-cluster", false, "discover live Istio CRDs from the Kubernetes API (client-go) instead of, or in addition to, --path")
+	cmd.Flags().String("kube-context", "", "kube-context to use for --in-cluster (default: in-cluster SA, else current context)")
 	return cmd
 }
 
@@ -96,11 +98,18 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	if len(scope.ConfigPaths) > 0 {
 		attrRoot = scope.ConfigPaths[0]
 	}
+	discoverers := append(defaultDiscoverers(), configDiscoverers(cfg)...)
+	inc, err := inClusterDiscoverers(cmd)
+	if err != nil {
+		return err
+	}
+	discoverers = append(discoverers, inc...)
+
 	srv := api.NewServer(api.Config{Addr: addr, Token: token}, api.Deps{
 		Store:       st,
 		Issuers:     reg,
 		Libs:        libs,
-		Discoverers: append(defaultDiscoverers(), configDiscoverers(cfg)...),
+		Discoverers: discoverers,
 		Scope:       scope,
 		Probe:       probeCfg,
 		Attributor:  buildAttributor(cfg, attrRoot),

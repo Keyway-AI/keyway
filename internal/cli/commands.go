@@ -64,7 +64,8 @@ func newSnapshotCmd() *cobra.Command {
 	}
 	cmd.Flags().StringSlice("namespace", nil, "Kubernetes namespaces to scan")
 	cmd.Flags().StringSlice("path", nil, "manifest files or directories to scan for consumers")
-	cmd.Flags().String("kube-context", "", "cluster name used in StableIDs")
+	cmd.Flags().String("kube-context", "", "kube-context for --in-cluster / cluster name used in StableIDs")
+	cmd.Flags().Bool("in-cluster", false, "discover live Istio CRDs from the Kubernetes API (client-go)")
 	return cmd
 }
 

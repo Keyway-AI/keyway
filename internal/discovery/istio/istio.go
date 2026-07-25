@@ -1,6 +1,7 @@
 // Package istio discovers consumers from Istio RequestAuthentication resources
-// (confidence 1.0 — declarative and unambiguous). It reads manifests from the
-// configured paths; the in-cluster dynamic-client path is a future addition.
+// (confidence 1.0 — declarative and unambiguous). It reads from static manifests
+// (Discoverer) or, via a client-go dynamic client, live cluster CRDs
+// (InClusterDiscoverer, see incluster.go). Both share the same mapping.
 package istio
 
 import (
@@ -82,10 +83,8 @@ func (d *Discoverer) Discover(_ context.Context, scope discovery.Scope) ([]model
 	if len(scope.ConfigPaths) == 0 {
 		return nil, nil
 	}
-	var consumers []model.Consumer
-	claimsByWorkload := map[string][]string{} // "ns/service" -> required claims
-	claimSource := map[string]string{}        // "ns/service" -> AuthorizationPolicy locator
-
+	var ras []raWithLoc
+	var aps []apWithLoc
 	err := discovery.WalkYAML(scope.ConfigPaths, func(path string, doc []byte) error {
 		var probe struct {
 			Kind string `yaml:"kind"`
@@ -99,28 +98,59 @@ func (d *Discoverer) Discover(_ context.Context, scope discovery.Scope) ([]model
 			if yaml.Unmarshal(doc, &ra) != nil || len(ra.Spec.JWTRules) == 0 {
 				return nil
 			}
-			if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, ra.Metadata.Namespace) {
-				return nil
-			}
-			consumers = append(consumers, d.toConsumer(ra, path, scope))
+			ras = append(ras, raWithLoc{ra, path})
 		case "AuthorizationPolicy":
 			var ap authorizationPolicy
 			if yaml.Unmarshal(doc, &ap) != nil {
 				return nil
 			}
-			if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, ap.Metadata.Namespace) {
-				return nil
-			}
-			if claims := requiredClaims(ap); len(claims) > 0 {
-				key := workloadKey(ap.Metadata.Namespace, apServiceName(ap))
-				claimsByWorkload[key] = unionAll(claimsByWorkload[key], claims)
-				claimSource[key] = path
-			}
+			aps = append(aps, apWithLoc{ap, path})
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
+	}
+	return d.assemble(scope, ras, aps), nil
+}
+
+// raWithLoc / apWithLoc pair a parsed CRD with its provenance locator (a file
+// path for the manifest source, a cluster ref for the in-cluster source).
+type raWithLoc struct {
+	ra  requestAuthentication
+	loc string
+}
+type apWithLoc struct {
+	ap  authorizationPolicy
+	loc string
+}
+
+// assemble is the shared mapping used by both the manifest and in-cluster
+// sources: it turns parsed RequestAuthentications into consumers and merges
+// required claims from AuthorizationPolicies onto the matching workload.
+func (d *Discoverer) assemble(scope discovery.Scope, ras []raWithLoc, aps []apWithLoc) []model.Consumer {
+	var consumers []model.Consumer
+	claimsByWorkload := map[string][]string{} // "ns/service" -> required claims
+	claimSource := map[string]string{}        // "ns/service" -> AuthorizationPolicy locator
+
+	for _, r := range ras {
+		if len(r.ra.Spec.JWTRules) == 0 {
+			continue
+		}
+		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, r.ra.Metadata.Namespace) {
+			continue
+		}
+		consumers = append(consumers, d.toConsumer(r.ra, r.loc, scope))
+	}
+	for _, a := range aps {
+		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, a.ap.Metadata.Namespace) {
+			continue
+		}
+		if claims := requiredClaims(a.ap); len(claims) > 0 {
+			key := workloadKey(a.ap.Metadata.Namespace, apServiceName(a.ap))
+			claimsByWorkload[key] = unionAll(claimsByWorkload[key], claims)
+			claimSource[key] = a.loc
+		}
 	}
 
 	// Merge required claims into the matching consumers.
@@ -137,7 +167,7 @@ func (d *Discoverer) Discover(_ context.Context, scope discovery.Scope) ([]model
 		}
 		consumers[i].Provenance["expects.required_claims"] = []model.ProvenanceRecord{prov}
 	}
-	return consumers, nil
+	return consumers
 }
 
 // requiredClaims extracts claim names required by an AuthorizationPolicy's

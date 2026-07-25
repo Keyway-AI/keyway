@@ -1,6 +1,7 @@
-# Adversarial (known limitation probe): a trailing space sneaks into the issuer
-# string. Ideal behaviour is silence (whitespace-insensitive); Keyway compares
-# verbatim, so we expect a flag — the same normalization gap as adv-03.
+# A trailing space sneaks into the issuer string. Whitespace is never part of a
+# real issuer (a token's iss claim can't carry it), so Keyway now trims it and
+# correctly stays silent (KI-26). Contrast with adv-03 (trailing slash), which
+# under strict OIDC is a real contract change and is still flagged.
 id: "adv-06"
 name: issuer-whitespace
 before: before

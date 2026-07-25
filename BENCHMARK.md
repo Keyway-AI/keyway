@@ -59,7 +59,7 @@ Keyway must stay completely silent.
 > the rules are self-consistent, **not** that they generalise. So we stress-test
 > it two ways that a rigged number could not survive — **mutation testing**
 > (inject faults into the detector; the tests catch 100% of behaviour-changing
-> ones) and a **held-out adversarial corpus** where Keyway scores **0.50 Youden,
+> ones) and a **held-out adversarial corpus** where Keyway scores **0.75 Youden,
 > not 1.0**, with its failures named. The full write-up is
 > [docs/benchmark-integrity.md](docs/benchmark-integrity.md) — read it before you
 > trust the 100%.

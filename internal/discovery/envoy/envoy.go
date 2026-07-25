@@ -86,9 +86,9 @@ func findProviders(node any) map[string]provider {
 						continue // keep the first definition, deterministically (KI-31)
 					}
 					if pm, ok := p.(map[string]any); ok {
-						if iss, ok := pm["issuer"].(string); ok && iss != "" {
+						if iss, ok := pm["issuer"].(string); ok && strings.TrimSpace(iss) != "" {
 							out[name] = provider{
-								issuer:        iss,
+								issuer:        strings.TrimSpace(iss), // KI-26: whitespace is never part of an issuer
 								audiences:     toStrings(pm["audiences"]),
 								cacheDuration: cacheDurationOf(pm),
 								jwksURI:       remoteJWKSURI(pm),
@@ -204,7 +204,9 @@ func toStrings(v any) []string {
 	out := make([]string, 0, len(arr))
 	for _, e := range arr {
 		if s, ok := e.(string); ok {
-			out = append(out, s)
+			if s = strings.TrimSpace(s); s != "" { // KI-26
+				out = append(out, s)
+			}
 		}
 	}
 	return out

@@ -291,14 +291,21 @@ func (d *Discoverer) toConsumer(ra requestAuthentication, path string, scope dis
 	var issuers, audiences []string
 	var jwksURI string
 	for _, r := range ra.Spec.JWTRules {
-		if r.Issuer != "" {
-			issuers = appendUnique(issuers, r.Issuer)
+		// Trim surrounding whitespace: it is never part of a real issuer/audience
+		// (a token's iss/aud claim can't carry it) and only causes false-positive
+		// diffs. Trailing slashes are deliberately preserved — under strict OIDC
+		// they change which tokens validate, so they are a real contract change
+		// (KI-26).
+		if iss := strings.TrimSpace(r.Issuer); iss != "" {
+			issuers = appendUnique(issuers, iss)
 		}
 		for _, a := range r.Audiences {
-			audiences = appendUnique(audiences, a)
+			if a := strings.TrimSpace(a); a != "" {
+				audiences = appendUnique(audiences, a)
+			}
 		}
 		if jwksURI == "" && r.JWKSURI != "" {
-			jwksURI = r.JWKSURI // the rotation endpoint (KI-32)
+			jwksURI = strings.TrimSpace(r.JWKSURI) // the rotation endpoint (KI-32)
 		}
 	}
 

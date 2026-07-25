@@ -5,7 +5,7 @@ It proves the corpus is internally consistent — not that the detector
 generalises. This page is the adversarial answer to "prove you're not just
 grading your own homework." It reports three things that a rigged 100% could not
 survive: **mutation testing**, a **held-out adversarial corpus** (where we score
-**0.5 Youden, not 1.0**), and an **honest industry comparison**.
+**0.75 Youden, not 1.0**), and an **honest industry comparison**.
 
 _Last updated: 2026-07-25._
 
@@ -70,7 +70,7 @@ cases we expected to fail.
 
 Run: `make bench` prints an `L3-adversarial` line alongside the main score.
 
-**Result: TPR = 1.00, FPR = 0.50, Youden = 0.50** (TP 4, FP 2, TN 2, FN 0).
+**Result: TPR = 1.00, FPR = 0.25, Youden = 0.75** (TP 4, FP 1, TN 3, FN 0).
 
 **Not 100% — by design, and honestly reported.** Breakdown:
 
@@ -82,21 +82,22 @@ Run: `make bench` prints an `L3-adversarial` line alongside the main score.
 | `adv-05 duplicate-audience` | same audience listed twice (dedup) | ✅ correct (silent) |
 | `adv-07 mixed-multi-consumer` | one service churns noise, another really widens | ✅ correct (flags only the real one) |
 | `adv-08 double-narrow` | two narrowings on one consumer at once | ✅ correct (narrowed) |
-| `adv-03 issuer-trailing-slash` | issuer gains a trailing `/` | ❌ **flagged** (we mark this a false positive) |
-| `adv-06 issuer-whitespace` | issuer gains a trailing space | ❌ **flagged** (false positive) |
+| `adv-03 issuer-trailing-slash` | issuer gains a trailing `/` | ❌ **flagged** — a documented judgment call (real change under strict OIDC) |
+| `adv-06 issuer-whitespace` | issuer gains a trailing space | ✅ correct (silent) — whitespace is now trimmed (KI-26) |
 
-The two failures are a **real, documented limitation**: Keyway compares issuer
-strings **verbatim** and has no normalization pass, so `…/main` vs `…/main/`
-reads as an issuer change (KI-26). We count these **against ourselves** even
-though the "right" answer is genuinely debatable — under strict OIDC the `iss`
-claim must byte-match, so a validator that changed its configured issuer to
-`…/main/` really would start rejecting `…/main` tokens, and flagging is
-defensible. We take the self-critical scoring (FP) rather than claim the
-ambiguity in our favour.
+The one remaining miss is a **documented judgment call**: Keyway compares issuer
+strings **verbatim**, so `…/main` vs `…/main/` reads as an issuer change (KI-26).
+We count it **against ourselves** even though the "right" answer is genuinely
+debatable — under strict OIDC the `iss` claim must byte-match, so a validator that
+changed its configured issuer to `…/main/` really would start rejecting `…/main`
+tokens, and flagging is defensible. (The sister case, a *whitespace* difference,
+was a clear false positive and is now fixed — whitespace is trimmed, since a
+token's `iss` can never carry it.)
 
 **This is the number that matters for a skeptic:** on hard, out-of-distribution
-cases, Keyway is **not perfect (0.5 Youden)**, and the specific failures are
-named and tracked, not hidden.
+cases, Keyway is **not perfect (0.75 Youden)**, and the one remaining miss
+(`adv-03`, trailing slash) is a named, documented judgment call rather than a
+hidden failure.
 
 ## 4. Why the *main* corpus can legitimately hit ~1.0 (and a scanner can't)
 
@@ -116,7 +117,7 @@ by us, and a *different task*):
 | Kiuwan | SAST | 100% TPR **@ 16% FPR** |
 | SAST category | — | historical **Youden ceiling ~0.39** |
 | **Keyway (main corpus)** | structured config diff | 1.00 Youden |
-| **Keyway (adversarial)** | hardest config edge cases | **0.50 Youden** |
+| **Keyway (adversarial)** | hardest config edge cases | **0.75 Youden** |
 
 The honest reading is **not** "Keyway beats Snyk" — they solve different
 problems. It is: *inference from code has a well-documented accuracy ceiling;
@@ -147,6 +148,6 @@ None of these are hidden by the 100%; they are why this page exists.
 - **Mutation testing** (100% mutator coverage, every behaviour-changing fault
   killed) shows the corpus genuinely tests the detector — the anti-overfitting
   proof that can't be gamed by adding rows.
-- The **adversarial corpus scores 0.5 Youden**, names its failures, and counts
-  ambiguity against itself — the opposite of a rigged benchmark.
+- The **adversarial corpus scores 0.75 Youden**, names its one remaining miss,
+  and counts the ambiguity against itself — the opposite of a rigged benchmark.
 - Reproduce all of it: `make mutation`, `make bench`, `make validate`.

@@ -21,6 +21,14 @@ type idemStore struct {
 	max   int
 	order []string
 	m     map[string]idemEntry
+	locks map[string]*keyLock // per-key locks for in-flight coalescing (KI-29)
+}
+
+// keyLock serializes concurrent requests that share an idempotency key, with a
+// refcount so the lock is removed once no request references it.
+type keyLock struct {
+	mu   sync.Mutex
+	refs int
 }
 
 type idemEntry struct {
@@ -31,7 +39,35 @@ type idemEntry struct {
 }
 
 func newIdemStore(ttl time.Duration) *idemStore {
-	return &idemStore{ttl: ttl, max: 4096, m: make(map[string]idemEntry)}
+	return &idemStore{ttl: ttl, max: 4096, m: make(map[string]idemEntry), locks: map[string]*keyLock{}}
+}
+
+// lock acquires the per-key lock, so only one request per idempotency key runs at
+// a time. Concurrent duplicates block here and (on acquiring) find the cached
+// result to replay instead of re-executing (KI-29).
+func (s *idemStore) lock(key string) {
+	s.mu.Lock()
+	kl := s.locks[key]
+	if kl == nil {
+		kl = &keyLock{}
+		s.locks[key] = kl
+	}
+	kl.refs++
+	s.mu.Unlock()
+	kl.mu.Lock()
+}
+
+func (s *idemStore) unlock(key string) {
+	s.mu.Lock()
+	kl := s.locks[key] // this goroutine holds a ref, so it's still present
+	s.mu.Unlock()
+	kl.mu.Unlock()
+	s.mu.Lock()
+	kl.refs--
+	if kl.refs == 0 {
+		delete(s.locks, key)
+	}
+	s.mu.Unlock()
 }
 
 func (s *idemStore) get(key string, now time.Time) (idemEntry, bool) {
@@ -109,16 +145,29 @@ func (s *Server) idempotency(next http.Handler) http.Handler {
 		r.Body = io.NopCloser(bytes.NewReader(body))
 
 		key := idemKey(rawKey, r.Method, r.URL.Path, body)
-		now := time.Now()
-		if e, ok := s.idem.get(key, now); ok {
+		replay := func(e idemEntry) {
 			if e.contentType != "" {
 				w.Header().Set("Content-Type", e.contentType)
 			}
 			w.Header().Set("Idempotent-Replay", "true")
 			w.WriteHeader(e.status)
 			_, _ = w.Write(e.body)
+		}
+
+		if e, ok := s.idem.get(key, time.Now()); ok {
+			replay(e)
 			return
 		}
+
+		// Serialize concurrent requests that share the key so only the first
+		// executes; the rest replay its cached result (KI-29).
+		s.idem.lock(key)
+		defer s.idem.unlock(key)
+		if e, ok := s.idem.get(key, time.Now()); ok {
+			replay(e)
+			return
+		}
+
 		rec := &recorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(rec, r)
 		if rec.status < 500 {
@@ -126,7 +175,7 @@ func (s *Server) idempotency(next http.Handler) http.Handler {
 				status:      rec.status,
 				body:        rec.body.Bytes(),
 				contentType: rec.Header().Get("Content-Type"),
-			}, now)
+			}, time.Now())
 		}
 	})
 }

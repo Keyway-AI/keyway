@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -223,6 +224,42 @@ func TestConsumerProbesEndpoint(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
 	assert.NotNil(t, body.Results, "results must be a (possibly empty) array, never null")
+}
+
+// TestIdempotencyConcurrentCoalescing fires many concurrent requests with the
+// SAME Idempotency-Key and body: exactly one must execute (the canary announce
+// mints a new key each real call), the rest replay it, and every response body
+// must be identical (KI-29).
+func TestIdempotencyConcurrentCoalescing(t *testing.T) {
+	h := testServer(t).Routes()
+	body := map[string]any{"issuer_id": "default", "alg": "RS256"}
+
+	const n = 24
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	bodies := make([]string, n)
+	replays := make([]string, n)
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			<-start // release all at once to maximise overlap
+			w := doKey(t, h, "POST", "/v1/canary/announce", "secret", "same-key", body)
+			bodies[i] = w.Body.String()
+			replays[i] = w.Header().Get("Idempotent-Replay")
+		}(i)
+	}
+	close(start)
+	wg.Wait()
+
+	executed := 0
+	for i := 0; i < n; i++ {
+		assert.Equal(t, bodies[0], bodies[i], "every concurrent response must be identical")
+		if replays[i] != "true" {
+			executed++
+		}
+	}
+	assert.Equal(t, 1, executed, "exactly one request executes; the rest replay")
 }
 
 func TestRunIndex(t *testing.T) {

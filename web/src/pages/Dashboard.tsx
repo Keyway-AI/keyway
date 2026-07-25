@@ -1,9 +1,11 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { Page } from "../components/Layout";
-import { Card, Empty, SeverityBadge, StatTile, Td, Th } from "../components/ui";
+import { Card, Empty, Pill, SeverityBadge, StatTile } from "../components/ui";
 import { useAsync } from "../lib/useAsync";
-import { relativeTime } from "../lib/format";
+import { relativeTime, severityColor } from "../lib/format";
+import { countBySeverity, severityRank, toFinding } from "../lib/findings";
 
 export default function Dashboard() {
   const coverage = useAsync(() => api.coverage());
@@ -12,6 +14,14 @@ export default function Dashboard() {
 
   const cov = coverage.data;
   const pct = cov && cov.total ? Math.round((cov.resolved / cov.total) * 100) : 0;
+
+  const findings = useMemo(() => (changes.data ?? []).map(toFinding), [changes.data]);
+  const counts = useMemo(() => countBySeverity(findings), [findings]);
+  const topFindings = useMemo(
+    () => [...findings].sort((a, b) => severityRank[a.severity] - severityRank[b.severity]).slice(0, 6),
+    [findings],
+  );
+  const actionable = counts.critical + counts.high;
 
   return (
     <Page
@@ -65,43 +75,46 @@ export default function Dashboard() {
         </Card>
 
         <Card
-          title="Recent changes"
+          title={
+            <span className="flex items-center gap-2">
+              Top findings
+              {actionable > 0 && (
+                <Pill className="text-critical">{actionable} need attention</Pill>
+              )}
+            </span>
+          }
           className="lg:col-span-2"
           action={
-            <Link to="/changes" className="text-xs text-brand hover:underline">
+            <Link to="/findings" className="text-xs text-brand hover:underline">
               View all →
             </Link>
           }
         >
-          {changes.data && changes.data.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <Th>Consumer</Th>
-                    <Th>Field</Th>
-                    <Th>Class</Th>
-                    <Th>Severity</Th>
-                    <Th>When</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {changes.data.map((c) => (
-                    <tr key={c.id}>
-                      <Td className="font-mono text-xs">{c.consumer_id.split("/").pop()}</Td>
-                      <Td className="font-mono text-xs text-muted">{c.field}</Td>
-                      <Td className="capitalize">{c.class}</Td>
-                      <Td>
-                        <SeverityBadge severity={c.severity} />
-                      </Td>
-                      <Td className="text-muted">{relativeTime(c.detected_at)}</Td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          {topFindings.length > 0 ? (
+            <ul className="divide-y divide-border/60">
+              {topFindings.map((f) => (
+                <li key={f.id}>
+                  <Link
+                    to="/findings"
+                    className="flex items-start gap-3 py-2.5 -mx-2 px-2 rounded-lg hover:bg-surface-2/50"
+                  >
+                    <SeverityBadge severity={f.severity} />
+                    <span className="min-w-0 flex-1">
+                      <span className={`block text-sm font-medium ${severityColor[f.severity]}`}>
+                        {f.headline}
+                      </span>
+                      <span className="block truncate text-xs text-muted">
+                        {f.service} · {relativeTime(f.event.detected_at)}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           ) : (
-            <Empty>{changes.loading ? "Loading…" : "No changes since baseline."}</Empty>
+            <Empty>
+              {changes.loading ? "Loading…" : "No findings — token contracts unchanged since baseline. 🎉"}
+            </Empty>
           )}
         </Card>
       </div>

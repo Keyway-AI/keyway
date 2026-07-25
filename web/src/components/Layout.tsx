@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 const nav = [
   { to: "/", label: "Dashboard", end: true, icon: "◉" },
+  { to: "/findings", label: "Findings", icon: "⚠" },
   { to: "/consumers", label: "Consumers", icon: "▤" },
   { to: "/changes", label: "Changes", icon: "◔" },
   { to: "/blast-radius", label: "Blast radius", icon: "✷" },

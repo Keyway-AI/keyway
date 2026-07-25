@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
+import Findings from "./pages/Findings";
 import Consumers from "./pages/Consumers";
 import Changes from "./pages/Changes";
 import BlastRadius from "./pages/BlastRadius";
@@ -11,6 +12,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
+        <Route path="findings" element={<Findings />} />
         <Route path="consumers" element={<Consumers />} />
         <Route path="changes" element={<Changes />} />
         <Route path="blast-radius" element={<BlastRadius />} />

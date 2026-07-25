@@ -68,6 +68,15 @@ export interface ProbeResult {
   run_at: string;
 }
 
+export interface Attribution {
+  kind: string; // commit | pr | deploy | idp_audit | unattributed
+  ref: string;
+  actor?: string;
+  team?: string;
+  timestamp: string;
+  confidence: number;
+}
+
 export interface ChangeEvent {
   id: string;
   from_version: string;
@@ -80,6 +89,7 @@ export interface ChangeEvent {
   severity: Severity;
   confidence: number;
   evidence: string[];
+  attribution?: Attribution | null;
   detected_at: string;
 }
 

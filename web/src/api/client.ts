@@ -4,6 +4,7 @@ import type {
   Consumer,
   CoverageResponse,
   HealthResponse,
+  ProbeResult,
   SnapshotResponse,
 } from "./types";
 import * as mock from "./mock";
@@ -92,6 +93,17 @@ export const api = {
     withMock<Consumer[]>(
       async () => (await request<{ consumers: Consumer[] }>("/v1/consumers")).consumers ?? [],
       mock.consumers,
+    ),
+
+  consumerProbes: (stableId: string) =>
+    withMock<ProbeResult[]>(
+      async () =>
+        (
+          await request<{ results: ProbeResult[] }>(
+            `/v1/consumers/${encodeURIComponent(stableId)}/probes`,
+          )
+        ).results ?? [],
+      () => mock.consumerProbes(stableId),
     ),
 
   changes: (params?: { since?: string; severity?: string; class?: string }) =>

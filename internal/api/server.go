@@ -74,6 +74,7 @@ func (s *Server) Routes() http.Handler {
 
 		r.Get("/v1/consumers", s.handleListConsumers)
 		r.Get("/v1/consumers/{stable_id}", s.handleGetConsumer)
+		r.Get("/v1/consumers/{stable_id}/probes", s.handleConsumerProbes)
 
 		r.Post("/v1/probes/run", s.handleRunProbes)
 		r.Get("/v1/probes/runs/{run_id}", s.handleGetProbeRun)

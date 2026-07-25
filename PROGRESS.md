@@ -135,7 +135,7 @@ _Last updated: 2026-07-24 — **all milestones M0–M9 + UI complete and tested*
 - [x] Blast-radius interactive form → result view (client-side resolver mirrors §10)
 - [x] Canary status board (announce action pending M6)
 - [x] Wired to live API (mock fallback only when API unreachable; `keyway.live=1` forces live) — verified in-browser against the daemon
-- [ ] Consumer detail drawer (provenance, confidence, probe history)
+- [x] Consumer detail drawer (provenance, confidence, probe history) — click a consumer row; backed by `GET /v1/consumers/{id}/probes`
 
 ---
 

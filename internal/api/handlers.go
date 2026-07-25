@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -103,6 +104,27 @@ func (s *Server) handleListConsumers(w http.ResponseWriter, r *http.Request) {
 		out = append(out, c)
 	}
 	writeJSON(w, http.StatusOK, apitypes.ConsumerList{Consumers: out, Total: len(out)})
+}
+
+// handleConsumerProbes returns a consumer's recent probe results (newest first),
+// powering the consumer detail drawer's probe-history panel.
+func (s *Server) handleConsumerProbes(w http.ResponseWriter, r *http.Request) {
+	stableID := chi.URLParam(r, "stable_id")
+	limit := 50
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 500 {
+			limit = n
+		}
+	}
+	results, err := s.deps.Store.ProbeHistory(r.Context(), stableID, limit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "store_error", "could not load probe history")
+		return
+	}
+	if results == nil {
+		results = []model.ProbeResult{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"consumer_id": stableID, "results": results})
 }
 
 func (s *Server) handleGetConsumer(w http.ResponseWriter, r *http.Request) {

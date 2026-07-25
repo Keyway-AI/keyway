@@ -5,6 +5,7 @@ import type {
   ChangeEvent,
   Consumer,
   CoverageResponse,
+  ProbeResult,
   SnapshotResponse,
 } from "./types";
 
@@ -52,7 +53,30 @@ export const consumers = (): Consumer[] => [
       source: "probed",
     },
     library: { name: "MicahParks/keyfunc", version: "v1.9.0", lang: "go" },
-    confidence: { overall: 1 },
+    confidence: {
+      overall: 1,
+      "expects.issuers": 1,
+      "expects.audiences": 1,
+      "jwks_behavior.refreshes_on_unknown_kid": 0.8,
+    },
+    provenance: {
+      "expects.issuers": [
+        {
+          source: "istio:RequestAuthentication/payments",
+          locator: "cluster/istio/payments-ra.yaml",
+          observed_at: new Date(Date.now() - 86400_000).toISOString(),
+          confidence: 1,
+        },
+      ],
+      "jwks_behavior.refreshes_on_unknown_kid": [
+        {
+          source: "lib:keyfunc",
+          locator: "MicahParks/keyfunc v1.9.0",
+          observed_at: new Date(Date.now() - 86400_000).toISOString(),
+          confidence: 0.8,
+        },
+      ],
+    },
   }),
   consumer({
     stable_id: "k8s://prod/data/legacy-reporting",
@@ -88,6 +112,29 @@ export const consumers = (): Consumer[] => [
     confidence: { overall: 0.4 },
   }),
 ];
+
+export const consumerProbes = (stableId: string): ProbeResult[] => {
+  // Only the probeable sample services have history; others return none.
+  if (!stableId.startsWith("k8s://") && !stableId.startsWith("route://")) return [];
+  const probes = [
+    { probe_id: "alg_none", passed: true, status_code: 401 },
+    { probe_id: "alg_confusion", passed: true, status_code: 401 },
+    { probe_id: "expired", passed: true, status_code: 401 },
+    { probe_id: "wrong_audience", passed: true, status_code: 403 },
+    { probe_id: "valid_baseline", passed: true, status_code: 200 },
+  ];
+  return probes.map((p, i) => ({
+    id: `${stableId}-${p.probe_id}`,
+    probe_id: p.probe_id,
+    consumer_id: stableId,
+    endpoint_url: "https://svc.internal/healthz",
+    status_code: p.status_code,
+    latency_ms: 12 + i * 3,
+    passed: p.passed,
+    raw_response: "",
+    run_at: new Date(Date.now() - (i + 1) * 1800_000).toISOString(),
+  }));
+};
 
 export const changes = (): ChangeEvent[] => [
   {

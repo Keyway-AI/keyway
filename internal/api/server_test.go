@@ -202,6 +202,20 @@ func TestIdempotencyBoundToBody(t *testing.T) {
 	assert.NotEqual(t, first.Body.String(), second.Body.String())
 }
 
+// TestConsumerProbesEndpoint verifies the per-consumer probe-history endpoint
+// (powers the detail drawer) returns 200 with a results array.
+func TestConsumerProbesEndpoint(t *testing.T) {
+	h := testServer(t).Routes()
+	w := do(t, h, "GET", "/v1/consumers/k8s%3A%2F%2Flocal%2Fprod%2Fapi-a/probes", "secret", nil)
+	require.Equal(t, 200, w.Code)
+	var body struct {
+		ConsumerID string              `json:"consumer_id"`
+		Results    []model.ProbeResult `json:"results"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	assert.NotNil(t, body.Results, "results must be a (possibly empty) array, never null")
+}
+
 func TestRunIndex(t *testing.T) {
 	idx := newRunIndex(2)
 	idx.put("a", []model.ProbeResult{{ProbeID: "valid_token"}})

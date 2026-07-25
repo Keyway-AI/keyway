@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api } from "../api/client";
 import { Page } from "../components/Layout";
 import { Card, Empty, Pill, Td, Th } from "../components/ui";
+import { ConsumerDrawer } from "../components/ConsumerDrawer";
 import { useAsync } from "../lib/useAsync";
 import { ttlLabel } from "../lib/format";
 import type { Consumer } from "../api/types";
@@ -19,6 +20,7 @@ function RefreshFlag({ c }: { c: Consumer }) {
 export default function Consumers() {
   const { data, loading } = useAsync(() => api.consumers());
   const [q, setQ] = useState("");
+  const [selected, setSelected] = useState<Consumer | null>(null);
 
   const rows = (data ?? []).filter(
     (c) =>
@@ -31,7 +33,7 @@ export default function Consumers() {
   return (
     <Page
       title="Consumers"
-      subtitle="Every component that validates tokens, derived from your cluster and config."
+      subtitle="Every component that validates tokens, derived from your cluster and config. Select a row for provenance, confidence, and probe history."
       actions={
         <input
           value={q}
@@ -58,7 +60,11 @@ export default function Consumers() {
               </thead>
               <tbody>
                 {rows.map((c) => (
-                  <tr key={c.stable_id} className="hover:bg-surface-2/50">
+                  <tr
+                    key={c.stable_id}
+                    onClick={() => setSelected(c)}
+                    className="cursor-pointer hover:bg-surface-2/50"
+                  >
                     <Td className="font-medium">{c.name}</Td>
                     <Td className="font-mono text-xs text-muted">{c.stable_id}</Td>
                     <Td>{c.owner_team ? <Pill>{c.owner_team}</Pill> : "—"}</Td>
@@ -85,6 +91,7 @@ export default function Consumers() {
           <Empty>{loading ? "Loading…" : "No consumers discovered yet."}</Empty>
         )}
       </Card>
+      <ConsumerDrawer consumer={selected} onClose={() => setSelected(null)} />
     </Page>
   );
 }

@@ -33,6 +33,13 @@ export interface Endpoint {
   safe_probe_path: string;
 }
 
+export interface ProvenanceRecord {
+  source: string;
+  locator: string;
+  observed_at: string;
+  confidence: number;
+}
+
 export interface Consumer {
   id: string;
   stable_id: string;
@@ -44,8 +51,21 @@ export interface Consumer {
   expects: Expectations;
   jwks_behavior: JWKSBehavior;
   library?: LibraryInfo | null;
+  provenance?: Record<string, ProvenanceRecord[]>;
   confidence: Record<string, number>;
   probeable: boolean;
+}
+
+export interface ProbeResult {
+  id: string;
+  probe_id: string;
+  consumer_id: string;
+  endpoint_url: string;
+  status_code: number;
+  latency_ms: number;
+  passed: boolean;
+  raw_response: string;
+  run_at: string;
 }
 
 export interface ChangeEvent {

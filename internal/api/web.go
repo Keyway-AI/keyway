@@ -11,8 +11,9 @@ import (
 var webFS embed.FS
 
 // spaHandler serves the embedded web dashboard, falling back to index.html for
-// client-side routes (SPA history mode). The production bundle is written into
-// webdist/ at container-build time; a placeholder ships otherwise.
+// client-side routes (SPA history mode). The real Vite bundle is committed under
+// webdist/ (refresh it with `make web-build`), so `go install` and a plain
+// `go build` both ship the full UI — no Node toolchain required at build time.
 func spaHandler() http.Handler {
 	sub, err := fs.Sub(webFS, "webdist")
 	if err != nil {

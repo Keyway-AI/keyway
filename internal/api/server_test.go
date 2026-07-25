@@ -132,6 +132,14 @@ func TestUIServed(t *testing.T) {
 	w := do(t, h, "GET", "/", "", nil)
 	assert.Equal(t, 200, w.Code)
 	assert.Contains(t, w.Body.String(), "Keyway")
+	// The embedded bundle must be the real Vite build (references a hashed asset),
+	// not the placeholder — guards KI-12.
+	assert.Contains(t, w.Body.String(), "/assets/", "expected the real web bundle to be embedded (run `make web-build`)")
+
+	// A client-side route falls back to index.html (SPA history mode).
+	spa := do(t, h, "GET", "/consumers", "", nil)
+	assert.Equal(t, 200, spa.Code)
+	assert.Contains(t, spa.Body.String(), "/assets/")
 }
 
 // doKey is like do but sets an Idempotency-Key header.

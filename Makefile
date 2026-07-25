@@ -116,8 +116,13 @@ web-dev: ## Start the Vite dev server (proxies /v1 to :8080)
 	cd web && npm run dev
 
 .PHONY: web-build
-web-build: ## Build the production web bundle into web/dist
+web-build: ## Build the production web bundle and embed it into the Go binary
 	cd web && npm run build
+	rm -rf internal/api/webdist
+	mkdir -p internal/api/webdist
+	cp -r web/dist/* internal/api/webdist/
+	find internal/api/webdist -name '*.map' -delete
+	@echo "Embedded web bundle refreshed. Commit internal/api/webdist so 'go install' ships the real UI."
 
 ## ----------------------------------------------------------------------------
 ## Benchmark harness (PRD §13)

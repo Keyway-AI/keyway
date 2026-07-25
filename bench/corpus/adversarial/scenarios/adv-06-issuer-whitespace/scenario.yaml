@@ -1,0 +1,8 @@
+# Adversarial (known limitation probe): a trailing space sneaks into the issuer
+# string. Ideal behaviour is silence (whitespace-insensitive); Keyway compares
+# verbatim, so we expect a flag — the same normalization gap as adv-03.
+id: "adv-06"
+name: issuer-whitespace
+before: before
+after: after
+expected: { detected: false, consumer: "k8s://local/prod/api-a" }

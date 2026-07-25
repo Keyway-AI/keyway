@@ -1,0 +1,8 @@
+apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata: { name: api-a, namespace: prod }
+spec:
+  selector: { matchLabels: { app: api-a } }
+  jwtRules:
+    - issuer: "https://kc/realms/main"
+      audiences: ["api-a", "api-b"]

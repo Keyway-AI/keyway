@@ -1,0 +1,8 @@
+# Hard: the same audience is listed twice. After de-duplication the set is
+# unchanged, so it is a no-op. Tests that set semantics (not list length) drive
+# the diff.
+id: "adv-05"
+name: duplicate-audience
+before: before
+after: after
+expected: { detected: false, consumer: "k8s://local/prod/api-a" }

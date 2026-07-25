@@ -1,0 +1,7 @@
+# Hard: svc-a only churns a label (noise); svc-b genuinely widens. Keyway must
+# flag svc-b and stay silent on svc-a.
+id: "adv-07"
+name: mixed-multi-consumer
+before: before
+after: after
+expected: { detected: true, class: widened, severity: medium, consumer: "k8s://local/prod/svc-b" }

@@ -1,0 +1,9 @@
+# Adversarial (known limitation probe): only a trailing slash is added to the
+# issuer URL. Most OIDC stacks treat these as the same issuer, so the ideal
+# behaviour is SILENCE. Keyway compares issuer strings verbatim, so we expect it
+# to (incorrectly) flag this — a documented normalization gap, recorded honestly.
+id: "adv-03"
+name: issuer-trailing-slash
+before: before
+after: after
+expected: { detected: false, consumer: "k8s://local/prod/api-a" }

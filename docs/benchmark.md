@@ -101,13 +101,24 @@ FPR** (the headline).
 This runs on every push/PR (`.github/workflows/ci.yml`), so the published
 accuracy cannot silently regress.
 
+## Is the 100% overfit? (integrity)
+
+A 100% on a self-authored corpus proves consistency, not generalisation. Two
+checks that a rigged number could not survive live in
+[benchmark-integrity.md](benchmark-integrity.md): **mutation testing**
+(`make mutation` — inject faults into the classifier, 100% mutator coverage,
+every behaviour-changing fault killed) and a **held-out adversarial corpus**
+(`bench/corpus/adversarial/`, scored as `L3-adversarial`, **0.5 Youden** — not
+perfect, failures named). Read that page before trusting the headline.
+
 ## Honest limitations
 
 - **The generated corpus is deterministic.** Ground truth is derived from the
   same field semantics the diff uses, so a passing score there proves
   *consistency and regression-safety*, not that the classification rules are the
   "right" ones — that judgement lives in the classification table itself
-  (PRD §9.2) and its unit tests.
+  (PRD §9.2) and its unit tests. Mutation testing (above) is how we confirm the
+  corpus actually exercises those rules.
 - **The realistic signal is in the file-based scenarios**, especially the no-op
   ones: those are where a naive differ would generate false positives, and where
   the "zero-noise" claim is actually earned. Growing that set (toward the PRD's

@@ -1,0 +1,7 @@
+# Hard: the audience list is reordered (pure noise) AND gains api-c (real). The
+# reorder must not mask the widening.
+id: "adv-02"
+name: reorder-hides-add
+before: before
+after: after
+expected: { detected: true, class: widened, severity: medium, consumer: "k8s://local/prod/api-a" }

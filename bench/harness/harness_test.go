@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"strconv"
 	"testing"
 
 	"github.com/nometria/keyway/bench/mutations"
@@ -27,16 +29,30 @@ func TestGeneratedCorpusScores(t *testing.T) {
 	assert.InDelta(t, 0.5, ratio, 0.05, "corpus should be roughly half true positives")
 }
 
+// realisticCount is the number of generated realistic scenarios. It defaults to
+// 400 but can be lowered via KEYWAY_REALISTIC_N so mutation testing (which reruns
+// the whole suite per mutant) stays fast enough to avoid timeouts — coverage of
+// every risk class is retained at a much smaller count since the catalog cycles.
+func realisticCount() int {
+	if v := os.Getenv("KEYWAY_REALISTIC_N"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+	}
+	return 400
+}
+
 // TestRealisticCorpusScores renders the generated realistic scenarios as real
 // YAML, runs them through actual discovery + diff, and asserts a perfect score.
 // This is the end-to-end regression guard for KI-18: if a future change to the
-// discovery adapters or the classifier breaks any risk class, one of these 400
+// discovery adapters or the classifier breaks any risk class, one of these
 // scenarios turns into an FP or FN and this test fails.
 func TestRealisticCorpusScores(t *testing.T) {
-	scenarios, cleanup, err := loadGeneratedRealistic(400)
+	n := realisticCount()
+	scenarios, cleanup, err := loadGeneratedRealistic(n)
 	require.NoError(t, err)
 	defer cleanup()
-	require.Len(t, scenarios, 400, "every generated scenario must discover cleanly")
+	require.Len(t, scenarios, n, "every generated scenario must discover cleanly")
 
 	card := score(scenarios)
 	assert.Greater(t, card.TP, 0)

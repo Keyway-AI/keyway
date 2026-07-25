@@ -1,0 +1,8 @@
+# Hard: billing simultaneously drops the legacy audience AND starts requiring a
+# `scope` claim — two narrowings on one consumer. At least the audience narrowing
+# must surface.
+id: "adv-08"
+name: double-narrow
+before: before
+after: after
+expected: { detected: true, class: narrowed, severity: low, consumer: "k8s://local/prod/billing" }

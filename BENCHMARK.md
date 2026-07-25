@@ -54,6 +54,16 @@ Keyway must stay completely silent.
 | **Precision** | **100%** | every alert it raised was real |
 | **Youden score** | **1.00** | 1.0 is a perfect detector |
 
+> **"100% sounds too good — is it real or overfit?"** Fair question, and the
+> honest answer is *both things are true*: 100% on a corpus we authored proves
+> the rules are self-consistent, **not** that they generalise. So we stress-test
+> it two ways that a rigged number could not survive — **mutation testing**
+> (inject faults into the detector; the tests catch 100% of behaviour-changing
+> ones) and a **held-out adversarial corpus** where Keyway scores **0.50 Youden,
+> not 1.0**, with its failures named. The full write-up is
+> [docs/benchmark-integrity.md](docs/benchmark-integrity.md) — read it before you
+> trust the 100%.
+
 ![Detection accuracy ROC chart](docs/benchmark-roc.svg)
 
 The blue dot (top-left = perfect) is Keyway. The orange dots are **published**

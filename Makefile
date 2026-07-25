@@ -136,6 +136,14 @@ bench-report: ## Run the benchmark and emit a human-readable report.html + roc.s
 validate: ## Validate against documented real-world CVEs/incidents (bench/realworld)
 	$(GO) run ./bench/harness --realworld --ci-gate
 
+.PHONY: mutation
+mutation: ## Mutation-test the detector: inject faults, prove the corpus catches them
+	@command -v gremlins >/dev/null 2>&1 || $(GO) install github.com/go-gremlins/gremlins/cmd/gremlins@latest
+	@echo "Mutating the classifier (internal/diff) and running the FULL suite per mutant."
+	@echo "A corpus that were merely overfit would let injected faults survive; the score"
+	@echo "is the % of injected detector bugs the tests actually catch."
+	KEYWAY_REALISTIC_N=40 gremlins unleash --integration --timeout-coefficient 8 ./internal/diff/
+
 .PHONY: bench-l2
 bench-l2: ## Score the live-probe layer (L2) against real containerized services
 	docker compose -f bench/l2/docker-compose.yml up -d --build

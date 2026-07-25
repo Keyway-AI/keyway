@@ -24,6 +24,7 @@ import (
 func main() {
 	var (
 		corpus    = flag.String("corpus", "./bench/corpus", "path to file-based scenarios")
+		adversary = flag.String("adversarial", "./bench/corpus/adversarial", "path to the held-out adversarial corpus (scored separately, not gated)")
 		out       = flag.String("out", "./bench/out", "output directory for the scorecard")
 		rounds    = flag.Int("rounds", 50, "generated-corpus rounds (each ~12 scenarios)")
 		realistic = flag.Int("realistic", 400, "count of generated realistic manifest scenarios (rendered YAML through real discovery)")
@@ -79,6 +80,14 @@ func main() {
 		rc.Layer = "L3-realistic"
 		cards["L3-realistic"] = rc
 	}
+	// The held-out adversarial corpus is deliberately hard and includes cases we
+	// expect to fail (documented normalization gaps). It is scored and reported
+	// honestly but NOT gated — its job is to expose limitations, not to pass.
+	if adv, e := loadFileScenarios(*adversary); e == nil && len(adv) > 0 {
+		ac := score(adv)
+		ac.Layer = "L3-adversarial"
+		cards["L3-adversarial"] = ac
+	}
 	// L1 is measured by the file-based scenarios (real discovery). Approximate
 	// recall as scenarios whose consumers were discovered non-empty.
 	if len(fileScenarios) > 0 {
@@ -108,6 +117,10 @@ func main() {
 	if rc, ok := cards["L3-realistic"]; ok {
 		fmt.Printf("  L3-realistic (rendered YAML → real discovery → diff): TPR=%.3f FPR=%.3f Youden=%.3f (TP=%d FP=%d TN=%d FN=%d)\n",
 			rc.TPR, rc.FPR, rc.Youden, rc.TP, rc.FP, rc.TN, rc.FN)
+	}
+	if ac, ok := cards["L3-adversarial"]; ok {
+		fmt.Printf("  L3-adversarial (held-out hard cases, NOT gated): TPR=%.3f FPR=%.3f Youden=%.3f (TP=%d FP=%d TN=%d FN=%d)\n",
+			ac.TPR, ac.FPR, ac.Youden, ac.TP, ac.FP, ac.TN, ac.FN)
 	}
 	fmt.Printf("  scorecard -> %s\n", scorePath)
 

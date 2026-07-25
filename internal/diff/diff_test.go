@@ -103,6 +103,94 @@ func TestComputeConsumerAddedRemoved(t *testing.T) {
 	}
 }
 
+// The following tests exist to pin down branches that the discovery-driven
+// corpus cannot reach (Istio/Envoy do not declare clock skew, and the corpus
+// never shrinks a cache TTL through this exact code path), so mutation testing
+// has coverage of every direction of every numeric/boolean comparison.
+
+func TestComputeClockSkewWidened(t *testing.T) {
+	from := version("v1", consumer("api-a", model.Expectations{ClockSkewSec: 60}))
+	to := version("v2", consumer("api-a", model.Expectations{ClockSkewSec: 300}))
+	events := Compute(from, to)
+	require.Len(t, events, 1)
+	assert.Equal(t, FieldClockSkew, events[0].Field)
+	assert.Equal(t, model.ChangeWidened, events[0].Class)
+	assert.Equal(t, model.SeverityMedium, events[0].Severity)
+}
+
+func TestComputeClockSkewNarrowed(t *testing.T) {
+	from := version("v1", consumer("api-a", model.Expectations{ClockSkewSec: 300}))
+	to := version("v2", consumer("api-a", model.Expectations{ClockSkewSec: 30}))
+	events := Compute(from, to)
+	require.Len(t, events, 1)
+	assert.Equal(t, model.ChangeNarrowed, events[0].Class)
+	assert.Equal(t, model.SeverityLow, events[0].Severity)
+}
+
+func jwksTTL(stableID string, ttl int) model.Consumer {
+	return model.Consumer{StableID: stableID, Name: stableID, JWKSBehavior: model.JWKSBehavior{CacheTTLSec: &ttl}}
+}
+
+func TestComputeCacheTTLIncreased(t *testing.T) {
+	from := version("v1", jwksTTL("api-a", 300))
+	to := version("v2", jwksTTL("api-a", 3600))
+	events := Compute(from, to)
+	require.Len(t, events, 1)
+	assert.Equal(t, FieldCacheTTL, events[0].Field)
+	assert.Equal(t, model.ChangeNarrowed, events[0].Class)
+	assert.Equal(t, model.SeverityMedium, events[0].Severity) // longer cache raises grace need
+}
+
+func TestComputeCacheTTLDecreased(t *testing.T) {
+	from := version("v1", jwksTTL("api-a", 3600))
+	to := version("v2", jwksTTL("api-a", 300))
+	events := Compute(from, to)
+	require.Len(t, events, 1)
+	assert.Equal(t, model.ChangeNarrowed, events[0].Class)
+	assert.Equal(t, model.SeverityLow, events[0].Severity)
+}
+
+// A cache TTL that is only *learned* (nil -> value) or unchanged must not page.
+func TestComputeCacheTTLLearnedAndEqualAreSilent(t *testing.T) {
+	learned := version("v2", jwksTTL("api-a", 300))
+	fromNil := version("v1", model.Consumer{StableID: "api-a", JWKSBehavior: model.JWKSBehavior{}})
+	assert.Empty(t, Compute(fromNil, learned), "learning a TTL is not a change")
+	assert.Empty(t, Compute(learned, learned), "equal TTL is not a change")
+}
+
+func TestComputeRefreshFalseToTrue(t *testing.T) {
+	tr, fa := true, false
+	from := version("v1", model.Consumer{StableID: "api-a", JWKSBehavior: model.JWKSBehavior{RefreshesOnUnknownKID: &fa}})
+	to := version("v2", model.Consumer{StableID: "api-a", JWKSBehavior: model.JWKSBehavior{RefreshesOnUnknownKID: &tr}})
+	events := Compute(from, to)
+	require.Len(t, events, 1)
+	assert.Equal(t, model.ChangeWidened, events[0].Class, "starting to refresh is a safe widening")
+	assert.Equal(t, model.SeverityLow, events[0].Severity)
+}
+
+// evidenceFor prefers a provenance Locator, falling back to Source, and emits
+// nothing when neither is present.
+func TestEvidenceForPrefersLocatorThenSource(t *testing.T) {
+	withLocator := consumer("api-a", model.Expectations{Audiences: []string{"a"}})
+	withLocator.Provenance = map[string][]model.ProvenanceRecord{
+		FieldAudiences: {{Source: "istio", Locator: "file.yaml"}},
+	}
+	to := consumer("api-a", model.Expectations{Audiences: []string{"a", "b"}})
+	to.Provenance = withLocator.Provenance
+	ev := Compute(version("v1", withLocator), version("v2", to))
+	require.Len(t, ev, 1)
+	assert.Equal(t, []string{"file.yaml"}, ev[0].Evidence, "locator preferred")
+
+	// Source-only (no locator) falls back to the source string.
+	srcOnly := consumer("api-b", model.Expectations{Audiences: []string{"a"}})
+	srcOnly.Provenance = map[string][]model.ProvenanceRecord{FieldAudiences: {{Source: "k8s-env"}}}
+	toB := consumer("api-b", model.Expectations{Audiences: []string{"a", "b"}})
+	toB.Provenance = srcOnly.Provenance
+	ev = Compute(version("v1", srcOnly), version("v2", toB))
+	require.Len(t, ev, 1)
+	assert.Equal(t, []string{"k8s-env"}, ev[0].Evidence, "source used when no locator")
+}
+
 func TestComputeLowConfidenceUnknown(t *testing.T) {
 	from := version("v1", consumer("api-a", model.Expectations{Audiences: []string{"api-a"}}))
 	toC := consumer("api-a", model.Expectations{Audiences: []string{"api-a", "api-b"}})

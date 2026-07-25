@@ -1,0 +1,8 @@
+# Hard: the accepted VALUE of the required `dept` claim changes (finance->legal),
+# but `dept` is still required. The token contract (which claims must be present)
+# is unchanged, so Keyway must stay silent. A naive value-diff would false-alarm.
+id: "adv-04"
+name: claim-value-changed
+before: before
+after: after
+expected: { detected: false, consumer: "k8s://local/prod/reports" }

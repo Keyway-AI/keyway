@@ -1,0 +1,16 @@
+apiVersion: "security.istio.io/v1beta1"
+kind: "RequestAuthentication"
+metadata:
+  name: "graphql-jwt"
+  namespace: graphql
+spec:
+  selector:
+    matchLabels:
+      app: graphql
+  jwtRules:
+    - issuer: "https://login.mycompany.io/"
+      jwksUri: "https://mycompany.us.auth0.com/.well-known/jwks.json"
+      outputPayloadToHeader: "my-data"
+      fromHeaders:
+        - name: x-jwt-assertion
+          prefix: "Bearer "

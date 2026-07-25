@@ -1,0 +1,7 @@
+# Real base config (istio/istio#50246) + a plausible onboard-a-second-audience
+# change. Ground truth: adding an accepted audience is a widening (medium).
+id: "rw-01"
+name: realworld-audience-add
+before: before
+after: after
+expected: { detected: true, class: widened, severity: medium, consumer: "k8s://local/istio-system/request-authentication" }

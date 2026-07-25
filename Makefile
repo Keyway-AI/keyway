@@ -149,6 +149,14 @@ mutation: ## Mutation-test the detector: inject faults, prove the corpus catches
 	@echo "is the % of injected detector bugs the tests actually catch."
 	KEYWAY_REALISTIC_N=40 gremlins unleash --integration --timeout-coefficient 8 ./internal/diff/
 
+.PHONY: bench-oss
+bench-oss: ## Independent benchmark: run discovery + a real diff on external OSS configs
+	@echo "== Discovery (L1) on real, unseen configs (Istio/Envoy docs + istio/istio issues) =="
+	$(GO) run ./cmd/keyway discover --path ./bench/oss/manifests --output table
+	@echo
+	@echo "== Diff (L3) on a real config with a plausible change =="
+	$(GO) run ./bench/harness --corpus ./bench/oss/diff --realistic 0 --out ./bench/out/oss
+
 .PHONY: bench-l2
 bench-l2: ## Score the live-probe layer (L2) against real containerized services
 	docker compose -f bench/l2/docker-compose.yml up -d --build

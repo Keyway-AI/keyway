@@ -1,0 +1,15 @@
+apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata:
+  name: request-authentication
+  namespace: istio-system
+spec:
+  jwtRules:
+  - audiences:
+    - delivery-platform-testing
+    forwardOriginalToken: true
+    fromHeaders:
+    - name: authorization
+      prefix: 'Jwt '
+    issuer: https://app.platform-identity-provider.testing.k8.atcloud.io
+    jwksUri: http://app.platform-identity-provider.svc.cluster.local/jwks

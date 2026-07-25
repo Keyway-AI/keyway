@@ -1,0 +1,15 @@
+http_filters:
+  - name: envoy.filters.http.jwt_authn
+    typed_config:
+      providers:
+        provider_name1:
+          issuer: https://example.com
+          audiences:
+          - bookstore_android.apps.googleusercontent.com
+          - bookstore_web.apps.googleusercontent.com
+          remote_jwks:
+            http_uri:
+              uri: https://example.com/jwks.json
+              cluster: example_jwks_cluster
+              timeout: 1s
+            cache_duration: 300s

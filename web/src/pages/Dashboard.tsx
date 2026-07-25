@@ -1,16 +1,34 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { Page } from "../components/Layout";
-import { Card, Empty, Pill, SeverityBadge, StatTile } from "../components/ui";
+import { Button, Card, Empty, Pill, SeverityBadge, StatTile } from "../components/ui";
+import { useToast } from "../components/toast";
 import { useAsync } from "../lib/useAsync";
 import { relativeTime, severityColor } from "../lib/format";
 import { countBySeverity, severityRank, toFinding } from "../lib/findings";
 
 export default function Dashboard() {
+  const toast = useToast();
+  const [snapshotting, setSnapshotting] = useState(false);
   const coverage = useAsync(() => api.coverage());
   const snapshot = useAsync(() => api.latestSnapshot());
   const changes = useAsync(() => api.changes());
+
+  async function takeSnapshot() {
+    setSnapshotting(true);
+    try {
+      const v = await api.createSnapshot();
+      toast.success(`Snapshot ${v.is_baseline ? "captured as baseline" : "captured"}`);
+      snapshot.reload();
+      coverage.reload();
+      changes.reload();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Snapshot failed");
+    } finally {
+      setSnapshotting(false);
+    }
+  }
 
   const cov = coverage.data;
   const pct = cov && cov.total ? Math.round((cov.resolved / cov.total) * 100) : 0;
@@ -27,6 +45,11 @@ export default function Dashboard() {
     <Page
       title="Dashboard"
       subtitle="Coverage and recent contract changes across your issuers."
+      actions={
+        <Button variant="primary" onClick={takeSnapshot} loading={snapshotting}>
+          Take snapshot
+        </Button>
+      }
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Consumers" value={cov?.total ?? "—"} hint="derived automatically" />

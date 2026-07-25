@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -100,6 +101,24 @@ func (s *Server) handleConsumerProbes(w http.ResponseWriter, r *http.Request) {
 		results = []model.ProbeResult{}
 	}
 	writeJSON(w, http.StatusOK, apitypes.ConsumerProbesResponse{ConsumerID: stableID, Results: results})
+}
+
+// handleListIssuers returns the registered issuers with their key state, so the
+// UI can pick an issuer and drive the canary lifecycle.
+func (s *Server) handleListIssuers(w http.ResponseWriter, r *http.Request) {
+	names := s.deps.Issuers.Names()
+	sort.Strings(names)
+	out := make([]model.Issuer, 0, len(names))
+	for _, n := range names {
+		iss, ok := s.deps.Issuers.Get(n)
+		if !ok {
+			continue
+		}
+		if desc, err := iss.Describe(r.Context()); err == nil {
+			out = append(out, desc)
+		}
+	}
+	writeJSON(w, http.StatusOK, apitypes.IssuerList{Issuers: out})
 }
 
 func (s *Server) handleGetConsumer(w http.ResponseWriter, r *http.Request) {
@@ -229,8 +248,8 @@ func (s *Server) handleCanaryStatus(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadGateway, "describe_failed", err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"issuer": desc.Name, "keys": desc.Keys, "announced_kid": iss.KeySet().AnnouncedKID(),
+	writeJSON(w, http.StatusOK, apitypes.CanaryStatusResponse{
+		Issuer: desc.Name, Keys: desc.Keys, AnnouncedKID: iss.KeySet().AnnouncedKID(),
 	})
 }
 

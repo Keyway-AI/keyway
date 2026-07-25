@@ -34,6 +34,19 @@ type ConsumerProbesResponse struct {
 	Results    []model.ProbeResult `json:"results"`
 }
 
+// IssuerList is the registered issuers with their live key state, so the UI can
+// drive the canary lifecycle.
+type IssuerList struct {
+	Issuers []model.Issuer `json:"issuers"`
+}
+
+// CanaryStatusResponse reports an issuer's keys and which is the announced canary.
+type CanaryStatusResponse struct {
+	Issuer       string      `json:"issuer"`
+	Keys         []model.Key `json:"keys"`
+	AnnouncedKID string      `json:"announced_kid"`
+}
+
 // BlastRadiusRequest is the body of POST /v1/blast-radius.
 type BlastRadiusRequest struct {
 	Proposal ChangeProposal `json:"proposal"`

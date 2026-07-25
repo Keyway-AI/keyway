@@ -66,6 +66,8 @@ func DefaultGates() []Gate {
 		{"L2", "probe accuracy", func(s Scorecard) float64 { return s.Precision }, func(v float64) bool { return v < 0.95 }, "correct verdicts < 95%"},
 		{"L3", "diff FPR", func(s Scorecard) float64 { return s.FPR }, func(v float64) bool { return v > 0.05 }, "alerts on no-op commits > 5%"},
 		{"L3", "Youden", func(s Scorecard) float64 { return s.Youden }, func(v float64) bool { return v < 0.70 }, "TPR - FPR < 0.70"},
+		{"L3-realistic", "diff FPR", func(s Scorecard) float64 { return s.FPR }, func(v float64) bool { return v > 0.05 }, "realistic corpus: alerts on no-op commits > 5%"},
+		{"L3-realistic", "Youden", func(s Scorecard) float64 { return s.Youden }, func(v float64) bool { return v < 0.70 }, "realistic corpus: TPR - FPR < 0.70"},
 		{"L4", "attribution", func(s Scorecard) float64 { return s.Precision }, func(v float64) bool { return v < 0.60 }, "correctly bound < 60%"},
 	}
 }

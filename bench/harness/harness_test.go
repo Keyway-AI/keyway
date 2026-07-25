@@ -27,6 +27,39 @@ func TestGeneratedCorpusScores(t *testing.T) {
 	assert.InDelta(t, 0.5, ratio, 0.05, "corpus should be roughly half true positives")
 }
 
+// TestRealisticCorpusScores renders the generated realistic scenarios as real
+// YAML, runs them through actual discovery + diff, and asserts a perfect score.
+// This is the end-to-end regression guard for KI-18: if a future change to the
+// discovery adapters or the classifier breaks any risk class, one of these 400
+// scenarios turns into an FP or FN and this test fails.
+func TestRealisticCorpusScores(t *testing.T) {
+	scenarios, cleanup, err := loadGeneratedRealistic(400)
+	require.NoError(t, err)
+	defer cleanup()
+	require.Len(t, scenarios, 400, "every generated scenario must discover cleanly")
+
+	card := score(scenarios)
+	assert.Greater(t, card.TP, 0)
+	assert.Greater(t, card.TN, 0)
+	assert.Equal(t, 0, card.FP, "no-op manifest churn must not alert")
+	assert.Equal(t, 0, card.FN, "every real contract change must be detected with the right class")
+	assert.InDelta(t, 1.0, card.Youden, 0.001)
+}
+
+// TestRealisticCorpusDeterministic verifies generation is reproducible (no RNG),
+// so CI results are stable.
+func TestRealisticCorpusDeterministic(t *testing.T) {
+	a := genRealistic(60)
+	b := genRealistic(60)
+	require.Len(t, a, 60)
+	require.Equal(t, len(a), len(b))
+	for i := range a {
+		assert.Equal(t, a[i].name, b[i].name)
+		assert.Equal(t, a[i].before, b[i].before, "scenario %d before manifests must be deterministic", i)
+		assert.Equal(t, a[i].after, b[i].after, "scenario %d after manifests must be deterministic", i)
+	}
+}
+
 // TestFileScenarios exercises the full discovery -> diff pipeline (L1 + L3) on
 // the before/after manifest scenarios in the corpus.
 func TestFileScenarios(t *testing.T) {

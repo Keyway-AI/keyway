@@ -26,6 +26,7 @@ func main() {
 		corpus    = flag.String("corpus", "./bench/corpus", "path to file-based scenarios")
 		out       = flag.String("out", "./bench/out", "output directory for the scorecard")
 		rounds    = flag.Int("rounds", 50, "generated-corpus rounds (each ~12 scenarios)")
+		realistic = flag.Int("realistic", 400, "count of generated realistic manifest scenarios (rendered YAML through real discovery)")
 		ciGate    = flag.Bool("ci-gate", false, "exit non-zero if any §13.4 threshold fails")
 		report    = flag.Bool("report", false, "also emit report.html + roc.svg (human-readable study)")
 		realworld = flag.Bool("realworld", false, "validate against documented CVEs/incidents -> docs/realworld-validation.md")
@@ -52,6 +53,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Realistic scenarios: rendered YAML run through the actual discovery
+	// pipeline (L1) into diff (L3), so a perfect score is end-to-end evidence,
+	// not just struct-diff self-consistency (KI-18).
+	realisticScenarios, cleanup, rerr := loadGeneratedRealistic(*realistic)
+	if rerr != nil {
+		fmt.Fprintln(os.Stderr, "harness: generate realistic scenarios:", rerr)
+		os.Exit(1)
+	}
+	defer cleanup()
+
 	all := append([]mutations.Scenario{}, generated...)
 	all = append(all, fileScenarios...)
 
@@ -61,6 +72,13 @@ func main() {
 	fullCard.Layer = "L3-all"
 
 	cards := map[string]Scorecard{"L3": genCard, "L3-all": fullCard}
+	// The rendered realistic corpus is scored on its own so its end-to-end
+	// signal is not diluted by the struct-level generated corpus.
+	if len(realisticScenarios) > 0 {
+		rc := score(realisticScenarios)
+		rc.Layer = "L3-realistic"
+		cards["L3-realistic"] = rc
+	}
 	// L1 is measured by the file-based scenarios (real discovery). Approximate
 	// recall as scenarios whose consumers were discovered non-empty.
 	if len(fileScenarios) > 0 {
@@ -84,9 +102,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("harness: %d generated + %d file scenario(s)\n", len(generated), len(fileScenarios))
+	fmt.Printf("harness: %d generated + %d file + %d realistic scenario(s)\n", len(generated), len(fileScenarios), len(realisticScenarios))
 	fmt.Printf("  L3 diff: TPR=%.3f FPR=%.3f precision=%.3f Youden=%.3f (TP=%d FP=%d TN=%d FN=%d)\n",
 		genCard.TPR, genCard.FPR, genCard.Precision, genCard.Youden, genCard.TP, genCard.FP, genCard.TN, genCard.FN)
+	if rc, ok := cards["L3-realistic"]; ok {
+		fmt.Printf("  L3-realistic (rendered YAML → real discovery → diff): TPR=%.3f FPR=%.3f Youden=%.3f (TP=%d FP=%d TN=%d FN=%d)\n",
+			rc.TPR, rc.FPR, rc.Youden, rc.TP, rc.FP, rc.TN, rc.FN)
+	}
 	fmt.Printf("  scorecard -> %s\n", scorePath)
 
 	if *report {

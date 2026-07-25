@@ -18,20 +18,36 @@ cluster or staging endpoints:
 
 ## Corpus composition (PRD §13.2)
 
-Two complementary sources, combined into one scorecard (`L3-all`):
+Three complementary sources, reported as three scorecards (`L3` for the
+generated struct corpus, `L3-realistic` for the rendered-YAML corpus, and
+`L3-all` for the generated + hand-authored file scenarios):
 
 1. **Generated corpus** (`bench/mutations`): for every row of the classification
    table (PRD §9.2) it emits a true-positive change, and for every
    contract-neutral field it emits a no-op. At the default 50 rounds that is
    **400 true positives + 400 true negatives** — the ~50/50 split OWASP
-   recommends, so the false-positive rate is meaningful.
+   recommends, so the false-positive rate is meaningful. It mutates model structs
+   directly, so it proves the classifier is self-consistent (see the honesty note
+   for what that does and doesn't establish).
 
-2. **File-based scenarios** (`bench/corpus/scenarios/*/`): each has a `before/`
+2. **Realistic corpus** (`bench/harness/realistic.go`, `--realistic N`, default
+   **400**): deterministically renders real Istio / Envoy / Kubernetes YAML
+   across parameterized names, namespaces, issuers, audiences, claims, and cache
+   TTLs, applies a catalog of realistic mutations (12 true-positive risk classes,
+   8 no-op churn patterns), and runs each pair through the **actual discovery
+   pipeline** into `diff.Compute`. Because ground truth comes from the manifest
+   mutation — not the diff's own field semantics — a perfect score here is
+   end-to-end evidence that derive→classify is correct at breadth, not just
+   self-consistent. Generation is index-driven (no RNG) so CI is reproducible.
+   Current split: **240 true-positive / 160 true-negative**.
+
+3. **File-based scenarios** (`bench/corpus/scenarios/*/`): each has a `before/`
    and `after/` directory of real Istio/Envoy/K8s manifests plus a
-   `scenario.yaml` ground truth. These run the **actual discovery pipeline**
-   (istio + k8s + envoy adapters) into `diff.Compute`, so they exercise L1 as
-   well as L3. The current set (**26 scenarios**, 15 true-positive / 11
-   true-negative, spanning the Istio, Envoy, and K8s discovery sources):
+   `scenario.yaml` ground truth, hand-authored to pin specific, named cases.
+   These also run the **actual discovery pipeline** (istio + k8s + envoy
+   adapters) into `diff.Compute`, so they exercise L1 as well as L3. The current
+   set (**26 scenarios**, 15 true-positive / 11 true-negative, spanning the
+   Istio, Envoy, and K8s discovery sources):
 
    | ID | Kind | Tests |
    |---|---|---|

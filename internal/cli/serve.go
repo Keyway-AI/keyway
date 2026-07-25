@@ -12,6 +12,7 @@ import (
 	"github.com/nometria/keyway/internal/api"
 	"github.com/nometria/keyway/internal/config"
 	"github.com/nometria/keyway/internal/issuerregistry"
+	"github.com/nometria/keyway/internal/keystore"
 	"github.com/nometria/keyway/internal/libdefaults"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/notify"
@@ -35,7 +36,23 @@ func newServeCmd() *cobra.Command {
 	cmd.Flags().Duration("snapshot-interval", 0, "if >0, snapshot+notify on this interval (e.g. 1h)")
 	cmd.Flags().Bool("in-cluster", false, "discover live Istio CRDs from the Kubernetes API (client-go) instead of, or in addition to, --path")
 	cmd.Flags().String("kube-context", "", "kube-context to use for --in-cluster (default: in-cluster SA, else current context)")
+	cmd.Flags().String("key-store", "", "directory to persist canary keys (encrypted); requires $KEYWAY_KEY_ENCRYPTION_KEY (32 bytes)")
 	return cmd
+}
+
+// keyStoreFor builds the durable key store when --key-store is set, sourcing the
+// AES key from $KEYWAY_KEY_ENCRYPTION_KEY. Returns (nil, nil) when persistence is
+// off, so canary state stays in-memory as before.
+func keyStoreFor(cmd *cobra.Command) (keystore.Store, error) {
+	dir, _ := cmd.Flags().GetString("key-store")
+	if dir == "" {
+		return nil, nil
+	}
+	key, err := keystore.KeyFromEnv("KEYWAY_KEY_ENCRYPTION_KEY")
+	if err != nil {
+		return nil, err
+	}
+	return keystore.NewFileStore(dir, key)
 }
 
 func runServe(cmd *cobra.Command, _ []string) error {
@@ -69,7 +86,13 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	if url, _ := cmd.Flags().GetString("issuer-url"); url != "" {
 		specs = append(specs, issuerregistry.Spec{Name: "default", Type: model.IssuerGenericOIDC, URL: url})
 	}
-	reg, err := issuerregistry.NewRegistry(specs)
+	// Optional durable key store: when --key-store is set, canary key material is
+	// persisted (encrypted) so it survives a restart (KI-09).
+	keyStore, err := keyStoreFor(cmd)
+	if err != nil {
+		return err
+	}
+	reg, err := issuerregistry.NewRegistryWithStore(specs, keyStore)
 	if err != nil {
 		return err
 	}

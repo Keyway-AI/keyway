@@ -11,6 +11,10 @@ treat it accordingly.
   run can be stopped without redeploying.
 - **No token bodies at rest.** Keyway never persists minted tokens or logs their contents. Only
   the `jti` and the probe ID are recorded (PRD OPEN-4).
+- **Signing keys stay in memory by default.** Operated canary/signing private keys live in the
+  daemon's memory. Persistence across restarts is opt-in (`keyway serve --key-store <dir>`) and,
+  when enabled, every private key is encrypted at rest with AES-256-GCM under a 32-byte operator key
+  from `$KEYWAY_KEY_ENCRYPTION_KEY` — private keys are never written in plaintext (KI-09).
 - **Least privilege.** The Keycloak/K8s credentials Keyway uses need read access for discovery and
   the ability to publish a *canary* key. They do **not** need permission to alter live signing
   keys, and Keyway will never attempt to.

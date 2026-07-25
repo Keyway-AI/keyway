@@ -30,8 +30,9 @@ type managed struct {
 
 // KeySet is a concurrency-safe collection of managed signing keys.
 type KeySet struct {
-	mu   sync.Mutex
-	keys []*managed
+	mu       sync.Mutex
+	keys     []*managed
+	onChange func([]PersistedKey) // fired after lifecycle mutations (persistence hook)
 }
 
 // NewKeySet returns an empty key set.
@@ -70,6 +71,7 @@ func (ks *KeySet) Generate(alg string, status model.KeyStatus, now time.Time) (m
 	ks.mu.Lock()
 	ks.keys = append(ks.keys, &managed{priv: priv, meta: meta})
 	ks.mu.Unlock()
+	ks.notify()
 	return meta, nil
 }
 
@@ -111,9 +113,9 @@ func (ks *KeySet) Sign(kid string, claims map[string]any) (string, error) {
 // only one key signs at a time.
 func (ks *KeySet) Promote(kid string, now time.Time) error {
 	ks.mu.Lock()
-	defer ks.mu.Unlock()
 	target := ks.byKIDLocked(kid)
 	if target == nil {
+		ks.mu.Unlock()
 		return fmt.Errorf("localkeys: no key for kid %q", kid)
 	}
 	for _, k := range ks.keys {
@@ -124,20 +126,24 @@ func (ks *KeySet) Promote(kid string, now time.Time) error {
 	target.meta.Status = model.KeyActive
 	t := now
 	target.meta.InSigningUseSince = &t
+	ks.mu.Unlock()
+	ks.notify()
 	return nil
 }
 
 // Retire marks a key retired.
 func (ks *KeySet) Retire(kid string, now time.Time) error {
 	ks.mu.Lock()
-	defer ks.mu.Unlock()
 	target := ks.byKIDLocked(kid)
 	if target == nil {
+		ks.mu.Unlock()
 		return fmt.Errorf("localkeys: no key for kid %q", kid)
 	}
 	target.meta.Status = model.KeyRetired
 	t := now
 	target.meta.RetiredAt = &t
+	ks.mu.Unlock()
+	ks.notify()
 	return nil
 }
 

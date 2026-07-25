@@ -137,17 +137,17 @@ func (d *Discoverer) assemble(scope discovery.Scope, ras []raWithLoc, aps []apWi
 		if len(r.ra.Spec.JWTRules) == 0 {
 			continue
 		}
-		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, r.ra.Metadata.Namespace) {
+		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, nsOrDefault(r.ra.Metadata.Namespace)) {
 			continue
 		}
 		consumers = append(consumers, d.toConsumer(r.ra, r.loc, scope))
 	}
 	for _, a := range aps {
-		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, a.ap.Metadata.Namespace) {
+		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, nsOrDefault(a.ap.Metadata.Namespace)) {
 			continue
 		}
 		if claims := requiredClaims(a.ap); len(claims) > 0 {
-			key := workloadKey(a.ap.Metadata.Namespace, apServiceName(a.ap))
+			key := workloadKey(nsOrDefault(a.ap.Metadata.Namespace), apServiceName(a.ap))
 			claimsByWorkload[key] = unionAll(claimsByWorkload[key], claims)
 			claimSource[key] = a.loc
 		}
@@ -223,10 +223,7 @@ func unionAll(a, b []string) []string {
 
 func (d *Discoverer) toConsumer(ra requestAuthentication, path string, scope discovery.Scope) model.Consumer {
 	name := serviceName(ra)
-	ns := ra.Metadata.Namespace
-	if ns == "" {
-		ns = "default"
-	}
+	ns := nsOrDefault(ra.Metadata.Namespace)
 	stableID := discovery.StableID(discovery.IDParts{
 		Cluster:     scope.KubeContext,
 		Namespace:   ns,
@@ -290,6 +287,16 @@ func ownerTeam(labels map[string]string) string {
 		}
 	}
 	return ""
+}
+
+// nsOrDefault normalizes an empty Kubernetes namespace to "default", matching how
+// the API server treats an unqualified resource — so namespace scoping and the
+// consumer's identity agree.
+func nsOrDefault(ns string) string {
+	if ns == "" {
+		return "default"
+	}
+	return ns
 }
 
 func contains(ss []string, v string) bool {

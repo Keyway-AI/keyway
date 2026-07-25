@@ -18,6 +18,7 @@ export interface JWKSBehavior {
   cache_ttl_sec?: number | null;
   refresh_interval_sec?: number | null;
   refreshes_on_unknown_kid?: boolean | null;
+  last_observed_refresh?: string | null;
   source: "config" | "library_default" | "observed" | "probed";
 }
 

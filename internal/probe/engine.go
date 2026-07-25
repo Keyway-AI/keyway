@@ -245,10 +245,15 @@ func (e *Engine) runConsumer(ctx context.Context, iss model.Issuer, mint MintFun
 const skipMarker = "\x00skip"
 
 func trackAndMaybeAbort(status, consecutive, limit int, out *ConsumerOutcome) int {
-	if status >= 500 {
+	// A 5xx OR a transport error (status 0 — no HTTP response at all) means the
+	// service is broken; both count toward the abort threshold. An expected
+	// 2xx/4xx probe verdict means the service is healthy and resets the run, so a
+	// service flapping between 5xx and connection-refused can no longer dodge the
+	// "stop hammering a broken target" guard.
+	if status >= 500 || status <= 0 {
 		consecutive++
 		if limit > 0 && consecutive >= limit {
-			out.Reason = "aborted after consecutive 5xx responses"
+			out.Reason = "aborted after consecutive 5xx / transport errors"
 		}
 		return consecutive
 	}

@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/nometria/keyway/internal/issuer/localkeys"
 )
@@ -29,6 +30,7 @@ type Store interface {
 type FileStore struct {
 	dir string
 	gcm cipher.AEAD
+	mu  sync.Mutex // serializes Save so concurrent writes to one issuer can't lose a rename
 }
 
 // NewFileStore opens (creating if needed) a directory-backed store. encKey must
@@ -92,10 +94,32 @@ func (s *FileStore) Save(issuer string, keys []localkeys.PersistedKey) error {
 	}
 	ct := s.gcm.Seal(nonce, nonce, pt, nil)
 
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Unique temp file (not a fixed ".tmp") + fsync + atomic rename, so two
+	// concurrent Saves can never move each other's temp file out from under them.
 	final := s.path(issuer)
-	tmp := final + ".tmp"
-	if err := os.WriteFile(tmp, ct, 0o600); err != nil {
+	f, err := os.CreateTemp(s.dir, sanitize(issuer)+".*.tmp")
+	if err != nil {
+		return fmt.Errorf("keystore: create temp: %w", err)
+	}
+	tmp := f.Name()
+	defer os.Remove(tmp) // no-op after a successful rename
+	if err := f.Chmod(0o600); err != nil {
+		_ = f.Close()
+		return fmt.Errorf("keystore: chmod: %w", err)
+	}
+	if _, err := f.Write(ct); err != nil {
+		_ = f.Close()
 		return fmt.Errorf("keystore: write: %w", err)
+	}
+	if err := f.Sync(); err != nil {
+		_ = f.Close()
+		return fmt.Errorf("keystore: sync: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("keystore: close: %w", err)
 	}
 	if err := os.Rename(tmp, final); err != nil {
 		return fmt.Errorf("keystore: rename: %w", err)

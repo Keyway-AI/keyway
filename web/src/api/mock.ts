@@ -121,7 +121,7 @@ export const consumerProbes = (stableId: string): ProbeResult[] => {
     { probe_id: "alg_confusion", passed: true, status_code: 401 },
     { probe_id: "expired", passed: true, status_code: 401 },
     { probe_id: "wrong_audience", passed: true, status_code: 403 },
-    { probe_id: "valid_baseline", passed: true, status_code: 200 },
+    { probe_id: "valid_token", passed: true, status_code: 200 },
   ];
   return probes.map((p, i) => ({
     id: `${stableId}-${p.probe_id}`,

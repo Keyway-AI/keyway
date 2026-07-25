@@ -30,11 +30,15 @@ type PersistedKey struct {
 func (ks *KeySet) SetOnChange(fn func([]PersistedKey)) { ks.onChange = fn }
 
 // notify pushes the current state to the onChange sink, if one is set. It must be
-// called with ks.mu unlocked (Export takes the lock).
+// called with ks.mu unlocked (Export takes the lock). persistMu serializes the
+// Export→onChange pair so two concurrent mutations cannot race their persists
+// (which would drop an update) or apply them out of order.
 func (ks *KeySet) notify() {
 	if ks.onChange == nil {
 		return
 	}
+	ks.persistMu.Lock()
+	defer ks.persistMu.Unlock()
 	ks.onChange(ks.Export())
 }
 

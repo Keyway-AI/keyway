@@ -62,8 +62,11 @@ func Load() (*DB, error) {
 // Match returns the JWKS behaviour and metadata for a library at a version. The
 // library name is matched exactly or by path suffix (so a go.mod module path
 // "github.com/MicahParks/keyfunc" matches the DB entry "MicahParks/keyfunc").
-// The version is matched against each entry's semver constraint; an empty or
-// unparseable version falls back to the first entry.
+// The version is matched against each entry's semver constraint. If no
+// version-specific constraint matches, an explicit catch-all entry (empty
+// Constraint) is used when the library defines one; otherwise the version is out
+// of the known range and Match returns ok=false — Keyway must not label an
+// unknown/out-of-range version with a specific version's known-bad behaviour.
 func (db *DB) Match(name, version string) (model.JWKSBehavior, VersionEntry, bool) {
 	lib, ok := db.lookup(name)
 	if !ok || len(lib.Versions) == 0 {
@@ -72,9 +75,13 @@ func (db *DB) Match(name, version string) (model.JWKSBehavior, VersionEntry, boo
 
 	ver, verErr := semver.NewVersion(strings.TrimPrefix(version, "v"))
 
-	for _, entry := range lib.Versions {
+	catchAll := -1
+	for i, entry := range lib.Versions {
 		if entry.Constraint == "" {
-			return behaviorOf(entry), entry, true
+			if catchAll < 0 {
+				catchAll = i // remember it, but prefer a version-specific match
+			}
+			continue
 		}
 		c, err := semver.NewConstraint(entry.Constraint)
 		if err != nil {
@@ -84,10 +91,13 @@ func (db *DB) Match(name, version string) (model.JWKSBehavior, VersionEntry, boo
 			return behaviorOf(entry), entry, true
 		}
 	}
-	// No constraint matched (or version unknown): fall back to the first entry so
-	// the flow still produces a finding.
-	entry := lib.Versions[0]
-	return behaviorOf(entry), entry, true
+	if catchAll >= 0 {
+		entry := lib.Versions[catchAll]
+		return behaviorOf(entry), entry, true
+	}
+	// Known library, but the version matches no constraint (or is unparseable):
+	// unknown behaviour, not a specific known-bad one.
+	return model.JWKSBehavior{}, VersionEntry{}, false
 }
 
 // lookup finds a library by exact name or by "/"-suffix match.

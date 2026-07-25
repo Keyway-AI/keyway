@@ -7,6 +7,29 @@ file in the same PR that adds or resolves an item.
 **Legend** — Impact: 🔴 blocks a real use case · 🟠 degrades a feature · 🟡 minor / cosmetic · 🔵 design caveat (not a bug).
 Status: `open` · `in progress` · `deferred` (intentionally not now) · `resolved`.
 
+_Last updated: 2026-07-25 (final project audit)._
+
+## Final audit (2026-07-25)
+
+A whole-codebase audit (four parallel review passes + mutation/race testing) found
+and **fixed** these correctness bugs — all were traced and are covered by tests:
+
+| ID | Sev | Bug | Fix |
+|----|-----|-----|-----|
+| AUD-01 | 🔴 | `measuredWindow` (KI-25) took the *most-recent* fail→pass canary transition, so a flaky-probe blip could shrink the grace period below the real pickup latency → rotation outage. | Take the **maximum** observed gap (worst-case pickup). `internal/blastradius/query.go` |
+| AUD-02 | 🔴 | `keystore.FileStore.Save` (KI-09) used a fixed `.tmp` path; concurrent saves on one issuer raced on rename and dropped persisted key state (113 errors / 200 trials). | `os.CreateTemp` unique file + fsync + a store mutex, and a `persistMu` serialising Export→onChange in `localkeys`. |
+| AUD-03 | 🔴 | `BlastRadiusResult` wire drift: grace emitted as int64 **nanoseconds** under `recommended_grace_period` (TS expected `_seconds`); `ChangeProposal` had no JSON tags (PascalCase echo). | Added `recommended_grace_period_seconds`; snake_case JSON tags on `ChangeProposal`. |
+| AUD-04 | 🟠 | `resolveRemoveClaim`/`resolveDropAlgorithm` ignored the proposal's issuer → over-warned consumers trusting a *different* issuer. | Scope to `usesIssuer` when an issuer is named. |
+| AUD-05 | 🟠 | `libdefaults.Match` returned `Versions[0]` as authoritative for any out-of-range/unparseable version → mislabelled e.g. keyfunc `v0.5`/`latest` as the known-bad v1.x behaviour. | Return `ok=false` unless a version constraint (or explicit catch-all) matches. |
+| AUD-06 | 🟠 | `firstIssuer()` picked `Names()[0]` off a map (nondeterministic) → probe runs could mint with the wrong issuer's key on multi-issuer setups. | Sort names for a deterministic pick. |
+| AUD-07 | 🟠 | Namespace scope filter compared the **raw** namespace, but consumers default empty→`default`, so `--namespace default` silently dropped manifests omitting `metadata.namespace`. | Normalise before filtering (istio + k8s). |
+| AUD-08 | 🟠 | The **L4 attribution CI gate** used Precision, which is structurally `1.0` (l4Score records only TP/FN) — the gate could never fail. | Gate on **Recall**. |
+| AUD-09 | 🟡 | Consecutive-5xx abort reset on transport errors (status 0), so a service flapping 5xx/connection-refused never aborted. | Count status `≤0` as a failure too. |
+| AUD-10 | 🟡 | `contract.Hash` sorted keys/claims on a single field (non-total) → theoretical non-determinism on duplicate KID/claim-name. | Total comparators. |
+| AUD-11 | 🟡 | UI: `ConsumerDrawer` confidence sort used a 1-arg comparator; "Accepts more/less" pill was misleading for JWKS-behaviour findings; `types.ts` missing `last_observed_refresh`; mock probe id drift. | Total comparator; new "Rotation risk" pill; type + mock aligned. |
+
+Design-level gaps found and **deferred** (tracked as KI-28…KI-32 below).
+
 _Last updated: 2026-07-24 (security audit v2)._
 
 ---
@@ -45,6 +68,11 @@ _Last updated: 2026-07-24 (security audit v2)._
 | KI-22 | Benchmark | ~~L4 had no corpus.~~ **Resolved:** the harness now scores L4 (git+deploy chain over a temp git repo + annotated manifest), feeding the §13.4 L4 gate (3/3, Youden 1.0). | 🟡 | resolved | `bench/harness/l4.go` |
 | KI-16 | Real-world | The `bench/realworld` cases are **reproductions** of the cited failure modes, not live scans of the named projects. The citation identifies the real bug class; the code recreates it so detection is deterministic. | 🔵 | by design | `docs/realworld-validation.md` |
 | KI-17 | Benchmark | The market-comparison numbers (Snyk/Semgrep/SonarQube/Kiuwan) are **published third-party OWASP results shown for calibration**, not a head-to-head Keyway ran. Different task. | 🔵 | by design | `BENCHMARK.md` "Honesty note" |
+| KI-28 | Discovery | **Istio↔K8s merge axis divergence:** the k8s adapter keys a workload by service-account name when a projected SA-token audience exists (`k8s://…/{sa}`), but Istio always keys by service name (`app` label → `k8s://…/{app}`). When SA name ≠ app name, the same workload yields two un-merged consumers. Needs a reconciliation step (emit both ID candidates, or standardise on service name + carry SA as metadata). | 🟠 | open | `internal/discovery/{k8s,istio}`, `stableid.go` |
+| KI-29 | API | **Idempotency has no in-flight coalescing:** the cache is populated only after the handler finishes, so two *concurrent* identical POSTs both execute (e.g. two snapshots). Sequential retries are deduped; concurrent ones need a per-key singleflight. | 🟡 | open | `internal/api/idempotency.go` |
+| KI-30 | Discovery | **Selector-less / namespace-wide AuthorizationPolicy** required-claims are dropped: `apServiceName` falls back to the policy's own name, matching no consumer, so a namespace-wide (no `spec.selector`) or mesh-root policy never applies its claims. Nested claim keys (`claims[a][b]`) also mis-parse. | 🟡 | open | `internal/discovery/istio/istio.go` |
+| KI-31 | Discovery | **Envoy discovery is order-nondeterministic** (ranges a map) and duplicate provider names in different filter blocks overwrite (last wins); provenance/confidence are only partially populated; namespace is set to the kube-context. | 🟡 | open | `internal/discovery/envoy/envoy.go` |
+| KI-32 | Discovery | Several model fields are never populated by discovery: `jwtRules[].jwksUri` is parsed then **discarded**, and `Expects.Algorithms`, `JWKSBehavior.RefreshIntervalSec`, and `RefreshesOnUnknownKID` are only ever set by library-defaults enrichment, not adapters. Surfacing `jwksUri` (the rotation endpoint) is the highest-value gap. | 🟡 | open | `internal/discovery/*`, `internal/model/consumer.go` |
 | KI-26 | Normalization | Issuer URLs are compared **verbatim** — no normalization of trailing slashes or whitespace. So `…/realms/main` vs `…/realms/main/` reads as an issuer change and pages. Surfaced by the held-out adversarial corpus (`adv-03`, `adv-06`), where it costs 2 false positives (FPR 0.5). Defensible under strict OIDC exact-match `iss` semantics, but a normalization pass would cut these FPs. | 🟡 | open | `internal/diff/diff.go`, `bench/corpus/adversarial/` |
 | KI-27 | Benchmark integrity | The main-corpus 100% proves self-consistency, not generalisation. Mitigated by **mutation testing** (`make mutation`: 100% mutator coverage, all behaviour-changing faults killed, 2 equivalent-mutant survivors) and a **held-out adversarial corpus** scored honestly at **0.5 Youden** (not gated). See `docs/benchmark-integrity.md`. | 🔵 | by design | `docs/benchmark-integrity.md`, `Makefile:mutation` |
 | KI-18 | Corpus size | ~~Only 10 realistic scenarios.~~ **Resolved:** two moves. (1) The hand-authored file corpus went 10→**26** (15 TP / 11 TN). (2) A new **realistic generator** (`bench/harness/realistic.go`) deterministically renders **400** real Istio/Envoy/K8s YAML before/after pairs (240 TP / 160 TN) across parameterized names/issuers/audiences/claims/TTLs and runs them through the **actual discovery pipeline** — meeting the PRD's 400 aspiration with end-to-end (L1+L3) scenarios rather than struct-level mutations. `L3-realistic` scores TPR=1.0/FPR=0.0 and is CI-gated. | 🟡 | resolved | `bench/harness/realistic.go`, `bench/corpus/scenarios/` |

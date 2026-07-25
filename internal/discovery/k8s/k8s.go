@@ -117,7 +117,10 @@ func (d *Discoverer) Discover(_ context.Context, scope discovery.Scope) ([]model
 
 	var consumers []model.Consumer
 	for _, w := range workloads {
-		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, w.Metadata.Namespace) {
+		// Match against the normalized namespace: a manifest that omits
+		// metadata.namespace lands in "default", so `--namespace default` must
+		// still select it.
+		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, firstNonEmpty(w.Metadata.Namespace, "default")) {
 			continue
 		}
 		consumers = append(consumers, d.toConsumer(w, services, scope))

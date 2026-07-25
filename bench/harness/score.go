@@ -68,6 +68,9 @@ func DefaultGates() []Gate {
 		{"L3", "Youden", func(s Scorecard) float64 { return s.Youden }, func(v float64) bool { return v < 0.70 }, "TPR - FPR < 0.70"},
 		{"L3-realistic", "diff FPR", func(s Scorecard) float64 { return s.FPR }, func(v float64) bool { return v > 0.05 }, "realistic corpus: alerts on no-op commits > 5%"},
 		{"L3-realistic", "Youden", func(s Scorecard) float64 { return s.Youden }, func(v float64) bool { return v < 0.70 }, "realistic corpus: TPR - FPR < 0.70"},
-		{"L4", "attribution", func(s Scorecard) float64 { return s.Precision }, func(v float64) bool { return v < 0.60 }, "correctly bound < 60%"},
+		// L4 uses Recall, not Precision: l4Score only records TP/FN (a wrong
+		// attribution is an FN, never an FP), so Precision is structurally 1.0 and
+		// could never fail the gate. Recall = correctly-bound / total.
+		{"L4", "attribution", func(s Scorecard) float64 { return s.Recall }, func(v float64) bool { return v < 0.60 }, "correctly bound < 60%"},
 	}
 }

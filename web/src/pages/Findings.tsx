@@ -14,6 +14,7 @@ function DirectionTag({ d }: { d: Finding["direction"] }) {
   const map: Record<Finding["direction"], { label: string; cls: string }> = {
     loosening: { label: "Accepts more", cls: "text-critical" },
     tightening: { label: "Accepts less", cls: "text-medium" },
+    rotation: { label: "Rotation risk", cls: "text-medium" },
     neutral: { label: "Inventory", cls: "text-muted" },
     unknown: { label: "Low confidence", cls: "text-muted" },
   };

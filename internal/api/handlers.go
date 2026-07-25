@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -335,6 +336,10 @@ func (s *Server) firstIssuer() (issuerregistry.CanaryIssuer, bool) {
 	if len(names) == 0 {
 		return nil, false
 	}
+	// Registry.Names() iterates a map, so sort for a deterministic choice — a
+	// random issuer would mint probe tokens with the wrong key on multi-issuer
+	// setups, intermittently failing the valid-token baseline.
+	sort.Strings(names)
 	return s.deps.Issuers.Get(names[0])
 }
 

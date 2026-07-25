@@ -109,8 +109,8 @@ export function ConsumerDrawer({ consumer, onClose }: { consumer: Consumer | nul
   if (!consumer) return null;
 
   const c = consumer;
-  const confidenceKeys = Object.keys(c.confidence).sort((a) =>
-    a === "overall" ? -1 : 1,
+  const confidenceKeys = Object.keys(c.confidence).sort(
+    (a, b) => (a === "overall" ? 0 : 1) - (b === "overall" ? 0 : 1) || a.localeCompare(b),
   );
   const provenanceEntries = Object.entries(c.provenance ?? {});
 

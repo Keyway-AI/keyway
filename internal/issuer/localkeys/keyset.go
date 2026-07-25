@@ -30,9 +30,10 @@ type managed struct {
 
 // KeySet is a concurrency-safe collection of managed signing keys.
 type KeySet struct {
-	mu       sync.Mutex
-	keys     []*managed
-	onChange func([]PersistedKey) // fired after lifecycle mutations (persistence hook)
+	mu        sync.Mutex
+	keys      []*managed
+	onChange  func([]PersistedKey) // fired after lifecycle mutations (persistence hook)
+	persistMu sync.Mutex           // serializes Export+onChange so persists never race or reorder
 }
 
 // NewKeySet returns an empty key set.

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/nometria/keyway/internal/issuer/localkeys"
@@ -54,6 +55,36 @@ func TestFileStoreWrongKeyFails(t *testing.T) {
 	require.NoError(t, err)
 	_, err = other.Load("iss")
 	require.Error(t, err)
+}
+
+// TestFileStoreConcurrentSaves stresses the atomic-write path: many concurrent
+// Saves to the same issuer must all succeed (no lost rename) and leave a valid,
+// decryptable file. Guards the KI-09 concurrency fix.
+func TestFileStoreConcurrentSaves(t *testing.T) {
+	s, err := NewFileStore(t.TempDir(), key32(2))
+	require.NoError(t, err)
+
+	var wg sync.WaitGroup
+	errs := make(chan error, 64)
+	for i := 0; i < 64; i++ {
+		wg.Add(1)
+		go func(n int) {
+			defer wg.Done()
+			keys := []localkeys.PersistedKey{{KID: "k", Alg: "RS256", Status: "active", PrivatePEM: strings.Repeat("x", n+1)}}
+			if err := s.Save("iss", keys); err != nil {
+				errs <- err
+			}
+		}(i)
+	}
+	wg.Wait()
+	close(errs)
+	for e := range errs {
+		t.Fatalf("concurrent Save failed: %v", e)
+	}
+	got, err := s.Load("iss")
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, "k", got[0].KID)
 }
 
 func TestFileStoreEmptyLoad(t *testing.T) {

@@ -27,14 +27,15 @@ const (
 	VerdictUnknown   = "unknown"
 )
 
-// ChangeProposal is a proposed change to evaluate (PRD §10.1).
+// ChangeProposal is a proposed change to evaluate (PRD §10.1). JSON tags match
+// the web client's contract (snake_case) since this is echoed in the API response.
 type ChangeProposal struct {
-	Kind         string
-	IssuerID     string
-	KID          string // rotate_key, retire_key
-	ClaimName    string // remove_claim
-	NewIssuerURL string // change_issuer
-	Algorithm    string // drop_algorithm
+	Kind         string `json:"kind"`
+	IssuerID     string `json:"issuer_id"`
+	KID          string `json:"kid,omitempty"`            // rotate_key, retire_key
+	ClaimName    string `json:"claim_name,omitempty"`     // remove_claim
+	NewIssuerURL string `json:"new_issuer_url,omitempty"` // change_issuer
+	Algorithm    string `json:"algorithm,omitempty"`      // drop_algorithm
 }
 
 // AffectedConsumer is one consumer's verdict under a proposal.
@@ -48,12 +49,16 @@ type AffectedConsumer struct {
 
 // BlastRadiusResult is the full answer (PRD §10.1).
 type BlastRadiusResult struct {
-	Proposal               ChangeProposal     `json:"proposal"`
-	Affected               []AffectedConsumer `json:"affected"`
-	Unknown                []model.Consumer   `json:"unknown"`
-	RecommendedGracePeriod time.Duration      `json:"recommended_grace_period"`
-	GraceBasis             string             `json:"grace_basis"`
-	GeneratedAt            time.Time          `json:"generated_at"`
+	Proposal ChangeProposal     `json:"proposal"`
+	Affected []AffectedConsumer `json:"affected"`
+	Unknown  []model.Consumer   `json:"unknown"`
+	// RecommendedGracePeriod is the Go-native duration; it is not serialized as a
+	// bare int64 of nanoseconds. The wire form is RecommendedGracePeriodSeconds so
+	// clients get a sane unit.
+	RecommendedGracePeriod        time.Duration `json:"-"`
+	RecommendedGracePeriodSeconds int           `json:"recommended_grace_period_seconds"`
+	GraceBasis                    string        `json:"grace_basis"`
+	GeneratedAt                   time.Time     `json:"generated_at"`
 }
 
 const canaryFreshness = 24 * time.Hour
@@ -107,6 +112,7 @@ func Resolve(v model.ContractVersion, p ChangeProposal, history map[string][]mod
 		}
 		res.RecommendedGracePeriod = GracePeriod(durations)
 	}
+	res.RecommendedGracePeriodSeconds = int(res.RecommendedGracePeriod / time.Second)
 	return res, nil
 }
 
@@ -193,7 +199,15 @@ func resolveRotateKey(v model.ContractVersion, p ChangeProposal, history map[str
 func resolveRemoveClaim(v model.ContractVersion, p ChangeProposal, history map[string][]model.ProbeResult) ([]AffectedConsumer, []model.Consumer) {
 	var affected []AffectedConsumer
 	var unknown []model.Consumer
+	// When the proposal names an issuer, only consumers that trust it can be
+	// affected by removing a claim there; otherwise we'd over-warn on consumers
+	// that require the same claim from a different issuer.
+	scoped := p.IssuerID != ""
+	url := issuerURL(v, p.IssuerID)
 	for _, c := range v.Consumers {
+		if scoped && !usesIssuer(c, url) {
+			continue
+		}
 		if containsStr(c.Expects.RequiredClaims, p.ClaimName) {
 			affected = append(affected, AffectedConsumer{
 				Consumer: c, Verdict: VerdictWillBreak, Confidence: 1.0,
@@ -234,7 +248,12 @@ func resolveChangeIssuer(v model.ContractVersion, p ChangeProposal) ([]AffectedC
 
 func resolveDropAlgorithm(v model.ContractVersion, p ChangeProposal) ([]AffectedConsumer, []model.Consumer) {
 	var affected []AffectedConsumer
+	scoped := p.IssuerID != ""
+	url := issuerURL(v, p.IssuerID)
 	for _, c := range v.Consumers {
+		if scoped && !usesIssuer(c, url) {
+			continue
+		}
 		algs := c.Expects.Algorithms
 		if len(algs) == 1 && algs[0] == p.Algorithm {
 			affected = append(affected, AffectedConsumer{
@@ -287,7 +306,12 @@ func measuredWindow(results []model.ProbeResult, now time.Time) (time.Duration, 
 	}
 	sort.Slice(canaries, func(i, j int) bool { return canaries[i].RunAt.Before(canaries[j].RunAt) })
 
-	// Find the last fail→pass transition and measure the gap across it.
+	// Measure the gap across every fail→pass transition and keep the LARGEST.
+	// A safety tool must size the grace window to the worst observed pickup: a
+	// later, smaller transition (e.g. a flaky probe or transient 5xx that briefly
+	// flips fail→pass) must never shrink the window below a genuinely slow pickup
+	// seen earlier. Taking the most-recent gap would let noise collapse the grace
+	// to the floor and cause the very rotation outage this measurement prevents.
 	var lastFail time.Time
 	haveFail := false
 	var best time.Duration
@@ -298,7 +322,7 @@ func measuredWindow(results []model.ProbeResult, now time.Time) (time.Duration, 
 			continue
 		}
 		if haveFail {
-			if d := r.RunAt.Sub(lastFail); d > 0 {
+			if d := r.RunAt.Sub(lastFail); d > 0 && (!found || d > best) {
 				best, found = d, true
 			}
 			haveFail = false // consumed this transition; a later fail starts a new one

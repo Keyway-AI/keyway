@@ -107,16 +107,18 @@ func TestMeasuredWindowNoTransition(t *testing.T) {
 	_, ok := measuredWindow(only, now)
 	assert.False(t, ok, "no fail→pass transition means no measurement")
 
-	// A later re-fail then re-pass yields the most recent transition.
+	// A real slow pickup (1h) followed later by a flaky-probe blip (5m) must keep
+	// the LARGEST gap — grace is sized to the worst observed pickup, so noise
+	// cannot shrink it and cause a rotation outage.
 	seq := []model.ProbeResult{
 		{ProbeID: probe.ProbeCanaryKey, Passed: false, RunAt: now.Add(-3 * time.Hour)},
-		{ProbeID: probe.ProbeCanaryKey, Passed: true, RunAt: now.Add(-2 * time.Hour)}, // 1h gap
+		{ProbeID: probe.ProbeCanaryKey, Passed: true, RunAt: now.Add(-2 * time.Hour)}, // 1h gap (real pickup)
 		{ProbeID: probe.ProbeCanaryKey, Passed: false, RunAt: now.Add(-40 * time.Minute)},
-		{ProbeID: probe.ProbeCanaryKey, Passed: true, RunAt: now.Add(-35 * time.Minute)}, // 5m gap (latest)
+		{ProbeID: probe.ProbeCanaryKey, Passed: true, RunAt: now.Add(-35 * time.Minute)}, // 5m blip
 	}
 	d, ok := measuredWindow(seq, now)
 	require.True(t, ok)
-	assert.Equal(t, 5*time.Minute, d, "uses the most recent transition")
+	assert.Equal(t, time.Hour, d, "uses the largest (worst-case) transition, not the most recent")
 }
 
 func TestRotateKeyStaleCanaryIgnored(t *testing.T) {

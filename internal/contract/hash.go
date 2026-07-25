@@ -151,11 +151,27 @@ func canonicalize(v model.ContractVersion) canonContract {
 				Status:       string(k.Status),
 			})
 		}
-		sort.Slice(ci.Keys, func(i, j int) bool { return ci.Keys[i].KID < ci.Keys[j].KID })
+		// Total comparators (tie-break beyond the primary key) so two keys sharing
+		// a KID — or two claims sharing a Name — still sort to a deterministic
+		// order regardless of input order, preserving the AC-1 hash guarantee.
+		sort.Slice(ci.Keys, func(i, j int) bool {
+			if ci.Keys[i].KID != ci.Keys[j].KID {
+				return ci.Keys[i].KID < ci.Keys[j].KID
+			}
+			if ci.Keys[i].Alg != ci.Keys[j].Alg {
+				return ci.Keys[i].Alg < ci.Keys[j].Alg
+			}
+			return ci.Keys[i].Status < ci.Keys[j].Status
+		})
 		for _, cl := range is.ClaimSchema {
 			ci.Claims = append(ci.Claims, canonClaim{Name: cl.Name, PresenceRate: cl.PresenceRate})
 		}
-		sort.Slice(ci.Claims, func(i, j int) bool { return ci.Claims[i].Name < ci.Claims[j].Name })
+		sort.Slice(ci.Claims, func(i, j int) bool {
+			if ci.Claims[i].Name != ci.Claims[j].Name {
+				return ci.Claims[i].Name < ci.Claims[j].Name
+			}
+			return ci.Claims[i].PresenceRate < ci.Claims[j].PresenceRate
+		})
 		out.Issuers = append(out.Issuers, ci)
 	}
 	sort.Slice(out.Issuers, func(i, j int) bool { return out.Issuers[i].IssuerURL < out.Issuers[j].IssuerURL })

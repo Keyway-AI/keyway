@@ -21,8 +21,9 @@ export interface Finding {
   /** short category tag for grouping/scanning */
   kind: string;
   /** loosening = accepts more (usually the risky direction); tightening = accepts
-   * less (can break existing clients); neutral = inventory change */
-  direction: "loosening" | "tightening" | "neutral" | "unknown";
+   * less (can break existing clients); rotation = affects key-rotation
+   * propagation, not which tokens are accepted; neutral = inventory change */
+  direction: "loosening" | "tightening" | "rotation" | "neutral" | "unknown";
   event: ChangeEvent;
 }
 
@@ -165,7 +166,7 @@ function describe(e: ChangeEvent): Desc {
       if (e.new_value === false || String(e.new_value) === "false")
         return {
           kind: "Key-rotation readiness",
-          direction: "tightening",
+          direction: "rotation",
           headline: `Won't pick up rotated signing keys on demand`,
           meaning: `${svc} stopped re-fetching the key set when it sees a token signed by an unknown key.`,
           impact:
@@ -174,7 +175,7 @@ function describe(e: ChangeEvent): Desc {
         };
       return {
         kind: "Key-rotation readiness",
-        direction: "loosening",
+        direction: "rotation",
         headline: `Now re-fetches keys on an unknown key id`,
         meaning: `${svc} will now refresh its key set when it encounters an unknown signing key.`,
         impact: "This is safer — key rotations propagate faster.",
@@ -185,7 +186,7 @@ function describe(e: ChangeEvent): Desc {
       const inc = Number(e.new_value) > Number(e.old_value);
       return {
         kind: "Key-cache duration",
-        direction: "tightening",
+        direction: "rotation",
         headline: inc ? `Caches signing keys longer` : `Caches signing keys for less time`,
         meaning: `${svc} changed how long it caches the signing key set (${e.old_value}s → ${e.new_value}s).`,
         impact: inc

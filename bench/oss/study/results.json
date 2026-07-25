@@ -1,0 +1,22 @@
+{
+  "files": 60,
+  "files_with_issuer": 57,
+  "unparsed": 0,
+  "consumers": 63,
+  "issuers": {
+    "declared": 36,
+    "captured": 36,
+    "recall": 1.0
+  },
+  "audiences": {
+    "declared": 14,
+    "captured": 14,
+    "recall": 1.0
+  },
+  "claims": {
+    "declared": 6,
+    "captured": 4,
+    "recall": 0.6666666666666666
+  },
+  "missed_issuers": []
+}

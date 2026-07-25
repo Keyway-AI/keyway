@@ -7,6 +7,46 @@ not how consistent it is with itself.
 
 _Date: 2026-07-25._
 
+## At scale: 60 public repositories
+
+The headline test. Using GitHub code search we pulled one real Istio/Envoy
+JWT-auth manifest each from **60 distinct public repositories** (layer5io,
+PacktPublishing, 3scale-demos, opea-project, kiali-adjacent projects, and many
+real company/personal deployments — full list in
+[`bench/oss/study/sources.tsv`](../bench/oss/study/sources.tsv)). None are in our
+corpus. We ran `keyway discover` over all 60 and graded its output against an
+**independent YAML parse** of the same files (does Keyway capture every declared
+issuer / audience / claim?). Reproduce with `make bench-oss-study`.
+
+| Field | Declared (independent parse) | Captured by Keyway | Recall |
+|---|---:|---:|---:|
+| **Issuers** | 36 | 36 | **100%** |
+| **Audiences** | 14 | 14 | **100%** |
+| **Required claims** | 6 | 4 | **66.7%** |
+
+- **All 60 files parsed** (0 unparsed); 63 consumers discovered.
+- **Every declared issuer and audience was captured.**
+- The **claims** gap is one real architectural pattern, not random error: in the
+  two missed cases (e.g. `fcul-cn/group02`) JWT validation lives on a
+  `RequestAuthentication` at the **ingress gateway**, while the `permissions`
+  claim is required by `AuthorizationPolicy`s on **backend services that have no
+  RequestAuthentication of their own**. Keyway only attaches claims to workloads
+  that also have an RA, so gateway-terminated-auth + backend-authz loses those
+  claims — tracked as **KI-30**.
+
+### A real bug this study found (and we fixed)
+
+The first run scored **94.4%** on issuers: two repos wrote `audiences` as a bare
+string (`audiences: "api"`) instead of a list. That broke the whole
+RequestAuthentication unmarshal and dropped the **issuer** with it. Real-world
+manifests are messy, so we made the `audiences` field tolerate a scalar-or-list
+(`internal/discovery/istio/istio.go`, test `TestScalarAudiencesTolerated`) — after
+which issuer recall is **100%**. This is the exercise working as intended: an
+external, unseen corpus surfaced a genuine robustness bug that our own corpus
+never would have.
+
+---
+
 ## Sources (all public, unmodified except where noted)
 
 The manifests live under [`bench/oss/manifests/`](../bench/oss/manifests). None

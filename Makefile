@@ -157,6 +157,12 @@ bench-oss: ## Independent benchmark: run discovery + a real diff on external OSS
 	@echo "== Diff (L3) on a real config with a plausible change =="
 	$(GO) run ./bench/harness --corpus ./bench/oss/diff --realistic 0 --out ./bench/out/oss
 
+.PHONY: bench-oss-study
+bench-oss-study: ## 60-repo independent discovery study (fetches real manifests; needs gh)
+	bash bench/oss/study/fetch.sh
+	$(GO) run ./cmd/keyway discover --path bench/oss/study/manifests --output json > /tmp/kw-study.json
+	python3 bench/oss/study/grade.py bench/oss/study/manifests /tmp/kw-study.json
+
 .PHONY: bench-l2
 bench-l2: ## Score the live-probe layer (L2) against real containerized services
 	docker compose -f bench/l2/docker-compose.yml up -d --build

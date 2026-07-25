@@ -27,6 +27,7 @@ and **fixed** these correctness bugs — all were traced and are covered by test
 | AUD-09 | 🟡 | Consecutive-5xx abort reset on transport errors (status 0), so a service flapping 5xx/connection-refused never aborted. | Count status `≤0` as a failure too. |
 | AUD-10 | 🟡 | `contract.Hash` sorted keys/claims on a single field (non-total) → theoretical non-determinism on duplicate KID/claim-name. | Total comparators. |
 | AUD-11 | 🟡 | UI: `ConsumerDrawer` confidence sort used a 1-arg comparator; "Accepts more/less" pill was misleading for JWKS-behaviour findings; `types.ts` missing `last_observed_refresh`; mock probe id drift. | Total comparator; new "Rotation risk" pill; type + mock aligned. |
+| AUD-12 | 🟠 | **Found by the 60-repo independent study:** real manifests sometimes write Istio `audiences` as a bare string (`audiences: "api"`) instead of a list; a `[]string` field failed to unmarshal and dropped the **entire** RequestAuthentication (issuer included) — issuer recall was 94.4%. | `audiences` now tolerates scalar-or-list (`stringSlice`); issuer recall → 100%. `internal/discovery/istio/istio.go` (test `TestScalarAudiencesTolerated`). See `docs/independent-benchmark.md`. |
 
 Design-level gaps found and **deferred** (tracked as KI-28…KI-32 below).
 

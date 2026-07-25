@@ -30,6 +30,30 @@ var _ discovery.Discoverer = (*Discoverer)(nil)
 // Name identifies this source in provenance records.
 func (d *Discoverer) Name() string { return "istio" }
 
+// stringSlice tolerates a field written as either a YAML scalar or a sequence.
+// Istio's `audiences` is schema-typed as a list, but real-world manifests in the
+// wild sometimes write a bare string (`audiences: "api"`). A plain []string field
+// fails to unmarshal that, which would drop the ENTIRE RequestAuthentication —
+// losing the issuer too. Accepting both keeps discovery robust on messy input.
+type stringSlice []string
+
+func (s *stringSlice) UnmarshalYAML(value *yaml.Node) error {
+	if value.Kind == yaml.ScalarNode {
+		if value.Value == "" {
+			*s = nil
+			return nil
+		}
+		*s = []string{value.Value}
+		return nil
+	}
+	var arr []string
+	if err := value.Decode(&arr); err != nil {
+		return err
+	}
+	*s = arr
+	return nil
+}
+
 // requestAuthentication is the subset of the CRD we read.
 type requestAuthentication struct {
 	Kind     string `yaml:"kind"`
@@ -43,10 +67,10 @@ type requestAuthentication struct {
 			MatchLabels map[string]string `yaml:"matchLabels"`
 		} `yaml:"selector"`
 		JWTRules []struct {
-			Issuer               string   `yaml:"issuer"`
-			Audiences            []string `yaml:"audiences"`
-			JWKSURI              string   `yaml:"jwksUri"`
-			ForwardOriginalToken bool     `yaml:"forwardOriginalToken"`
+			Issuer               string      `yaml:"issuer"`
+			Audiences            stringSlice `yaml:"audiences"`
+			JWKSURI              string      `yaml:"jwksUri"`
+			ForwardOriginalToken bool        `yaml:"forwardOriginalToken"`
 			FromHeaders          []struct {
 				Name   string `yaml:"name"`
 				Prefix string `yaml:"prefix"`

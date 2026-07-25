@@ -35,6 +35,9 @@ const (
 // JWKSBehavior captures how a consumer fetches and caches keys — the mechanism
 // behind most rotation outages.
 type JWKSBehavior struct {
+	// JWKSURI is the endpoint the consumer fetches signing keys from (the
+	// rotation endpoint). Captured from Istio jwtRules.jwksUri / Envoy remote_jwks.
+	JWKSURI               string         `json:"jwks_uri,omitempty"`
 	CacheTTLSec           *int           `json:"cache_ttl_sec,omitempty"`
 	RefreshIntervalSec    *int           `json:"refresh_interval_sec,omitempty"`
 	RefreshesOnUnknownKID *bool          `json:"refreshes_on_unknown_kid,omitempty"`

@@ -166,30 +166,47 @@ func (d *Discoverer) assemble(scope discovery.Scope, ras []raWithLoc, aps []apWi
 		}
 		consumers = append(consumers, d.toConsumer(r.ra, r.loc, scope))
 	}
+	// Selector-less AuthorizationPolicies apply to every workload in their
+	// namespace (Istio semantics), so their claims are tracked per-namespace.
+	nsWideClaims := map[string][]string{} // namespace -> claims
+	nsWideSource := map[string]string{}
 	for _, a := range aps {
-		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, nsOrDefault(a.ap.Metadata.Namespace)) {
+		ns := nsOrDefault(a.ap.Metadata.Namespace)
+		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, ns) {
 			continue
 		}
-		if claims := requiredClaims(a.ap); len(claims) > 0 {
-			key := workloadKey(nsOrDefault(a.ap.Metadata.Namespace), apServiceName(a.ap))
-			claimsByWorkload[key] = unionAll(claimsByWorkload[key], claims)
-			claimSource[key] = a.loc
-		}
-	}
-
-	// Merge required claims into the matching consumers.
-	for i := range consumers {
-		key := workloadKey(consumers[i].Namespace, consumers[i].Name)
-		claims := claimsByWorkload[key]
+		claims := requiredClaims(a.ap)
 		if len(claims) == 0 {
 			continue
 		}
+		if len(a.ap.Spec.Selector.MatchLabels) == 0 {
+			nsWideClaims[ns] = unionAll(nsWideClaims[ns], claims)
+			nsWideSource[ns] = a.loc
+			continue
+		}
+		key := workloadKey(ns, apServiceName(a.ap))
+		claimsByWorkload[key] = unionAll(claimsByWorkload[key], claims)
+		claimSource[key] = a.loc
+	}
+
+	// Merge required claims into the matching consumers: both those from a policy
+	// that selects this workload and those from any namespace-wide policy.
+	for i := range consumers {
+		ns := consumers[i].Namespace
+		key := workloadKey(ns, consumers[i].Name)
+		claims := unionAll(claimsByWorkload[key], nsWideClaims[ns])
+		if len(claims) == 0 {
+			continue
+		}
+		loc := claimSource[key]
+		if loc == "" {
+			loc = nsWideSource[ns]
+		}
 		consumers[i].Expects.RequiredClaims = unionAll(consumers[i].Expects.RequiredClaims, claims)
 		consumers[i].Confidence["expects.required_claims"] = 1.0
-		prov := model.ProvenanceRecord{
-			Source: "istio:AuthorizationPolicy", Locator: claimSource[key], ObservedAt: d.now(), Confidence: 1.0,
-		}
-		consumers[i].Provenance["expects.required_claims"] = []model.ProvenanceRecord{prov}
+		consumers[i].Provenance["expects.required_claims"] = []model.ProvenanceRecord{{
+			Source: "istio:AuthorizationPolicy", Locator: loc, ObservedAt: d.now(), Confidence: 1.0,
+		}}
 	}
 	return consumers
 }
@@ -208,17 +225,20 @@ func requiredClaims(ap authorizationPolicy) []string {
 	return out
 }
 
-// claimKey returns the claim name from "request.auth.claims[<name>]".
+// claimKey returns the top-level claim name from "request.auth.claims[<name>]".
+// For a nested claim like "request.auth.claims[realm_access][roles]" it returns
+// the first segment ("realm_access") — the claim the token must carry.
 func claimKey(key string) (string, bool) {
 	const prefix = "request.auth.claims["
-	if !strings.HasPrefix(key, prefix) || !strings.HasSuffix(key, "]") {
+	if !strings.HasPrefix(key, prefix) {
 		return "", false
 	}
-	name := strings.TrimSuffix(strings.TrimPrefix(key, prefix), "]")
-	if name == "" {
+	rest := strings.TrimPrefix(key, prefix)
+	idx := strings.IndexByte(rest, ']')
+	if idx <= 0 {
 		return "", false
 	}
-	return name, true
+	return rest[:idx], true
 }
 
 // workloadLabelKeys are the selector labels, in preference order, that name the
@@ -269,12 +289,16 @@ func (d *Discoverer) toConsumer(ra requestAuthentication, path string, scope dis
 	})
 
 	var issuers, audiences []string
+	var jwksURI string
 	for _, r := range ra.Spec.JWTRules {
 		if r.Issuer != "" {
 			issuers = appendUnique(issuers, r.Issuer)
 		}
 		for _, a := range r.Audiences {
 			audiences = appendUnique(audiences, a)
+		}
+		if jwksURI == "" && r.JWKSURI != "" {
+			jwksURI = r.JWKSURI // the rotation endpoint (KI-32)
 		}
 	}
 
@@ -302,7 +326,7 @@ func (d *Discoverer) toConsumer(ra requestAuthentication, path string, scope dis
 			Audiences:    audiences,
 			ClockSkewSec: 0,
 		},
-		JWKSBehavior: model.JWKSBehavior{Source: model.SrcConfig},
+		JWKSBehavior: model.JWKSBehavior{JWKSURI: jwksURI, Source: model.SrcConfig},
 		Provenance:   provMap,
 		Confidence:   conf,
 		Probeable:    true,

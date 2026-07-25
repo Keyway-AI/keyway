@@ -15,6 +15,7 @@ export interface Expectations {
 }
 
 export interface JWKSBehavior {
+  jwks_uri?: string;
   cache_ttl_sec?: number | null;
   refresh_interval_sec?: number | null;
   refreshes_on_unknown_kid?: boolean | null;

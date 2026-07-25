@@ -5,6 +5,7 @@ package envoy
 
 import (
 	"context"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -42,8 +43,16 @@ func (d *Discoverer) Discover(_ context.Context, scope discovery.Scope) ([]model
 		if err := yaml.Unmarshal(doc, &root); err != nil {
 			return nil
 		}
-		for name, prov := range findProviders(root) {
-			if c, ok := d.toConsumer(name, prov, path, scope); ok {
+		provs := findProviders(root)
+		// Iterate in sorted order so discovery output is deterministic across runs
+		// (findProviders returns a map). (KI-31)
+		names := make([]string, 0, len(provs))
+		for n := range provs {
+			names = append(names, n)
+		}
+		sort.Strings(names)
+		for _, name := range names {
+			if c, ok := d.toConsumer(name, provs[name], path, scope); ok {
 				consumers = append(consumers, c)
 			}
 		}
@@ -60,6 +69,7 @@ type provider struct {
 	issuer        string
 	audiences     []string
 	cacheDuration string
+	jwksURI       string
 }
 
 // findProviders recursively locates a "providers" map under any jwt_authn
@@ -72,12 +82,16 @@ func findProviders(node any) map[string]provider {
 		case map[string]any:
 			if provs, ok := v["providers"].(map[string]any); ok {
 				for name, p := range provs {
+					if _, exists := out[name]; exists {
+						continue // keep the first definition, deterministically (KI-31)
+					}
 					if pm, ok := p.(map[string]any); ok {
 						if iss, ok := pm["issuer"].(string); ok && iss != "" {
 							out[name] = provider{
 								issuer:        iss,
 								audiences:     toStrings(pm["audiences"]),
 								cacheDuration: cacheDurationOf(pm),
+								jwksURI:       remoteJWKSURI(pm),
 							}
 						}
 					}
@@ -102,7 +116,7 @@ func (d *Discoverer) toConsumer(name string, p provider, path string, scope disc
 	}
 	stableID := discovery.StableID(discovery.IDParts{Gateway: "envoy", Route: name})
 
-	jwks := model.JWKSBehavior{Source: model.SrcConfig}
+	jwks := model.JWKSBehavior{JWKSURI: p.jwksURI, Source: model.SrcConfig} // rotation endpoint (KI-32)
 	if sec, ok := parseDuration(p.cacheDuration); ok {
 		jwks.CacheTTLSec = &sec
 	}
@@ -122,11 +136,32 @@ func (d *Discoverer) toConsumer(name string, p provider, path string, scope disc
 		JWKSBehavior: jwks,
 		Provenance: map[string][]model.ProvenanceRecord{
 			"expects.issuers":         {prov},
+			"expects.audiences":       {prov},
 			"jwks_behavior.cache_ttl": {prov},
 		},
-		Confidence: map[string]float64{"overall": 1.0},
-		Probeable:  true,
+		Confidence: map[string]float64{
+			"overall":           1.0,
+			"expects.issuers":   1.0,
+			"expects.audiences": 1.0,
+		},
+		Probeable: true,
 	}, true
+}
+
+// remoteJWKSURI extracts the JWKS endpoint from a provider's remote_jwks config.
+func remoteJWKSURI(pm map[string]any) string {
+	rj, ok := pm["remote_jwks"].(map[string]any)
+	if !ok {
+		return ""
+	}
+	hu, ok := rj["http_uri"].(map[string]any)
+	if !ok {
+		return ""
+	}
+	if uri, ok := hu["uri"].(string); ok {
+		return uri
+	}
+	return ""
 }
 
 func cacheDurationOf(pm map[string]any) string {

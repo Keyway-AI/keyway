@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/nometria/keyway/internal/api"
+	"github.com/nometria/keyway/internal/app"
 	"github.com/nometria/keyway/internal/config"
 	"github.com/nometria/keyway/internal/issuerregistry"
 	"github.com/nometria/keyway/internal/keystore"
@@ -128,7 +129,9 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	}
 	discoverers = append(discoverers, inc...)
 
-	srv := api.NewServer(api.Config{Addr: addr, Token: token}, api.Deps{
+	// One application-layer dependency set, shared by the HTTP server and the
+	// scheduler so both drive the same use-cases.
+	appDeps := app.Deps{
 		Store:       st,
 		Issuers:     reg,
 		Libs:        libs,
@@ -136,11 +139,12 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		Scope:       scope,
 		Probe:       probeCfg,
 		Attributor:  buildAttributor(cfg, attrRoot),
-	})
+	}
+	srv := api.NewServer(api.Config{Addr: addr, Token: token}, appDeps)
 
 	// Optional scheduler: periodically snapshot and notify on change events.
 	if interval, _ := cmd.Flags().GetDuration("snapshot-interval"); interval > 0 {
-		go runScheduler(ctx, cmd.OutOrStdout(), srv, notifierFor(cfg), interval)
+		go runScheduler(ctx, cmd.OutOrStdout(), appDeps, notifierFor(cfg), interval)
 	}
 
 	fmt.Fprintf(cmd.OutOrStdout(), "%s listening on %s (%d issuer(s), UI at /)\n", version.String(), addr, reg.Len())
@@ -149,7 +153,7 @@ func runServe(cmd *cobra.Command, _ []string) error {
 
 // runScheduler snapshots on a fixed interval and delivers notifiable change
 // events to the configured notifier (PRD §10.3 / scheduler; KI-06).
-func runScheduler(ctx context.Context, out io.Writer, srv *api.Server, n notify.Notifier, interval time.Duration) {
+func runScheduler(ctx context.Context, out io.Writer, deps app.Deps, n notify.Notifier, interval time.Duration) {
 	fmt.Fprintf(out, "scheduler: snapshotting every %s\n", interval)
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -158,7 +162,7 @@ func runScheduler(ctx context.Context, out io.Writer, srv *api.Server, n notify.
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			res, err := srv.Snapshot(ctx, "scheduled")
+			res, err := deps.Snapshot(ctx, "scheduled")
 			if err != nil {
 				fmt.Fprintln(out, "scheduler: snapshot error:", err)
 				continue

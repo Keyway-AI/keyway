@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nometria/keyway/internal/app"
 	"github.com/nometria/keyway/internal/issuerregistry"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/stretchr/testify/assert"
@@ -59,7 +60,7 @@ func testServer(t *testing.T) *Server {
 		{Name: "default", Type: model.IssuerGenericOIDC, URL: "https://issuer.test"},
 	})
 	require.NoError(t, err)
-	return NewServer(Config{Token: "secret"}, Deps{Store: newMemStore(), Issuers: reg})
+	return NewServer(Config{Token: "secret"}, app.Deps{Store: newMemStore(), Issuers: reg})
 }
 
 func do(t *testing.T, h http.Handler, method, path, token string, body any) *httptest.ResponseRecorder {

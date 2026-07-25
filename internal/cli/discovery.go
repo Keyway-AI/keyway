@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/nometria/keyway/internal/app"
 	"github.com/nometria/keyway/internal/attribution"
 	"github.com/nometria/keyway/internal/config"
 	"github.com/nometria/keyway/internal/contract"
@@ -17,6 +18,7 @@ import (
 	"github.com/nometria/keyway/internal/discovery/k8s"
 	"github.com/nometria/keyway/internal/discovery/kube"
 	"github.com/nometria/keyway/internal/discovery/oidcclient"
+	"github.com/nometria/keyway/internal/libdefaults"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/store/postgres"
 	"github.com/spf13/cobra"
@@ -186,10 +188,6 @@ func runSnapshot(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	consumers, err := discovery.Run(context.Background(), scope, ds...)
-	if err != nil {
-		return err
-	}
 
 	ctx := context.Background()
 	st, err := postgres.Open(ctx, dsn)
@@ -198,13 +196,17 @@ func runSnapshot(cmd *cobra.Command) error {
 	}
 	defer st.Close()
 
-	v := contract.Build(contract.BuildInput{Consumers: consumers, TriggerKind: "manual"})
 	attrRoot := "."
 	if len(scope.ConfigPaths) > 0 {
 		attrRoot = scope.ConfigPaths[0]
 	}
 	cfg, _ := config.Load(configPath(cmd))
-	res, err := contract.SnapshotWithAttribution(ctx, st, v, buildAttributor(cfg, attrRoot))
+	libs, _ := libdefaults.Load()
+	// Same use-case the HTTP API and scheduler run, so behaviour can't drift.
+	res, err := app.Deps{
+		Store: st, Discoverers: ds, Scope: scope, Libs: libs,
+		Attributor: buildAttributor(cfg, attrRoot),
+	}.Snapshot(ctx, "manual")
 	if err != nil {
 		return err
 	}

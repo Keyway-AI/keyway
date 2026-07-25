@@ -12,12 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/nometria/keyway/internal/contract"
-	"github.com/nometria/keyway/internal/discovery"
-	"github.com/nometria/keyway/internal/issuerregistry"
-	"github.com/nometria/keyway/internal/libdefaults"
-	"github.com/nometria/keyway/internal/probe"
-	"github.com/nometria/keyway/internal/store"
+	"github.com/nometria/keyway/internal/app"
 	"github.com/nometria/keyway/pkg/apitypes"
 )
 
@@ -27,29 +22,18 @@ type Config struct {
 	Token string // bearer token required by all /v1 endpoints
 }
 
-// Deps are the runtime dependencies the handlers operate on.
-type Deps struct {
-	Store       store.Store
-	Issuers     *issuerregistry.Registry
-	Libs        *libdefaults.DB
-	Discoverers []discovery.Discoverer
-	Scope       discovery.Scope
-	Probe       probe.EngineConfig
-	// Attributor, when set, binds each change event to its cause (commit/deploy/
-	// IdP admin action) as snapshots are taken. Optional.
-	Attributor contract.Attributor
-}
-
-// Server holds server dependencies.
+// Server is the HTTP transport. It owns only transport concerns (routing, auth,
+// idempotency, the in-memory run index) and delegates all business logic to the
+// application layer (app.Deps).
 type Server struct {
 	cfg  Config
-	deps Deps
+	deps app.Deps
 	idem *idemStore
 	runs *runIndex
 }
 
-// NewServer constructs an API server.
-func NewServer(cfg Config, deps Deps) *Server {
+// NewServer constructs an API server over the application-layer dependencies.
+func NewServer(cfg Config, deps app.Deps) *Server {
 	return &Server{cfg: cfg, deps: deps, idem: newIdemStore(24 * time.Hour), runs: newRunIndex(256)}
 }
 

@@ -22,9 +22,16 @@ type RunProbesRequest struct {
 	ProbeIDs    []string `json:"probe_ids,omitempty"`
 }
 
-// RunProbesResponse acknowledges a probe run.
+// RunProbesResponse acknowledges a probe run and carries its results.
 type RunProbesResponse struct {
-	RunID string `json:"run_id"`
+	RunID   string              `json:"run_id"`
+	Results []model.ProbeResult `json:"results"`
+}
+
+// ConsumerProbesResponse is a consumer's recent probe history.
+type ConsumerProbesResponse struct {
+	ConsumerID string              `json:"consumer_id"`
+	Results    []model.ProbeResult `json:"results"`
 }
 
 // BlastRadiusRequest is the body of POST /v1/blast-radius.

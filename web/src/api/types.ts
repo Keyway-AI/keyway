@@ -58,6 +58,34 @@ export interface Consumer {
   probeable: boolean;
 }
 
+export type KeyStatus = "announced" | "active" | "retiring" | "retired";
+
+export interface Key {
+  kid: string;
+  alg: string;
+  use: string;
+  status: KeyStatus;
+  public_key_pem?: string;
+  first_seen_in_jwks?: string;
+  in_signing_use_since?: string | null;
+  retired_at?: string | null;
+}
+
+export interface IssuerInfo {
+  id?: string;
+  name: string;
+  type?: string;
+  issuer_url?: string;
+  jwks_uri?: string;
+  keys?: Key[] | null;
+}
+
+export interface CanaryStatus {
+  issuer: string;
+  keys: Key[];
+  announced_kid: string;
+}
+
 export interface ProbeResult {
   id: string;
   probe_id: string;
@@ -130,6 +158,8 @@ export interface BlastRadiusResult {
     issuer_id: string;
     kid?: string;
     claim_name?: string;
+    new_issuer_url?: string;
+    algorithm?: string;
   };
   affected: AffectedConsumer[];
   unknown: Consumer[];

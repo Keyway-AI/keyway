@@ -1,10 +1,15 @@
 // Sample data mirroring the PRD demo so the dashboard is fully navigable before
 // the backend endpoints land. Swap in live data by setting localStorage
 // `keyway.live=1` (see client.ts).
+import { computeBlast } from "../lib/blast";
 import type {
+  BlastRadiusResult,
+  CanaryStatus,
   ChangeEvent,
   Consumer,
   CoverageResponse,
+  IssuerInfo,
+  Key,
   ProbeResult,
   SnapshotResponse,
 } from "./types";
@@ -134,6 +139,110 @@ export const consumerProbes = (stableId: string): ProbeResult[] => {
     raw_response: "",
     run_at: new Date(Date.now() - (i + 1) * 1800_000).toISOString(),
   }));
+};
+
+export const blastRadius = (proposal: BlastRadiusResult["proposal"]): BlastRadiusResult =>
+  computeBlast(consumers(), proposal);
+
+// --- interactive mocks (so the demo works with no backend) ---
+
+// In-memory canary key state per issuer, mutated by announce/promote so the
+// sample UI behaves like the real lifecycle.
+const canaryState: Record<string, Key[]> = {
+  default: [
+    {
+      kid: "rsa-2025-06",
+      alg: "RS256",
+      use: "sig",
+      status: "active",
+      first_seen_in_jwks: new Date(Date.now() - 40 * 86400_000).toISOString(),
+      in_signing_use_since: new Date(Date.now() - 40 * 86400_000).toISOString(),
+    },
+  ],
+};
+
+let mockKidSeq = 100;
+
+export const issuers = (): IssuerInfo[] => [
+  {
+    id: "default",
+    name: "default",
+    type: "generic_oidc",
+    issuer_url: "https://kc/realms/main",
+    jwks_uri: "https://kc/realms/main/protocol/openid-connect/certs",
+    keys: canaryState["default"],
+  },
+];
+
+export const canaryStatus = (issuerId: string): CanaryStatus => {
+  const keys = canaryState[issuerId] ?? [];
+  const announced = keys.find((k) => k.status === "announced");
+  return { issuer: issuerId, keys, announced_kid: announced?.kid ?? "" };
+};
+
+export const canaryAnnounce = (issuerId: string, alg: string): Key => {
+  const key: Key = {
+    kid: `rsa-2026-${mockKidSeq++}`,
+    alg: alg || "RS256",
+    use: "sig",
+    status: "announced",
+    first_seen_in_jwks: new Date().toISOString(),
+  };
+  canaryState[issuerId] = [...(canaryState[issuerId] ?? []), key];
+  return key;
+};
+
+// Promote flips the announced key to active signing and moves the prior active
+// key to retiring — mirroring the real KeyStatus lifecycle so the demo advances.
+export const canaryPromote = (issuerId: string, kid: string): { promoted: string } => {
+  const keys = canaryState[issuerId] ?? [];
+  canaryState[issuerId] = keys.map((k) => {
+    if (k.kid === kid) return { ...k, status: "active", in_signing_use_since: new Date().toISOString() };
+    if (k.status === "active") return { ...k, status: "retiring" };
+    return k;
+  });
+  return { promoted: kid };
+};
+
+export const createSnapshot = (): SnapshotResponse => ({
+  version_id: `v-${Date.now()}`,
+  hash: Array.from({ length: 64 }, () => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join(""),
+  is_baseline: false,
+});
+
+export const runProbes = (consumerIds?: string[]): { run_id: string; results: ProbeResult[] } => {
+  const targets = (consumers().filter((c) => c.probeable) ?? []).filter(
+    (c) => !consumerIds || consumerIds.length === 0 || consumerIds.includes(c.stable_id),
+  );
+  const results: ProbeResult[] = [];
+  const probes = [
+    { probe_id: "alg_none", passed: true, status: 401 },
+    { probe_id: "alg_confusion", passed: true, status: 401 },
+    { probe_id: "tampered_signature", passed: true, status: 401 },
+    { probe_id: "expired", passed: true, status: 401 },
+    { probe_id: "wrong_audience", passed: true, status: 403 },
+    { probe_id: "wrong_issuer", passed: true, status: 401 },
+    { probe_id: "valid_token", passed: true, status: 200 },
+  ];
+  for (const c of targets) {
+    for (let i = 0; i < probes.length; i++) {
+      const p = probes[i];
+      // legacy-reporting fails the alg_none probe (a real finding) in the demo.
+      const passed = c.name === "legacy-reporting" && p.probe_id === "alg_none" ? false : p.passed;
+      results.push({
+        id: `${c.stable_id}-${p.probe_id}`,
+        probe_id: p.probe_id,
+        consumer_id: c.stable_id,
+        endpoint_url: "https://svc.internal/healthz",
+        status_code: passed ? p.status : 200,
+        latency_ms: 8 + i * 2,
+        passed,
+        raw_response: "",
+        run_at: new Date().toISOString(),
+      });
+    }
+  }
+  return { run_id: `run-${Date.now()}`, results };
 };
 
 export const changes = (): ChangeEvent[] => [

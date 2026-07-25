@@ -56,6 +56,7 @@ func (s *Server) Routes() http.Handler {
 		r.Get("/v1/snapshots/latest", s.handleLatestSnapshot)
 		r.Get("/v1/snapshots/{id}", s.handleGetSnapshot)
 
+		r.Get("/v1/issuers", s.handleListIssuers)
 		r.Get("/v1/consumers", s.handleListConsumers)
 		r.Get("/v1/consumers/{stable_id}", s.handleGetConsumer)
 		r.Get("/v1/consumers/{stable_id}/probes", s.handleConsumerProbes)

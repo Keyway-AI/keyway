@@ -1,9 +1,12 @@
 import type {
   BlastRadiusResult,
+  CanaryStatus,
   ChangeEvent,
   Consumer,
   CoverageResponse,
   HealthResponse,
+  IssuerInfo,
+  Key,
   ProbeResult,
   SnapshotResponse,
 } from "./types";
@@ -87,7 +90,10 @@ export const api = {
     }, mock.latestSnapshot),
 
   createSnapshot: () =>
-    request<SnapshotResponse>("/v1/snapshots", { method: "POST" }),
+    withMock<SnapshotResponse>(
+      () => request<SnapshotResponse>("/v1/snapshots", { method: "POST" }),
+      mock.createSnapshot,
+    ),
 
   consumers: () =>
     withMock<Consumer[]>(
@@ -116,8 +122,54 @@ export const api = {
   // POST /v1/blast-radius — live resolution. Callers fall back to the local
   // resolver when the API is unavailable.
   blastRadius: (proposal: BlastRadiusResult["proposal"]) =>
-    request<BlastRadiusResult>("/v1/blast-radius", {
-      method: "POST",
-      body: JSON.stringify({ proposal }),
-    }),
+    withMock<BlastRadiusResult>(
+      () =>
+        request<BlastRadiusResult>("/v1/blast-radius", {
+          method: "POST",
+          body: JSON.stringify({ proposal }),
+        }),
+      () => mock.blastRadius(proposal),
+    ),
+
+  issuers: () =>
+    withMock<IssuerInfo[]>(
+      async () => (await request<{ issuers: IssuerInfo[] }>("/v1/issuers")).issuers ?? [],
+      mock.issuers,
+    ),
+
+  canaryStatus: (issuerId: string) =>
+    withMock<CanaryStatus>(
+      () => request<CanaryStatus>(`/v1/canary/status?issuer_id=${encodeURIComponent(issuerId)}`),
+      () => mock.canaryStatus(issuerId),
+    ),
+
+  canaryAnnounce: (issuerId: string, alg: string) =>
+    withMock<Key>(
+      () =>
+        request<Key>("/v1/canary/announce", {
+          method: "POST",
+          body: JSON.stringify({ issuer_id: issuerId, alg }),
+        }),
+      () => mock.canaryAnnounce(issuerId, alg),
+    ),
+
+  canaryPromote: (issuerId: string, kid: string) =>
+    withMock<{ promoted: string }>(
+      () =>
+        request<{ promoted: string }>("/v1/canary/promote", {
+          method: "POST",
+          body: JSON.stringify({ issuer_id: issuerId, kid }),
+        }),
+      () => mock.canaryPromote(issuerId, kid),
+    ),
+
+  runProbes: (consumerIds?: string[]) =>
+    withMock<{ run_id: string; results: ProbeResult[] }>(
+      () =>
+        request<{ run_id: string; results: ProbeResult[] }>("/v1/probes/run", {
+          method: "POST",
+          body: JSON.stringify({ consumer_ids: consumerIds ?? [] }),
+        }),
+      () => mock.runProbes(consumerIds),
+    ),
 };

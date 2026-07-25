@@ -72,6 +72,53 @@ func TestRotateKeyCanaryEvidenceWins(t *testing.T) {
 	assert.Contains(t, res.Affected[0].Evidence[0], "probe:")
 }
 
+// TestRotateKeyMeasuredWindow verifies that when the canary probe history shows
+// a real fail→pass transition, the grace period is based on that MEASURED pickup
+// latency rather than the cache-TTL default, and the basis is labelled (KI-25).
+func TestRotateKeyMeasuredWindow(t *testing.T) {
+	// Cache TTL of 6h would recommend a 9h grace. The measured pickup is tighter.
+	c := consumerUsing("payments-api", model.JWKSBehavior{CacheTTLSec: intp(6 * 3600), Source: model.SrcConfig})
+	v := issuerVersion(c)
+	now := time.Now()
+	// Announced key rejected at -4h, accepted at -2h → measured pickup = 2h.
+	history := map[string][]model.ProbeResult{
+		"payments-api": {
+			{ProbeID: probe.ProbeCanaryKey, Passed: false, RunAt: now.Add(-4 * time.Hour)},
+			{ProbeID: probe.ProbeCanaryKey, Passed: true, RunAt: now.Add(-2 * time.Hour)},
+		},
+	}
+	res, err := Resolve(v, ChangeProposal{Kind: KindRotateKey, IssuerID: "iss-1"}, history, now)
+	require.NoError(t, err)
+	require.Len(t, res.Affected, 1)
+	assert.Equal(t, VerdictReady, res.Affected[0].Verdict)
+	// Grace = measured 2h * 1.5 = 3h, NOT the 9h the 6h cache TTL would give.
+	assert.Equal(t, 3*time.Hour, res.RecommendedGracePeriod)
+	assert.Contains(t, res.GraceBasis, "measured pickup")
+	assert.Contains(t, res.Affected[0].Reason, "measured pickup")
+}
+
+func TestMeasuredWindowNoTransition(t *testing.T) {
+	now := time.Now()
+	// Only passes (already picked up on first probe) → no measurable transition.
+	only := []model.ProbeResult{
+		{ProbeID: probe.ProbeCanaryKey, Passed: true, RunAt: now.Add(-time.Hour)},
+		{ProbeID: probe.ProbeCanaryKey, Passed: true, RunAt: now.Add(-30 * time.Minute)},
+	}
+	_, ok := measuredWindow(only, now)
+	assert.False(t, ok, "no fail→pass transition means no measurement")
+
+	// A later re-fail then re-pass yields the most recent transition.
+	seq := []model.ProbeResult{
+		{ProbeID: probe.ProbeCanaryKey, Passed: false, RunAt: now.Add(-3 * time.Hour)},
+		{ProbeID: probe.ProbeCanaryKey, Passed: true, RunAt: now.Add(-2 * time.Hour)}, // 1h gap
+		{ProbeID: probe.ProbeCanaryKey, Passed: false, RunAt: now.Add(-40 * time.Minute)},
+		{ProbeID: probe.ProbeCanaryKey, Passed: true, RunAt: now.Add(-35 * time.Minute)}, // 5m gap (latest)
+	}
+	d, ok := measuredWindow(seq, now)
+	require.True(t, ok)
+	assert.Equal(t, 5*time.Minute, d, "uses the most recent transition")
+}
+
 func TestRotateKeyStaleCanaryIgnored(t *testing.T) {
 	c := consumerUsing("payments-api", model.JWKSBehavior{RefreshesOnUnknownKID: boolp(false)})
 	v := issuerVersion(c)

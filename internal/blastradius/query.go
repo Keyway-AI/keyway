@@ -4,6 +4,7 @@ package blastradius
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/nometria/keyway/internal/model"
@@ -85,15 +86,23 @@ func Resolve(v model.ContractVersion, p ChangeProposal, history map[string][]mod
 	res.Affected = affected
 	res.Unknown = unknown
 
-	// Grace period from the ready consumers' refresh windows (PRD §10.3).
+	// Grace period from the ready consumers' refresh windows (PRD §10.3). A
+	// window measured from a real announce→pickup (KI-25) is preferred to a
+	// default one at the same duration, and the basis is labelled accordingly.
 	if len(windows) > 0 {
 		durations := make([]time.Duration, 0, len(windows))
 		var maxW time.Duration
+		var maxMeasured bool
 		for _, w := range windows {
 			durations = append(durations, w.window)
-			if w.window > maxW {
+			if w.window > maxW || (w.window == maxW && w.measured && !maxMeasured) {
 				maxW = w.window
-				res.GraceBasis = w.stableID
+				maxMeasured = w.measured
+				if w.measured {
+					res.GraceBasis = "measured pickup on " + w.stableID
+				} else {
+					res.GraceBasis = w.stableID
+				}
 			}
 		}
 		res.RecommendedGracePeriod = GracePeriod(durations)
@@ -104,6 +113,7 @@ func Resolve(v model.ContractVersion, p ChangeProposal, history map[string][]mod
 type windowed struct {
 	stableID string
 	window   time.Duration
+	measured bool // true when the window came from an observed announce→pickup, not a default
 }
 
 // issuerURL resolves a proposal's IssuerID to an issuer URL via the contract,
@@ -135,8 +145,13 @@ func resolveRotateKey(v model.ContractVersion, p ChangeProposal, history map[str
 				ac.Verdict, ac.Confidence = VerdictReady, 1.0
 				ac.Reason = "canary key accepted"
 				ac.Evidence = []string{"probe:" + pr.ProbeID}
-				if w, ok := readyWindow(c); ok {
-					windows = append(windows, windowed{c.StableID, w})
+				// Prefer a window measured from the observed announce→pickup over
+				// the cache-TTL/library default (KI-25).
+				if mw, ok := measuredWindow(history[c.StableID], now); ok {
+					windows = append(windows, windowed{c.StableID, mw, true})
+					ac.Reason = fmt.Sprintf("canary key accepted (measured pickup %s)", mw.Round(time.Second))
+				} else if w, ok := readyWindow(c); ok {
+					windows = append(windows, windowed{c.StableID, w, false})
 				}
 			} else {
 				ac.Verdict, ac.Confidence = VerdictWillBreak, 1.0
@@ -162,7 +177,7 @@ func resolveRotateKey(v model.ContractVersion, p ChangeProposal, history map[str
 			ac.Reason = fmt.Sprintf("refreshes JWKS; %ds cache", *c.JWKSBehavior.CacheTTLSec)
 			ac.Evidence = []string{"source:" + string(c.JWKSBehavior.Source)}
 			affected = append(affected, ac)
-			windows = append(windows, windowed{c.StableID, time.Duration(*c.JWKSBehavior.CacheTTLSec) * time.Second})
+			windows = append(windows, windowed{c.StableID, time.Duration(*c.JWKSBehavior.CacheTTLSec) * time.Second, false})
 			continue
 		}
 
@@ -249,6 +264,47 @@ func readyWindow(c model.Consumer) (time.Duration, bool) {
 		return time.Duration(*c.JWKSBehavior.RefreshIntervalSec) * time.Second, true
 	}
 	return 0, false
+}
+
+// measuredWindow derives a real announce→pickup latency from canary probe
+// history (KI-25). When the scheduler (or an operator) re-runs the canary probe
+// over time, the history records the moment the consumer went from rejecting the
+// announced key (fail) to accepting it (pass). The gap between the last failing
+// probe and the first passing probe after it bounds how long pickup actually
+// took — a measurement, not a cache-TTL guess. Returns false when the history
+// shows no such transition (e.g. the key was already picked up on first probe).
+func measuredWindow(results []model.ProbeResult, now time.Time) (time.Duration, bool) {
+	// Collect fresh canary probes in chronological order.
+	var canaries []model.ProbeResult
+	for _, r := range results {
+		if r.ProbeID != probe.ProbeCanaryKey {
+			continue
+		}
+		if now.Sub(r.RunAt) > canaryFreshness {
+			continue
+		}
+		canaries = append(canaries, r)
+	}
+	sort.Slice(canaries, func(i, j int) bool { return canaries[i].RunAt.Before(canaries[j].RunAt) })
+
+	// Find the last fail→pass transition and measure the gap across it.
+	var lastFail time.Time
+	haveFail := false
+	var best time.Duration
+	found := false
+	for _, r := range canaries {
+		if !r.Passed {
+			lastFail, haveFail = r.RunAt, true
+			continue
+		}
+		if haveFail {
+			if d := r.RunAt.Sub(lastFail); d > 0 {
+				best, found = d, true
+			}
+			haveFail = false // consumed this transition; a later fail starts a new one
+		}
+	}
+	return best, found
 }
 
 func freshCanary(results []model.ProbeResult, now time.Time) (model.ProbeResult, bool) {

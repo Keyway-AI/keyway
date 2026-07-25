@@ -107,7 +107,10 @@ make web-dev      # starts the Vite dev server on :5173 (proxies /v1 → :8080)
              └──────────┴─▶ blast radius + grace period ─▶ CLI / HTTP API / Web UI
 ```
 
-See [`docs/architecture.md`](docs/architecture.md) for the full design and
+See [**ARCHITECTURE.md**](ARCHITECTURE.md) for the full guide — the layering, the
+data flow, the extension seams, and where to change things —
+[`docs/architecture-review.md`](docs/architecture-review.md) for the independent
+design critique, and
 [`rollover-prd-v0.2-implementation.md`](rollover-prd-v0.2-implementation.md) for the
 complete buildable specification.
 

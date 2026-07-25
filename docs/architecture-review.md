@@ -118,19 +118,25 @@ package) removes the copy.
 
 ## 5. Top recommendations (prioritised by leverage ÷ effort)
 
-1. **Introduce `internal/app` (application/use-case layer).** Move the snapshot,
+> **Status (2026-07-25):** recommendations **#1, #2, and #3** are now implemented
+> — see `internal/app`, `internal/store/{memory,open}`, and the typed DTOs in
+> `pkg/apitypes`. The narrative guide is [ARCHITECTURE.md](../ARCHITECTURE.md).
+> #4 (consumer identity) and #6 (HA seam) remain open, tracked as KI-28/KI-33 and
+> KI-05/KI-09.
+
+1. ✅ **Introduce `internal/app` (application/use-case layer).** Move the snapshot,
    probe-run, and blast-radius orchestration out of `api.Server`/`cli` into
    use-case types (`SnapshotService`, `ProbeService`, …) that depend only on
    ports (`store.Store`, `discovery.Discoverer`, `issuer` registry, `Attributor`).
    CLI, HTTP, and scheduler become thin callers. Kills W1 and most of W2/W6.
    *High leverage, medium effort.*
 
-2. **Make `store.Store` the only persistence seam.** Add a `store.Open(dsn)`
+2. ✅ **Make `store.Store` the only persistence seam.** Add a `store.Open(dsn)`
    factory and an in-memory/SQLite implementation; have the CLI depend on the
    interface. Enables offline dev, faster tests, and the multi-replica story.
    *High leverage, low-medium effort.*
 
-3. **One DTO boundary for the whole API.** Every handler returns a `pkg/apitypes`
+3. ✅ **One DTO boundary for the whole API (acute cases).** Every handler returns a `pkg/apitypes`
    type; nothing serializes a domain struct raw. Add a tiny contract test that
    fails if a Go response type and its TS counterpart drift (the AUD-03 class).
    *Medium leverage, low effort — and it retires a whole bug class.*
@@ -159,8 +165,8 @@ package) removes the copy.
 | Domain modelling | **A** | `model` leaf; pure, deterministic core; injected clocks |
 | Extensibility (adapters) | **A−** | 8 well-chosen ports; new source/issuer/notifier = one interface |
 | Layering (bottom half) | **A−** | clean domain, no cycles |
-| Layering (top half) | **C+** | orchestration in transport; no app layer; leaky store |
-| API contract hygiene | **C** | inconsistent DTOs → drift (AUD-03) |
+| Layering (top half) | **B+** | app layer added; store behind the interface; wiring still in `serve` |
+| API contract hygiene | **B** | probe/blast/consumer-probe responses now typed DTOs; a few GETs still return the domain model |
 | Identity / correlation | **C+** | inline StableID; cross-source merge gaps (KI-28/33) |
 | Scale/HA readiness | **B−** (for v1) | single-daemon by design; seams exist but unused |
 | Testing architecture | **A** | mutation + race + offline corpus + adversarial + independent OSS benchmark |

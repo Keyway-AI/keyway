@@ -18,7 +18,7 @@ import (
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/notify"
 	"github.com/nometria/keyway/internal/probe"
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/store/open"
 	"github.com/nometria/keyway/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -72,15 +72,12 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Store + migrations.
-	if err := postgres.MigrateUp(cfg.DBURL); err != nil {
-		return err
-	}
-	st, err := postgres.Open(ctx, cfg.DBURL)
+	// Store (migrations run inside the factory for a Postgres DSN).
+	st, cleanup, err := open.Open(ctx, cfg.DBURL)
 	if err != nil {
 		return err
 	}
-	defer st.Close()
+	defer cleanup()
 
 	// Issuer registry from config, plus an optional default generic issuer.
 	specs := issuerSpecs(cfg)

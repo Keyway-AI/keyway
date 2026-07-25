@@ -20,7 +20,7 @@ import (
 	"github.com/nometria/keyway/internal/discovery/oidcclient"
 	"github.com/nometria/keyway/internal/libdefaults"
 	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/store/open"
 	"github.com/spf13/cobra"
 )
 
@@ -190,11 +190,11 @@ func runSnapshot(cmd *cobra.Command) error {
 	}
 
 	ctx := context.Background()
-	st, err := postgres.Open(ctx, dsn)
+	st, cleanup, err := open.Open(ctx, dsn)
 	if err != nil {
 		return err
 	}
-	defer st.Close()
+	defer cleanup()
 
 	attrRoot := "."
 	if len(scope.ConfigPaths) > 0 {

@@ -9,7 +9,7 @@ import (
 	"github.com/nometria/keyway/internal/blastradius"
 	"github.com/nometria/keyway/internal/libdefaults"
 	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/store/open"
 	"github.com/spf13/cobra"
 )
 
@@ -54,11 +54,11 @@ func runBlastRadius(cmd *cobra.Command, proposal blastradius.ChangeProposal) err
 		return fmt.Errorf("no database configured (set --db or KEYWAY_DB_URL)")
 	}
 	ctx := context.Background()
-	st, err := postgres.Open(ctx, dsn)
+	st, cleanup, err := open.Open(ctx, dsn)
 	if err != nil {
 		return err
 	}
-	defer st.Close()
+	defer cleanup()
 
 	v, err := st.LatestVersion(ctx)
 	if err != nil {

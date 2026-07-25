@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/store/open"
 	"github.com/spf13/cobra"
 )
 
@@ -28,11 +28,11 @@ func runReport(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("no database configured (set --db or KEYWAY_DB_URL)")
 	}
 	ctx := context.Background()
-	st, err := postgres.Open(ctx, dsn)
+	st, cleanup, err := open.Open(ctx, dsn)
 	if err != nil {
 		return err
 	}
-	defer st.Close()
+	defer cleanup()
 
 	sinceStr, _ := cmd.Flags().GetString("since")
 	events, err := st.ListChangeEvents(ctx, parseSinceDur(sinceStr))

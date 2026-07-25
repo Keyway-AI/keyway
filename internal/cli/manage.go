@@ -9,7 +9,8 @@ import (
 	"github.com/nometria/keyway/internal/config"
 	"github.com/nometria/keyway/internal/diff"
 	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/store"
+	"github.com/nometria/keyway/internal/store/open"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -51,12 +52,12 @@ func runInit(cmd *cobra.Command) error {
 
 	// Test connectivity if a DB is configured.
 	if dsn := dbURL(cmd); dsn != "" {
-		st, err := postgres.Open(context.Background(), dsn)
+		_, cleanup, err := open.Open(context.Background(), dsn)
 		if err != nil {
 			fmt.Fprintf(out, "⚠ database not reachable: %v\n", err)
 			return nil
 		}
-		st.Close()
+		cleanup()
 		fmt.Fprintln(out, "✓ database reachable")
 	} else {
 		fmt.Fprintln(out, "No database configured yet (set KEYWAY_DB_URL or db_url in config).")
@@ -127,11 +128,11 @@ func runDiff(cmd *cobra.Command) error {
 		return fmt.Errorf("no database configured (set --db or KEYWAY_DB_URL)")
 	}
 	ctx := context.Background()
-	st, err := postgres.Open(ctx, dsn)
+	st, cleanup, err := open.Open(ctx, dsn)
 	if err != nil {
 		return err
 	}
-	defer st.Close()
+	defer cleanup()
 
 	from, err := resolveVersion(ctx, st, cmdString(cmd, "from"), true)
 	if err != nil {
@@ -157,7 +158,7 @@ func runDiff(cmd *cobra.Command) error {
 	return tw.Flush()
 }
 
-func resolveVersion(ctx context.Context, st *postgres.Store, id string, baselineDefault bool) (model.ContractVersion, error) {
+func resolveVersion(ctx context.Context, st store.Store, id string, baselineDefault bool) (model.ContractVersion, error) {
 	if id != "" {
 		return st.GetContractVersion(ctx, id)
 	}

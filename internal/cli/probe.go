@@ -10,7 +10,7 @@ import (
 	"github.com/nometria/keyway/internal/issuer/generic"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/probe"
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/nometria/keyway/internal/store/open"
 	"github.com/spf13/cobra"
 )
 
@@ -85,9 +85,9 @@ func runProbe(cmd *cobra.Command, _ []string) error {
 	// Persist results unless dry-run or no DB configured.
 	if !dry {
 		if dsn := dbURL(cmd); dsn != "" {
-			st, oerr := postgres.Open(ctx, dsn)
+			st, cleanup, oerr := open.Open(ctx, dsn)
 			if oerr == nil {
-				defer st.Close()
+				defer cleanup()
 				if serr := st.SaveProbeResults(ctx, results); serr != nil {
 					fmt.Fprintln(cmd.ErrOrStderr(), "warning: could not persist probe results:", serr)
 				}
@@ -108,11 +108,11 @@ func loadConsumers(cmd *cobra.Command) ([]model.Consumer, error) {
 	if dsn == "" {
 		return nil, nil
 	}
-	st, err := postgres.Open(context.Background(), dsn)
+	st, cleanup, err := open.Open(context.Background(), dsn)
 	if err != nil {
 		return nil, err
 	}
-	defer st.Close()
+	defer cleanup()
 	v, err := st.LatestVersion(context.Background())
 	if err != nil {
 		return nil, nil

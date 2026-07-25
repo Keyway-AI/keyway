@@ -68,8 +68,14 @@ type ProvenanceRecord struct {
 // Consumer is a component that validates tokens. Derived automatically — Keyway
 // never asks the user to author these.
 type Consumer struct {
-	ID           string                        `json:"id"`
-	StableID     string                        `json:"stable_id"`
+	ID       string `json:"id"`
+	StableID string `json:"stable_id"`
+	// Aliases are alternative stable identities for the SAME workload discovered
+	// by a different source (e.g. Kubernetes keys a workload by its service
+	// account while Istio keys it by service name). The aggregator merges two
+	// consumers whose identity sets — {StableID} ∪ Aliases — intersect, so a
+	// single logical service seen two ways becomes one record (KI-28).
+	Aliases      []string                      `json:"aliases,omitempty"`
 	Kind         ConsumerKind                  `json:"kind"`
 	Name         string                        `json:"name"`
 	Namespace    string                        `json:"namespace,omitempty"`

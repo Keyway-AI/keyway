@@ -121,8 +121,8 @@ package) removes the copy.
 > **Status (2026-07-25):** recommendations **#1, #2, and #3** are now implemented
 > — see `internal/app`, `internal/store/{memory,open}`, and the typed DTOs in
 > `pkg/apitypes`. The narrative guide is [ARCHITECTURE.md](../ARCHITECTURE.md).
-> #4 (consumer identity) and #6 (HA seam) remain open, tracked as KI-28/KI-33 and
-> KI-05/KI-09.
+> #4 (consumer identity, KI-28/KI-33) is now implemented via first-class
+> `Aliases` + alias-aware merge. #6 (HA seam) remains open (KI-05/KI-09).
 
 1. ✅ **Introduce `internal/app` (application/use-case layer).** Move the snapshot,
    probe-run, and blast-radius orchestration out of `api.Server`/`cli` into
@@ -141,7 +141,7 @@ package) removes the copy.
    fails if a Go response type and its TS counterpart drift (the AUD-03 class).
    *Medium leverage, low effort — and it retires a whole bug class.*
 
-4. **First-class `ConsumerIdentity` (canonical id + aliases).** Replace the inline
+4. ✅ **First-class consumer identity (canonical id + aliases).** Replace the inline
    `StableID` precedence with an identity type that carries alternative keys, and
    put cross-source correlation in one function. Fixes KI-28/KI-33 structurally
    rather than per-adapter. *High leverage for correctness, medium effort.*
@@ -167,7 +167,7 @@ package) removes the copy.
 | Layering (bottom half) | **A−** | clean domain, no cycles |
 | Layering (top half) | **B+** | app layer added; store behind the interface; wiring still in `serve` |
 | API contract hygiene | **B** | probe/blast/consumer-probe responses now typed DTOs; a few GETs still return the domain model |
-| Identity / correlation | **C+** | inline StableID; cross-source merge gaps (KI-28/33) |
+| Identity / correlation | **B** | first-class aliases; cross-source merge fixed (KI-28); richer selector naming (KI-33) — selector-less policies remain |
 | Scale/HA readiness | **B−** (for v1) | single-daemon by design; seams exist but unused |
 | Testing architecture | **A** | mutation + race + offline corpus + adversarial + independent OSS benchmark |
 

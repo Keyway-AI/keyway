@@ -221,11 +221,25 @@ func claimKey(key string) (string, bool) {
 	return name, true
 }
 
-func apServiceName(ap authorizationPolicy) string {
-	for _, k := range []string{"app", "app.kubernetes.io/name"} {
-		if v := ap.Spec.Selector.MatchLabels[k]; v != "" {
-			return v
+// workloadLabelKeys are the selector labels, in preference order, that name the
+// workload a policy targets. Beyond the app.kubernetes.io convention this
+// recognises Istio gateway (`istio`) and legacy (`k8s-app`) selectors, so a
+// gateway RequestAuthentication is named for its workload rather than the policy
+// (KI-33). Falls back to the resource name when no selector matches.
+var workloadLabelKeys = []string{"app", "app.kubernetes.io/name", "istio", "k8s-app"}
+
+func labelValue(labels map[string]string) (string, bool) {
+	for _, k := range workloadLabelKeys {
+		if v := labels[k]; v != "" {
+			return v, true
 		}
+	}
+	return "", false
+}
+
+func apServiceName(ap authorizationPolicy) string {
+	if v, ok := labelValue(ap.Spec.Selector.MatchLabels); ok {
+		return v
 	}
 	return ap.Metadata.Name
 }
@@ -296,10 +310,8 @@ func (d *Discoverer) toConsumer(ra requestAuthentication, path string, scope dis
 }
 
 func serviceName(ra requestAuthentication) string {
-	for _, key := range []string{"app", "app.kubernetes.io/name"} {
-		if v := ra.Spec.Selector.MatchLabels[key]; v != "" {
-			return v
-		}
+	if v, ok := labelValue(ra.Spec.Selector.MatchLabels); ok {
+		return v
 	}
 	return ra.Metadata.Name
 }

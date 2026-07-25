@@ -154,6 +154,18 @@ func (d *Discoverer) toConsumer(w workload, services []service, scope discovery.
 		ServiceName:    serviceName,
 	})
 
+	// When the primary identity is service-account-based (a projected token ties
+	// the workload to an SA-issued audience), also expose the service-name
+	// identity as an alias, so an Istio consumer keyed by service name merges
+	// with this one instead of producing a duplicate (KI-28).
+	var aliases []string
+	if saOrEmpty(sa, saAudience) != "" {
+		svcID := discovery.StableID(discovery.IDParts{Cluster: scope.KubeContext, Namespace: ns, ServiceName: serviceName})
+		if svcID != stableID {
+			aliases = append(aliases, svcID)
+		}
+	}
+
 	source := "k8s:" + w.Kind + "/" + w.Metadata.Name
 	prov := model.ProvenanceRecord{Source: source, Locator: source, ObservedAt: d.now(), Confidence: confidenceFor(saAudience, envConf)}
 	provMap := map[string][]model.ProvenanceRecord{"expects.audiences": {prov}}
@@ -166,6 +178,7 @@ func (d *Discoverer) toConsumer(w workload, services []service, scope discovery.
 	return model.Consumer{
 		ID:        stableID,
 		StableID:  stableID,
+		Aliases:   aliases,
 		Kind:      model.ConsumerService,
 		Name:      serviceName,
 		Namespace: ns,

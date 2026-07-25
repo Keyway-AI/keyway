@@ -26,20 +26,41 @@ func Run(ctx context.Context, scope Scope, discoverers ...Discoverer) ([]model.C
 	return Merge(all...), firstErr
 }
 
-// Merge combines consumer sets by StableID, unioning expectations, endpoints,
-// provenance and confidence.
+// Merge combines consumer sets by identity, unioning expectations, endpoints,
+// provenance and confidence. Two consumers merge when their identity sets —
+// {StableID} ∪ Aliases — intersect, so the same workload discovered by two
+// sources under different primary keys (Istio by service name, Kubernetes by
+// service account) becomes one record (KI-28). The first-seen consumer's
+// StableID is canonical, so ordering discoverers service-name-first yields the
+// more readable identity.
 func Merge(sets ...[]model.Consumer) []model.Consumer {
-	order := []string{}
-	byID := map[string]model.Consumer{}
+	order := []string{}                 // canonical StableIDs, first-seen order
+	byID := map[string]model.Consumer{} // canonical StableID -> merged consumer
+	canon := map[string]string{}        // any identity key -> canonical StableID
+
 	for _, set := range sets {
 		for _, c := range set {
-			existing, ok := byID[c.StableID]
-			if !ok {
+			target := ""
+			for _, k := range identityKeys(c) {
+				if cn, ok := canon[k]; ok {
+					target = cn
+					break
+				}
+			}
+			if target == "" {
 				order = append(order, c.StableID)
 				byID[c.StableID] = c
+				for _, k := range identityKeys(c) {
+					canon[k] = c.StableID
+				}
 				continue
 			}
-			byID[c.StableID] = mergeConsumers(existing, c)
+			byID[target] = mergeConsumers(byID[target], c)
+			for _, k := range identityKeys(byID[target]) {
+				if _, ok := canon[k]; !ok {
+					canon[k] = target
+				}
+			}
 		}
 	}
 	out := make([]model.Consumer, 0, len(order))
@@ -47,6 +68,18 @@ func Merge(sets ...[]model.Consumer) []model.Consumer {
 		out = append(out, byID[id])
 	}
 	return aliasFold(out)
+}
+
+// identityKeys is the set of stable identities a consumer can be correlated by.
+func identityKeys(c model.Consumer) []string {
+	keys := make([]string, 0, 1+len(c.Aliases))
+	keys = append(keys, c.StableID)
+	for _, a := range c.Aliases {
+		if a != "" && a != c.StableID && !contains(keys, a) {
+			keys = append(keys, a)
+		}
+	}
+	return keys
 }
 
 // aliasFold merges an OIDC client-registry consumer (oidc://…) into a
@@ -106,6 +139,13 @@ func mergeConsumers(a, b model.Consumer) model.Consumer {
 	a.OwnerTeam = firstNonEmpty(a.OwnerTeam, b.OwnerTeam)
 	if a.Kind == "" {
 		a.Kind = b.Kind
+	}
+
+	// Keep every alternate identity of the merged-in consumer so the canonical
+	// record can still be correlated by any of them.
+	a.Aliases = unionStrings(a.Aliases, b.Aliases)
+	if b.StableID != a.StableID {
+		a.Aliases = unionStrings(a.Aliases, []string{b.StableID})
 	}
 
 	a.Expects.Issuers = unionStrings(a.Expects.Issuers, b.Expects.Issuers)

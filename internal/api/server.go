@@ -12,7 +12,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
 	"github.com/nometria/keyway/internal/app"
+	"github.com/nometria/keyway/internal/coordination"
 	"github.com/nometria/keyway/pkg/apitypes"
 )
 
@@ -23,18 +25,39 @@ type Config struct {
 }
 
 // Server is the HTTP transport. It owns only transport concerns (routing, auth,
-// idempotency, the in-memory run index) and delegates all business logic to the
-// application layer (app.Deps).
+// idempotency, the node-local run index) and delegates all business logic to the
+// application layer (app.Deps). Idempotency storage is the coordination seam, so
+// a multi-replica deployment shares replays via Postgres; the in-flight lock is a
+// same-node coalescing concern.
 type Server struct {
-	cfg  Config
-	deps app.Deps
-	idem *idemStore
-	runs *runIndex
+	cfg      Config
+	deps     app.Deps
+	idem     coordination.IdempotencyStore
+	inflight *keyMutex
+	runs     *runIndex
 }
 
-// NewServer constructs an API server over the application-layer dependencies.
+// NewServer constructs an API server over the application-layer dependencies,
+// defaulting to an in-memory idempotency store. Use WithIdempotency to supply a
+// shared (Postgres-backed) store for multi-replica deployments.
 func NewServer(cfg Config, deps app.Deps) *Server {
-	return &Server{cfg: cfg, deps: deps, idem: newIdemStore(24 * time.Hour), runs: newRunIndex(256)}
+	return &Server{
+		cfg:      cfg,
+		deps:     deps,
+		idem:     coordination.NewMemoryIdempotency(defaultIdempotencyTTL),
+		inflight: newKeyMutex(),
+		runs:     newRunIndex(256),
+	}
+}
+
+// WithIdempotency overrides the idempotency store (e.g. the Postgres-backed one
+// from the coordinator) so retried writes replay across replicas. Returns the
+// server for chaining.
+func (s *Server) WithIdempotency(store coordination.IdempotencyStore) *Server {
+	if store != nil {
+		s.idem = store
+	}
+	return s
 }
 
 // Routes builds the HTTP handler.

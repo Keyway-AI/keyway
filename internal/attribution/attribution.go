@@ -3,15 +3,13 @@
 package attribution
 
 import (
-	"context"
-
 	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/ports"
 )
 
-// Attributor resolves the cause of a change event.
-type Attributor interface {
-	Attribute(ctx context.Context, ev model.ChangeEvent) (*model.Attribution, error)
-}
+// Attributor resolves the cause of a change event. It is an alias of the shared
+// ports.Attributor so producers here and the contract consumer share one type.
+type Attributor = ports.Attributor
 
 // Unattributed is the fallback used when no source can claim a change. v1 covers
 // git commits, K8s deploy annotations, and Keycloak admin events; everything

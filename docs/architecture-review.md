@@ -118,11 +118,16 @@ package) removes the copy.
 
 ## 5. Top recommendations (prioritised by leverage ÷ effort)
 
-> **Status (2026-07-25):** recommendations **#1, #2, and #3** are now implemented
-> — see `internal/app`, `internal/store/{memory,open}`, and the typed DTOs in
-> `pkg/apitypes`. The narrative guide is [ARCHITECTURE.md](../ARCHITECTURE.md).
-> #4 (consumer identity, KI-28/KI-33) is now implemented via first-class
-> `Aliases` + alias-aware merge. #6 (HA seam) remains open (KI-05/KI-09).
+> **Status (2026-07-26):** recommendations **#1–#7 are now implemented.**
+> #1/#2/#3 — see `internal/app`, `internal/store/{memory,open}`, typed DTOs in
+> `pkg/apitypes`. #4 (consumer identity, KI-28/KI-33) — first-class `Aliases` +
+> alias-aware merge. **#5 (composition root)** — `internal/app.Build(cfg)`
+> assembles the graph once; `serve.go` is now flag-parsing + one `Build` call.
+> **#6 (HA seam)** — `internal/coordination` defines durable-idempotency and
+> scheduler-leadership as interfaces with in-memory (single-node) and Postgres
+> (shared-replay + advisory-lock leader) adapters; the scheduler is leader-gated.
+> **#7 (unify Attributor)** — one `ports.Attributor`, aliased by contract and
+> attribution. The narrative guide is [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 1. ✅ **Introduce `internal/app` (application/use-case layer).** Move the snapshot,
    probe-run, and blast-radius orchestration out of `api.Server`/`cli` into
@@ -146,17 +151,20 @@ package) removes the copy.
    put cross-source correlation in one function. Fixes KI-28/KI-33 structurally
    rather than per-adapter. *High leverage for correctness, medium effort.*
 
-5. **A composition root.** One `internal/app.Build(cfg) (*App, error)` (or
-   `wire`-style assembly) that constructs the object graph once; `serve` and each
-   CLI command ask it for what they need. Shrinks `serve.go`, removes wiring
-   duplication. *Medium leverage, low effort once #1 lands.*
+5. ✅ **A composition root.** One `internal/app.Build(cfg) (*App, error)` constructs
+   the object graph once (store, coordination, key store, issuer registry);
+   `serve` calls it and asks for what it needs. `serve.go` shrank to flag-parsing
+   plus one `Build` call.
 
-6. **Design the HA seam now, implement later.** Define durable-idempotency and
-   scheduler-leadership as interfaces (even if the only impl is "single-node")
-   so multi-replica is a new adapter, not a rewrite. *Low effort now, saves a lot
-   later.*
+6. ✅ **HA seam.** `internal/coordination` defines durable-idempotency and
+   scheduler-leadership as interfaces, with in-memory single-node adapters (the
+   default) and Postgres adapters (idempotency rows shared across replicas; a
+   session-level advisory lock for leadership). Multi-replica is now an adapter
+   choice, not a rewrite. The operated-key store gained a Postgres backend too,
+   so canary state is shared/durable, with the AES root key from a secret manager.
 
-7. **Unify the `Attributor` port.** One interface, no cycle. *Trivial.*
+7. ✅ **Unify the `Attributor` port.** One `ports.Attributor`; contract and
+   attribution are aliases. No cycle, no duplication.
 
 ## 6. Scorecard
 
@@ -168,7 +176,7 @@ package) removes the copy.
 | Layering (top half) | **B+** | app layer added; store behind the interface; wiring still in `serve` |
 | API contract hygiene | **B** | probe/blast/consumer-probe responses now typed DTOs; a few GETs still return the domain model |
 | Identity / correlation | **B** | first-class aliases; cross-source merge fixed (KI-28); richer selector naming (KI-33) — selector-less policies remain |
-| Scale/HA readiness | **B−** (for v1) | single-daemon by design; seams exist but unused |
+| Scale/HA readiness | **B+** | coordination seams (durable idempotency + leader election) with Postgres adapters; shared/durable canary keystore; leader-gated scheduler |
 | Testing architecture | **A** | mutation + race + offline corpus + adversarial + independent OSS benchmark |
 
 **Overall: a well-modelled, highly extensible core with a thin, slightly

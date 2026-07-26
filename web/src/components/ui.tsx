@@ -16,11 +16,11 @@ export function Card({
 }) {
   return (
     <section
-      className={`rounded-xl border border-border bg-surface ${className}`}
+      className={`rounded-lg border border-border bg-surface shadow-card ${className}`}
     >
       {(title || action) && (
-        <header className="flex items-center justify-between border-b border-border px-5 py-3">
-          <h2 className="text-sm font-semibold text-text">{title}</h2>
+        <header className="flex items-center justify-between border-b border-border px-5 py-3.5">
+          <h2 className="font-display text-sm text-text">{title}</h2>
           {action}
         </header>
       )}
@@ -41,9 +41,9 @@ export function StatTile({
   accent?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-5">
-      <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
-      <div className={`mt-2 text-3xl font-semibold ${accent}`}>{value}</div>
+    <div className="rounded-lg border border-border bg-surface p-5 shadow-card">
+      <div className="eyebrow">{label}</div>
+      <div className={`mt-2 font-display text-3xl ${accent}`}>{value}</div>
       {hint && <div className="mt-1 text-xs text-muted">{hint}</div>}
     </div>
   );
@@ -99,10 +99,10 @@ export function Table({ children }: { children: ReactNode }) {
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 const buttonStyles: Record<ButtonVariant, string> = {
-  primary: "bg-brand text-white hover:bg-brand-strong border-transparent",
-  secondary: "bg-surface-2 text-text hover:bg-surface-2/70 border-border",
+  primary: "bg-accent text-accent-fg hover:bg-accent-hover border-transparent shadow-card",
+  secondary: "bg-surface text-text hover:bg-surface-2 border-border shadow-card",
   ghost: "bg-transparent text-muted hover:text-text hover:bg-surface-2 border-transparent",
-  danger: "bg-critical text-white hover:bg-critical/90 border-transparent",
+  danger: "bg-danger text-white hover:bg-danger/90 border-transparent shadow-card",
 };
 
 export function Button({
@@ -117,7 +117,7 @@ export function Button({
     <button
       {...props}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${buttonStyles[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-md border px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${buttonStyles[variant]} ${className}`}
     >
       {loading && (
         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -149,7 +149,7 @@ export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInpu
   return (
     <input
       {...props}
-      className={`w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-text outline-none placeholder:text-muted focus:border-brand ${className}`}
+      className={`w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-text outline-none placeholder:text-faint focus:border-accent ${className}`}
     />
   );
 }
@@ -158,7 +158,7 @@ export function Select({ className = "", children, ...props }: SelectHTMLAttribu
   return (
     <select
       {...props}
-      className={`w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-text outline-none focus:border-brand ${className}`}
+      className={`w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-text outline-none focus:border-accent ${className}`}
     >
       {children}
     </select>
@@ -186,15 +186,15 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-xl border border-border bg-surface shadow-2xl"
+        className="animate-dialog-in w-full max-w-lg rounded-lg border border-border bg-elevated shadow-pop"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between border-b border-border px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-text">{title}</h2>
+          <h2 className="font-display text-sm text-text">{title}</h2>
           <button onClick={onClose} className="text-muted hover:text-text" aria-label="Close">
             ✕
           </button>

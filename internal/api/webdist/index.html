@@ -1,12 +1,23 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Keyway</title>
     <meta name="description" content="Know which consumers break before you rotate a key." />
-    <script type="module" crossorigin src="/assets/index-BHbEIBiq.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DntLDYUo.css">
+    <script>
+      // Apply the saved theme before first paint to avoid a flash. Light is
+      // the default (matching the dayotter design language).
+      (function () {
+        try {
+          var t = localStorage.getItem("keyway.theme") || "light";
+          var dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-ZZvP1Cx8.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BdBhoAbU.css">
   </head>
   <body>
     <div id="root"></div>

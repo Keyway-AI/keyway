@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { SettingsModal, useHealthProbe } from "./Settings";
+import { ThemeToggle } from "./ThemeToggle";
 
 const nav = [
   { to: "/", label: "Dashboard", end: true, icon: "◉" },
@@ -26,14 +27,14 @@ function NavItem({ to, label, end, icon }: { to: string; label: string; end?: bo
       to={to}
       end={end}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+        `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
           isActive
-            ? "bg-surface-2 text-text"
+            ? "bg-accent-soft font-medium text-accent"
             : "text-muted hover:bg-surface-2 hover:text-text"
         }`
       }
     >
-      <span className="w-4 text-center text-muted">{icon}</span>
+      <span className="w-4 text-center">{icon}</span>
       {label}
     </NavLink>
   );
@@ -49,7 +50,7 @@ export default function Layout() {
       <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-surface px-3 py-5">
         <div className="flex items-center gap-2 px-3 pb-6">
           <span className="text-xl">🔑</span>
-          <span className="text-lg font-semibold tracking-tight">Keyway</span>
+          <span className="font-display text-lg text-text">Keyway</span>
         </div>
         <nav className="flex flex-col gap-1">
           {nav.map((n) => (
@@ -57,9 +58,12 @@ export default function Layout() {
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-3 px-1 pt-6">
+          <div className="px-1">
+            <ThemeToggle />
+          </div>
           <button
             onClick={() => setSettingsOpen(true)}
-            className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text"
+            className="flex items-center gap-3 rounded-md px-2 py-2 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text"
           >
             <span className="w-4 text-center">⚙</span>
             Settings

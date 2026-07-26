@@ -8,97 +8,56 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/nometria/keyway/internal/coordination"
 )
 
-// idemStore caches responses to write requests keyed by a client-supplied
-// Idempotency-Key (bound to method+path+body), so a retried write replays the
-// original result instead of re-executing (PRD §12). It is an in-memory,
-// TTL-bounded, hard-capped cache — sufficient for a single daemon; a
-// multi-replica deployment would back this with Postgres (KI-05).
-type idemStore struct {
+// The idempotency middleware replays the cached response when a POST repeats an
+// Idempotency-Key for the SAME method, path, and body (PRD §12). Storage is the
+// coordination.IdempotencyStore seam — in-memory for a single daemon, Postgres to
+// share replays across replicas. The per-key in-flight lock below is a same-node
+// concern (coalescing concurrent duplicates, KI-29) kept separate from storage.
+
+// keyMutex serializes concurrent requests that share an idempotency key on this
+// node, with a refcount so each lock is removed once no request references it.
+type keyMutex struct {
 	mu    sync.Mutex
-	ttl   time.Duration
-	max   int
-	order []string
-	m     map[string]idemEntry
-	locks map[string]*keyLock // per-key locks for in-flight coalescing (KI-29)
+	locks map[string]*keyLock
 }
 
-// keyLock serializes concurrent requests that share an idempotency key, with a
-// refcount so the lock is removed once no request references it.
 type keyLock struct {
 	mu   sync.Mutex
 	refs int
 }
 
-type idemEntry struct {
-	status      int
-	body        []byte
-	contentType string
-	expires     time.Time
-}
-
-func newIdemStore(ttl time.Duration) *idemStore {
-	return &idemStore{ttl: ttl, max: 4096, m: make(map[string]idemEntry), locks: map[string]*keyLock{}}
-}
+func newKeyMutex() *keyMutex { return &keyMutex{locks: map[string]*keyLock{}} }
 
 // lock acquires the per-key lock, so only one request per idempotency key runs at
-// a time. Concurrent duplicates block here and (on acquiring) find the cached
-// result to replay instead of re-executing (KI-29).
-func (s *idemStore) lock(key string) {
-	s.mu.Lock()
-	kl := s.locks[key]
+// a time on this node. Concurrent duplicates block here and (on acquiring) find
+// the cached result to replay instead of re-executing.
+func (k *keyMutex) lock(key string) {
+	k.mu.Lock()
+	kl := k.locks[key]
 	if kl == nil {
 		kl = &keyLock{}
-		s.locks[key] = kl
+		k.locks[key] = kl
 	}
 	kl.refs++
-	s.mu.Unlock()
+	k.mu.Unlock()
 	kl.mu.Lock()
 }
 
-func (s *idemStore) unlock(key string) {
-	s.mu.Lock()
-	kl := s.locks[key] // this goroutine holds a ref, so it's still present
-	s.mu.Unlock()
+func (k *keyMutex) unlock(key string) {
+	k.mu.Lock()
+	kl := k.locks[key] // this goroutine holds a ref, so it's still present
+	k.mu.Unlock()
 	kl.mu.Unlock()
-	s.mu.Lock()
+	k.mu.Lock()
 	kl.refs--
 	if kl.refs == 0 {
-		delete(s.locks, key)
+		delete(k.locks, key)
 	}
-	s.mu.Unlock()
-}
-
-func (s *idemStore) get(key string, now time.Time) (idemEntry, bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	e, ok := s.m[key]
-	if !ok {
-		return idemEntry{}, false
-	}
-	if now.After(e.expires) {
-		delete(s.m, key)
-		return idemEntry{}, false
-	}
-	return e, true
-}
-
-func (s *idemStore) put(key string, e idemEntry, now time.Time) {
-	e.expires = now.Add(s.ttl)
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if _, exists := s.m[key]; !exists {
-		s.order = append(s.order, key)
-	}
-	s.m[key] = e
-	// Hard FIFO cap: evict oldest entries when over capacity (not just expired
-	// ones), so a burst of distinct keys cannot exhaust memory.
-	for len(s.order) > s.max {
-		oldest := s.order[0]
-		s.order = s.order[1:]
-		delete(s.m, oldest)
-	}
+	k.mu.Unlock()
 }
 
 // recorder captures a handler's response so it can be cached and replayed.
@@ -144,38 +103,39 @@ func (s *Server) idempotency(next http.Handler) http.Handler {
 		_ = r.Body.Close()
 		r.Body = io.NopCloser(bytes.NewReader(body))
 
+		ctx := r.Context()
 		key := idemKey(rawKey, r.Method, r.URL.Path, body)
-		replay := func(e idemEntry) {
-			if e.contentType != "" {
-				w.Header().Set("Content-Type", e.contentType)
+		replay := func(rec coordination.Record) {
+			if rec.ContentType != "" {
+				w.Header().Set("Content-Type", rec.ContentType)
 			}
 			w.Header().Set("Idempotent-Replay", "true")
-			w.WriteHeader(e.status)
-			_, _ = w.Write(e.body)
+			w.WriteHeader(rec.Status)
+			_, _ = w.Write(rec.Body)
 		}
 
-		if e, ok := s.idem.get(key, time.Now()); ok {
-			replay(e)
+		if rec, ok, _ := s.idem.Get(ctx, key); ok {
+			replay(rec)
 			return
 		}
 
-		// Serialize concurrent requests that share the key so only the first
-		// executes; the rest replay its cached result (KI-29).
-		s.idem.lock(key)
-		defer s.idem.unlock(key)
-		if e, ok := s.idem.get(key, time.Now()); ok {
-			replay(e)
+		// Serialize concurrent requests that share the key on this node so only
+		// the first executes; the rest replay its cached result (KI-29).
+		s.inflight.lock(key)
+		defer s.inflight.unlock(key)
+		if rec, ok, _ := s.idem.Get(ctx, key); ok {
+			replay(rec)
 			return
 		}
 
 		rec := &recorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(rec, r)
 		if rec.status < 500 {
-			s.idem.put(key, idemEntry{
-				status:      rec.status,
-				body:        rec.body.Bytes(),
-				contentType: rec.Header().Get("Content-Type"),
-			}, time.Now())
+			_ = s.idem.Put(ctx, key, coordination.Record{
+				Status:      rec.status,
+				Body:        rec.body.Bytes(),
+				ContentType: rec.Header().Get("Content-Type"),
+			})
 		}
 	})
 }
@@ -191,3 +151,7 @@ func idemKey(rawKey, method, path string, body []byte) string {
 	h.Write(body)
 	return hex.EncodeToString(h.Sum(nil))
 }
+
+// defaultIdempotencyTTL is the in-memory cache lifetime used when the server is
+// constructed without an explicit store.
+const defaultIdempotencyTTL = 24 * time.Hour

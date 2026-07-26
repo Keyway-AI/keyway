@@ -5,6 +5,7 @@
 package keystore
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -13,9 +14,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/nometria/keyway/internal/issuer/localkeys"
 )
@@ -148,6 +151,34 @@ func sanitize(name string) string {
 	return b.String()
 }
 
+// KeySource describes where the 32-byte AES root key comes from. The key
+// protects all persisted private key material, so it should itself live in a
+// secret manager rather than the config file. Exactly one of the fields is used,
+// in this precedence: Command > File > Env. A command lets an operator bridge to
+// any secret manager without Keyway bundling its SDK (e.g. `vault kv get -field
+// key secret/keyway` or `aws secretsmanager get-secret-value ...`).
+type KeySource struct {
+	Env     string // environment variable name (e.g. KEYWAY_KEY_ENCRYPTION_KEY)
+	File    string // path to a file (e.g. a mounted Kubernetes/Vault secret)
+	Command string // shell command whose stdout is the key
+}
+
+// ResolveKey returns the 32-byte AES key from the highest-precedence configured
+// source. It fails closed: if a source is configured but cannot yield a 32-byte
+// key, that is an error rather than a silent fallback to a weaker source.
+func ResolveKey(src KeySource) ([]byte, error) {
+	switch {
+	case src.Command != "":
+		return KeyFromCommand(src.Command)
+	case src.File != "":
+		return KeyFromFile(src.File)
+	case src.Env != "":
+		return KeyFromEnv(src.Env)
+	default:
+		return nil, fmt.Errorf("keystore: no key source configured (set an env var, file, or command)")
+	}
+}
+
 // KeyFromEnv reads a 32-byte AES key from an environment variable. The value may
 // be base64 (std or url), hex, or 32 raw bytes. It returns an error if the
 // variable is unset or does not decode to exactly 32 bytes, so key persistence
@@ -157,6 +188,36 @@ func KeyFromEnv(envVar string) ([]byte, error) {
 	if v == "" {
 		return nil, fmt.Errorf("keystore: %s is not set (a 32-byte key is required to persist signing keys)", envVar)
 	}
+	return decodeKey(v, envVar)
+}
+
+// KeyFromFile reads the key from a file (e.g. a secret mounted by Kubernetes or
+// Vault Agent). Whitespace is trimmed; the contents may be base64, hex, or raw.
+func KeyFromFile(path string) ([]byte, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("keystore: read key file: %w", err)
+	}
+	return decodeKey(strings.TrimSpace(string(b)), path)
+}
+
+// KeyFromCommand runs an operator-configured shell command and uses its stdout as
+// the key. This is the secret-manager bridge: the command typically shells out to
+// a secret-manager CLI. The command is trusted operator configuration (never
+// derived from request data); it is run via `sh -c`.
+func KeyFromCommand(command string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, "sh", "-c", command).Output()
+	if err != nil {
+		return nil, fmt.Errorf("keystore: key command failed: %w", err)
+	}
+	return decodeKey(strings.TrimSpace(string(out)), "key command output")
+}
+
+// decodeKey turns a string (base64 std/url, hex, or 32 raw bytes) into a 32-byte
+// key, or returns a descriptive error naming the source.
+func decodeKey(v, source string) ([]byte, error) {
 	if b, err := base64.StdEncoding.DecodeString(v); err == nil && len(b) == 32 {
 		return b, nil
 	}
@@ -169,5 +230,5 @@ func KeyFromEnv(envVar string) ([]byte, error) {
 	if len(v) == 32 {
 		return []byte(v), nil
 	}
-	return nil, fmt.Errorf("keystore: %s must decode to 32 bytes (base64, hex, or raw)", envVar)
+	return nil, fmt.Errorf("keystore: %s must decode to 32 bytes (base64, hex, or raw)", source)
 }

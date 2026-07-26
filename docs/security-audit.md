@@ -35,9 +35,13 @@ in [SECURITY.md](../SECURITY.md) hold.
   config. An operator who can write both the manifests and the allowlist can point Keyway at
   internal hosts — this is inherent to the tool's job and bounded by the allowlist.
 - **Idempotency-Key** (PRD §12) is not yet enforced on write endpoints — a correctness/robustness
-  gap, not a security one.
+  gap, not a security one. _(Addressed later: enforced via SEC-05, and now backed by the
+  `coordination.IdempotencyStore` seam — in-memory single-node, or Postgres-shared across replicas.)_
 - **Canary key material** lives in the daemon's memory. A production deployment that needs canary
   state to survive restarts should supply the operated key from a secret manager (future work).
+  _(Addressed later: a Postgres-backed `keystore.Store` shares/persists the encrypted material
+  across replicas, and the AES root key is sourced from a secret manager — env, a mounted-secret
+  file, or a `vault`/`aws`-style command — never the config file. See "HA infrastructure" below.)_
 
 ## Re-run
 
@@ -105,3 +109,30 @@ govulncheck ./...   # expect: No vulnerabilities found.
 
 Regression tests: `TestK8sDeployPathTraversal` (`internal/attribution`) and
 `TestIdempotencyBoundToBody` (`internal/api`) lock in SEC-04 and SEC-05.
+
+---
+
+# HA infrastructure upgrade
+
+_Date: 2026-07-26 · Scope: the audits' documented future-work / known-limitation
+cases (canary key material in memory; idempotency durability) plus the
+architecture review's open scale/HA recommendations (#5–#7)._
+
+The audits found no open defects here — these were **documented limitations**.
+The infrastructure now accommodates them:
+
+| Case (source) | Upgrade |
+|---|---|
+| Idempotency state in-process only (audit v1 known-limitation; KI-05) | Storage is the `coordination.IdempotencyStore` seam. Default in-memory (single-node); `--db <postgres>` shares idempotent-write replays across replicas via a `keyway_idempotency` table. Same-node in-flight coalescing (KI-29) is unchanged. |
+| Canary key material in daemon memory (audit v1/v2 known-limitation; KI-09) | New Postgres-backed `keystore.Store` (`--key-store-db`) stores AES-256-GCM ciphertext in `keyway_operated_keys`, so canary state is durable **and shared** across replicas. |
+| Root key should come from a secret manager (audit v2 future-work) | `keystore.ResolveKey` sources the 32-byte AES key from a secret manager, in precedence: `$KEYWAY_KEY_ENCRYPTION_KEY_CMD` (a command, e.g. `vault kv get -field key secret/keyway`) > `--key-encryption-key-file` (a mounted secret) > `$KEYWAY_KEY_ENCRYPTION_KEY`. It fails closed. |
+| Single-daemon scheduler could double-fire under multiple replicas (arch W5/#6) | `coordination.Leader` gates the scheduler. In-memory = always leader (single node); Postgres uses a session-level advisory lock (`pg_try_advisory_lock`) held on a dedicated connection, so exactly one replica snapshots per tick and a standby takes over automatically if the leader dies. |
+| Wiring sprawl in `serve.go` (arch W6/#5) | `internal/app.Build(cfg)` is the single composition root; `serve.go` is flag-parsing + one `Build` call. |
+| Duplicated `Attributor` interface (arch W7) | One `ports.Attributor`; `contract.Attributor` and `attribution.Attributor` are aliases. |
+
+**Security posture.** No new externally-reachable surface: the coordination and
+key-store backends are operator-configured (a DSN, a secret-manager reference).
+Private key material is still never written in plaintext — the Postgres keystore
+encrypts exactly as `FileStore` does, under a root key that now lives in a secret
+manager rather than only an env var. The advisory-lock leader and idempotency
+rows carry no secrets. `govulncheck ./...` remains clean.

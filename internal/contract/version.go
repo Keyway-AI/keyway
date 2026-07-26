@@ -6,6 +6,7 @@ import (
 
 	"github.com/nometria/keyway/internal/diff"
 	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/ports"
 	"github.com/nometria/keyway/internal/store"
 )
 
@@ -18,11 +19,10 @@ type SnapshotResult struct {
 }
 
 // Attributor binds a change event to its cause (a commit, a deploy, an IdP admin
-// action). Implemented by internal/attribution.Chain. Declared here as an
-// interface so the contract package does not import attribution.
-type Attributor interface {
-	Attribute(ctx context.Context, ev model.ChangeEvent) (*model.Attribution, error)
-}
+// action). It is an alias of the shared ports.Attributor, so the contract
+// package (consumer) and the attribution package (producer) share one interface
+// without importing each other.
+type Attributor = ports.Attributor
 
 // Snapshot implements the mandatory baseline flow (PRD §8.2):
 //

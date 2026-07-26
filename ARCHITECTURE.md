@@ -151,6 +151,18 @@ There is **one** definition of each use-case. The HTTP handler, the CLI
 they cannot drift. Transports only translate: parse the request, call the
 use-case, map `app.ErrNoSnapshot`/`ErrNoIssuer` to status codes, serialize a DTO.
 
+**Composition root.** `app.Build(ctx, BuildConfig) (*App, error)` is the single
+place that assembles the object graph — store, coordination seams, key store,
+issuer registry — and returns the `Deps` plus an `App.Close()`. `serve.go` is now
+flag-parsing followed by one `Build` call.
+
+**HA coordination (`internal/coordination`).** Two seams make Keyway multi-replica
+without a rewrite: `IdempotencyStore` (durable idempotent-write replay) and
+`Leader` (so exactly one replica runs the scheduler). Each has an in-memory
+single-node adapter (the default) and a Postgres adapter — idempotency rows shared
+across replicas, and a session-level advisory lock for leadership. The scheduler
+is leader-gated; the HTTP server takes the shared `IdempotencyStore`.
+
 ---
 
 ## 6. Extension seams — how to add things

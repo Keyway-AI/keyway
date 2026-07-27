@@ -6,12 +6,13 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/issuer/generic"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/probe"
 	"github.com/nometria/keyway/internal/store/open"
-	"github.com/spf13/cobra"
 )
 
 func newProbeCmd() *cobra.Command {
@@ -22,6 +23,7 @@ func newProbeCmd() *cobra.Command {
 	}
 	cmd.Flags().String("consumer", "", "limit to a single consumer StableID")
 	cmd.Flags().String("probe", "", "limit to a single probe ID")
+	cmd.Flags().Bool("harness", false, "run the generative attack harness (internal/attack) instead of the fixed probe set")
 	cmd.Flags().Bool("dry-run", false, "construct tokens but do not send requests")
 	cmd.Flags().Bool("i-know-this-is-production", false, "override the staging-only guard (dangerous)")
 	cmd.Flags().StringSlice("allow", nil, "host substrings the probe engine may target (staging allowlist)")
@@ -69,9 +71,14 @@ func runProbe(cmd *cobra.Command, _ []string) error {
 	cfg.DryRun = dry
 	eng := probe.NewEngine(cfg)
 
-	results, outcomes, err := eng.Run(ctx, issModel, func(kid string, claims map[string]any) (string, error) {
+	mint := func(kid string, claims map[string]any) (string, error) {
 		return iss.MintToken(ctx, kid, claims)
-	}, consumers)
+	}
+	runFn := eng.Run
+	if harness, _ := cmd.Flags().GetBool("harness"); harness {
+		runFn = eng.RunHarness
+	}
+	results, outcomes, err := runFn(ctx, issModel, mint, consumers)
 	if err != nil {
 		return err
 	}

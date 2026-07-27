@@ -3,7 +3,7 @@
 // →store, run probes, resolve a blast radius — expressed once, against ports only
 // (store.Store, discovery.Discoverer, the issuer registry, an Attributor). The
 // HTTP API, the CLI, and the scheduler are thin callers of these use-cases, so the
-// same behaviour is shared instead of re-implemented per transport.
+// same behavior is shared instead of re-implemented per transport.
 package app
 
 import (
@@ -92,6 +92,39 @@ func (d Deps) ProbeRun(ctx context.Context, consumerIDs []string) ([]model.Probe
 	}
 	eng := probe.NewEngine(d.Probe)
 	results, _, err := eng.Run(ctx, issModel, mintFuncOf(iss), consumers)
+	if err != nil {
+		return nil, err
+	}
+	if err := d.Store.SaveProbeResults(ctx, results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+// HarnessRun fires the generative attack corpus (internal/attack) at the latest
+// snapshot's consumers via the probe engine, signing claim-level attacks with the
+// real issuer so a target's signature check passes and its claim validation is
+// what's exercised. Results are persisted like probe results. Returns
+// ErrNoSnapshot / ErrNoIssuer for the caller to map.
+func (d Deps) HarnessRun(ctx context.Context, consumerIDs []string) ([]model.ProbeResult, error) {
+	v, err := d.Store.LatestVersion(ctx)
+	if err != nil {
+		return nil, ErrNoSnapshot
+	}
+	consumers := v.Consumers
+	if len(consumerIDs) > 0 {
+		consumers = filterByStableID(consumers, consumerIDs)
+	}
+	iss, ok := d.firstIssuer()
+	if !ok {
+		return nil, ErrNoIssuer
+	}
+	issModel, err := iss.Describe(ctx)
+	if err != nil {
+		return nil, err
+	}
+	eng := probe.NewEngine(d.Probe)
+	results, _, err := eng.RunHarness(ctx, issModel, mintFuncOf(iss), consumers)
 	if err != nil {
 		return nil, err
 	}

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
 )
 
 // b64 is the JWS segment encoding: base64url, no padding.
@@ -46,6 +47,25 @@ func signingInput(header, claims any) (string, error) {
 
 // assemble joins a signing input with an (already base64url-encoded) signature.
 func assemble(input, sigB64 string) string { return input + "." + sigB64 }
+
+// tamperSignature flips the final byte of a compact JWS signature, producing a
+// structurally valid but cryptographically invalid token.
+func tamperSignature(token string) (string, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return "", fmt.Errorf("attack: not a compact JWS")
+	}
+	sig, err := b64.DecodeString(parts[2])
+	if err != nil {
+		return "", fmt.Errorf("attack: decode signature: %w", err)
+	}
+	if len(sig) == 0 {
+		return "", fmt.Errorf("attack: empty signature")
+	}
+	sig[len(sig)-1] ^= 0xFF
+	parts[2] = b64.EncodeToString(sig)
+	return strings.Join(parts, "."), nil
+}
 
 // --- signing primitives (hand-rolled so we can also produce *malformed* JWS
 // that a well-behaved library would refuse to emit) --------------------------

@@ -1,4 +1,4 @@
-// Package probe mints synthetic tokens and verifies consumer behaviour against
+// Package probe mints synthetic tokens and verifies consumer behavior against
 // real staging endpoints (PRD §6). Minted tokens are NEVER persisted.
 package probe
 
@@ -59,7 +59,7 @@ func (e Expectation) Accepts(status int) bool {
 // MutateFunc returns the Authorization header value and any extra headers.
 type MutateFunc func(ctx MintContext) (authHeader string, extraHeaders map[string]string, err error)
 
-// Probe is one verification behaviour.
+// Probe is one verification behavior.
 type Probe struct {
 	ID                 string
 	Name               string

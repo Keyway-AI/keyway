@@ -141,17 +141,51 @@ verifier threat we could source from RFC 8725, OWASP, CVEs, CWE, and the
 PortSwigger catalog — not against our own corpus. The generated report is
 [threat-coverage.md](./threat-coverage.md) (`keyway threats coverage`).
 
-**Current coverage: 12 of 35 documented threats (~34%).** Whole categories are
-still uncovered — header key-injection (`jku`/`x5u`/`jwk`/`x5c`/`kid`, 0/6),
-JWKS delivery (0/2), and encoding/parsing (0/3). Those 23 gaps are named and
-cited in the report; they are the roadmap. The `100%`/`8-of-8` figures elsewhere
-in this repo are recall *against what we check* — this 34% is recall *against the
-known universe*, and it is the number that should go up.
+**Current coverage: 21 of 35 documented threats (60%).** The
+[generative attack harness](../internal/attack) (§4c) closed nine gaps at once
+— empty-signature, `alg` case/whitespace variants, the ECDSA `(0,0)` "psychic
+signature", embedded-`jwk` self-signing, `kid` path traversal, `aud` array/string
+confusion, missing-`exp`, and two encoding/structural classes. The remaining 14
+gaps are still named and cited in the report: JWKS delivery (`http`/redirect,
+0/2), the callback-dependent `jku`/`x5u` header injections, weak keys, and a few
+claim-hardening cases. The `100%`/`8-of-8` figures elsewhere in this repo are
+recall *against what we check* — this 60% is recall *against the known universe*,
+and it is the number that should keep going up.
 
-The taxonomy is kept honest in two ways: a test asserts every "covered" mapping
-points at a probe that actually exists in the registry, and a test fails if the
-catalog ever claims 100% coverage of the whole space (the exact overclaim this
-page exists to prevent).
+The taxonomy is kept honest three ways: a test asserts every "covered" mapping
+points at a probe/generator that actually exists; a bridge test asserts the
+harness credit matches exactly the threats the corpus can detect end-to-end
+(self-contained), so callback-dependent checks like `jku` do **not** inflate the
+number; and a test fails if the catalog ever claims 100% of the whole space (the
+exact overclaim this page exists to prevent).
+
+## 4c. The generative harness (escaping the checklist)
+
+The original 13 probes were a hand-written list — comprehensive only about the
+things someone thought to add. The [attack harness](../internal/attack) replaces
+that with **taxonomy-driven generators**: each emits concrete attack tokens
+tagged with the threat they exercise and the verdict a *correct* verifier must
+return, and a **reference oracle** (built on the `go-jose` library, configured
+correctly) encodes the security invariants.
+
+Two properties make this trustworthy rather than circular:
+
+- **The corpus self-validates.** A known-correct verifier (the oracle) must
+  reject every attack token and accept the control. If a generator ever produces
+  a token that doesn't actually have the property it claims, the test fails. So
+  "this token is an alg=none bypass" is *proven*, not asserted.
+- **Detection is proven end-to-end.** One test fires the whole corpus at a
+  deliberately-broken target (accepts everything) and requires a finding for
+  every attack; another fires it at an oracle-backed target and requires **zero**
+  false positives.
+
+Because the generators are driven by the taxonomy, adding a new threat entry and
+a generator for it is the whole change — coverage goes up by construction, and
+the bridge test refuses to let the number claim more than the corpus can actually
+detect at a single endpoint. (Live scanning of real services reuses the probe
+engine's issuer minting so claim-level attacks are signed by the real key; that
+integration is the next step and is why `jku`/`x5u` are generated but not yet
+counted.)
 
 ## 5. Where the real risk actually lives
 

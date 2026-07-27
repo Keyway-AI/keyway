@@ -10,7 +10,7 @@ This runs in CI (`go test ./bench/realworld/...`), so the guarantee can't silent
 
 > **Read this the right way.** 8-of-8 is recall *against the risk classes Keyway
 > already checks*. It is **not** a claim of comprehensive JWT security coverage.
-> For recall against the full documented threat universe — currently ~34%, with
+> For recall against the full documented threat universe — currently ~60%, with
 > every gap named — see [threat-coverage.md](./threat-coverage.md)
 > (`keyway threats coverage`). These reproductions are the "covered" end of that
 > taxonomy; the gaps there are the roadmap.

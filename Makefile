@@ -149,6 +149,11 @@ mutation: ## Mutation-test the detector: inject faults, prove the corpus catches
 	@echo "is the % of injected detector bugs the tests actually catch."
 	KEYWAY_REALISTIC_N=40 gremlins unleash --integration --timeout-coefficient 8 ./internal/diff/
 
+.PHONY: coverage
+coverage: ## Regenerate docs/threat-coverage.md from the threat taxonomy
+	$(GO) run ./cmd/keyway threats coverage > docs/threat-coverage.md
+	@echo "Wrote docs/threat-coverage.md"
+
 .PHONY: bench-oss
 bench-oss: ## Independent benchmark: run discovery + a real diff on external OSS configs
 	@echo "== Discovery (L1) on real, unseen configs (Istio/Envoy docs + istio/istio issues) =="

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/nometria/keyway/internal/model"
 )
 
@@ -22,7 +23,7 @@ type BuildInput struct {
 // baseline decision to Snapshot (version.go).
 //
 // When no explicit edges are supplied (the discovery path), Build derives the
-// issuer→consumer graph: it synthesises a minimal Issuer record for every issuer
+// issuer→consumer graph: it synthesizes a minimal Issuer record for every issuer
 // URL that consumers trust but that no supplied Issuer covers, and one Edge per
 // (issuer, consumer) trust relationship. The canonical hash keys edges by issuer
 // URL + consumer StableID, so the derived graph hashes deterministically.
@@ -45,7 +46,7 @@ func Build(in BuildInput) model.ContractVersion {
 	return v
 }
 
-// deriveGraph returns the issuer set (supplied + synthesised) and the edges. If
+// deriveGraph returns the issuer set (supplied + synthesized) and the edges. If
 // explicit edges are supplied they are used as-is.
 func deriveGraph(supplied []model.Issuer, consumers []model.Consumer, edges []model.Edge) ([]model.Issuer, []model.Edge) {
 	issuers := append([]model.Issuer{}, supplied...)

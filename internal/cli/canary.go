@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/spf13/cobra"
+
+	"github.com/nometria/keyway/internal/model"
 )
 
 // The canary commands operate on the running daemon's in-memory issuer keys via

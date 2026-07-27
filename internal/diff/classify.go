@@ -103,6 +103,6 @@ func Classify(field string, op FieldOp, value any, confidence float64) Classific
 		return Classification{model.ChangeNeutral, model.SeverityLow}
 	}
 
-	// Unrecognised field: report but do not page.
+	// Unrecognized field: report but do not page.
 	return Classification{model.ChangeUnknown, model.SeverityInfo}
 }

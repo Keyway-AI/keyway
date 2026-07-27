@@ -184,7 +184,7 @@ func accept(w http.ResponseWriter, claims map[string]any, v vulnFlags) {
 			return
 		}
 	}
-	// nbf (not-before) is honoured by every non-broken service, independent of
+	// nbf (not-before) is honored by every non-broken service, independent of
 	// the exp weakness, so the not_yet_valid probe passes everywhere except a
 	// service that deliberately ignores it.
 	if nbf, ok := claims["nbf"].(float64); ok && now.Unix() < int64(nbf) {

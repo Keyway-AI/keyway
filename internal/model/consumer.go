@@ -21,7 +21,7 @@ type Expectations struct {
 	ClockSkewSec   int      `json:"clock_skew_sec"`
 }
 
-// BehaviorSource records how a piece of behaviour was determined, in ascending
+// BehaviorSource records how a piece of behavior was determined, in ascending
 // order of confidence: config < library_default < observed < probed.
 type BehaviorSource string
 

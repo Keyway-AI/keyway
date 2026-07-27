@@ -3,12 +3,13 @@ package contract
 import (
 	"testing"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nometria/keyway/internal/model"
 )
 
-// TestBuildDerivesGraph verifies issuers and edges are synthesised from the
+// TestBuildDerivesGraph verifies issuers and edges are synthesized from the
 // consumers' trusted issuers (KI-07), and that the hash is deterministic.
 func TestBuildDerivesGraph(t *testing.T) {
 	consumers := []model.Consumer{
@@ -17,7 +18,7 @@ func TestBuildDerivesGraph(t *testing.T) {
 	}
 	v1 := Build(BuildInput{Consumers: consumers})
 
-	// Two distinct issuer URLs -> two synthesised issuers.
+	// Two distinct issuer URLs -> two synthesized issuers.
 	require.Len(t, v1.Issuers, 2)
 	// c1 trusts 1 issuer, c2 trusts 2 -> 3 edges.
 	require.Len(t, v1.Edges, 3)

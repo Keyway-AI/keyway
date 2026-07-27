@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/model"
-	"gopkg.in/yaml.v3"
 )
 
 // ownerLabelPriority is the label lookup order for OwnerTeam (PRD §7.3).
@@ -239,7 +240,7 @@ func projectedAudience(w workload) string {
 func matchService(services []service, ns string, podLabels map[string]string) *service {
 	for i := range services {
 		s := services[i]
-		if s.Metadata.Namespace != ns && !(s.Metadata.Namespace == "" && ns == "default") {
+		if s.Metadata.Namespace != ns && (s.Metadata.Namespace != "" || ns != "default") {
 			continue
 		}
 		if len(s.Spec.Selector) == 0 {

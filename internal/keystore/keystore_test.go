@@ -8,9 +8,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/nometria/keyway/internal/issuer/localkeys"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nometria/keyway/internal/issuer/localkeys"
 )
 
 func key32(seed byte) []byte {

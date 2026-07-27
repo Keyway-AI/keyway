@@ -10,11 +10,12 @@ import (
 
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/nometria/keyway/internal/issuer/generic"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/probe"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // pinnedValidator accepts only tokens signed by a specific kid (a consumer that

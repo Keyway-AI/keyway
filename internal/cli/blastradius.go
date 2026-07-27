@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/nometria/keyway/internal/blastradius"
 	"github.com/nometria/keyway/internal/libdefaults"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/store/open"
-	"github.com/spf13/cobra"
 )
 
 func newBlastRadiusCmd() *cobra.Command {

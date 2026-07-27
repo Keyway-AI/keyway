@@ -1,6 +1,6 @@
 // Package realworld validates Keyway against documented, real-world JWT/JWKS
 // incidents (CVEs, GitHub issues, postmortems). Each case reproduces the exact
-// vulnerable behaviour from a cited source and asserts that Keyway flags it — so
+// vulnerable behavior from a cited source and asserts that Keyway flags it — so
 // the suite answers "would Keyway have caught this real risk?" rather than only
 // testing synthetic scenarios.
 package realworld
@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
+
 	"github.com/nometria/keyway/internal/issuer/generic"
 )
 
@@ -60,7 +61,7 @@ func vulnServer(iss *generic.Adapter, v vuln) http.Handler {
 		switch alg {
 		case "none":
 			if v.acceptNone {
-				accept(w, payload, v) // VULNERABLE: unsigned token honoured
+				accept(w, payload, v) // VULNERABLE: unsigned token honored
 				return
 			}
 			w.WriteHeader(http.StatusUnauthorized)

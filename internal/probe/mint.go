@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-jose/go-jose/v4"
 	"github.com/google/uuid"
+
 	"github.com/nometria/keyway/internal/model"
 )
 

@@ -10,11 +10,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/nometria/keyway/internal/app"
 	"github.com/nometria/keyway/internal/issuerregistry"
 	"github.com/nometria/keyway/internal/model"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // memStore is a minimal in-memory store.Store for handler tests.
@@ -243,7 +244,7 @@ func TestIdempotencyConcurrentCoalescing(t *testing.T) {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			<-start // release all at once to maximise overlap
+			<-start // release all at once to maximize overlap
 			w := doKey(t, h, "POST", "/v1/canary/announce", "secret", "same-key", body)
 			bodies[i] = w.Body.String()
 			replays[i] = w.Header().Get("Idempotent-Replay")

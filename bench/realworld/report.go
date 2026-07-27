@@ -18,8 +18,8 @@ func MarkdownReport() (md string, detected, total int) {
 			detected++
 			mark = "✅ flagged"
 		}
-		rows.WriteString(fmt.Sprintf("| %s | %s | [%s](%s) | `%s` | %s |\n",
-			c.ID, c.Title, c.Reference, c.Source, c.Mechanism, mark))
+		fmt.Fprintf(&rows, "| %s | %s | [%s](%s) | `%s` | %s |\n",
+			c.ID, c.Title, c.Reference, c.Source, c.Mechanism, mark)
 	}
 
 	pct := 0
@@ -32,7 +32,7 @@ func MarkdownReport() (md string, detected, total int) {
 	b.WriteString("> Does Keyway actually catch the JWT/JWKS risks that have bitten real projects?\n")
 	b.WriteString("> Each row below **reproduces the exact failure mode from a cited public source**\n")
 	b.WriteString("> (a CVE, a GitHub issue, a spec rule) and checks whether Keyway flags it.\n\n")
-	b.WriteString(fmt.Sprintf("**Result: Keyway detected %d of %d documented risks (%d%%).**\n\n", detected, total, pct))
+	fmt.Fprintf(&b, "**Result: Keyway detected %d of %d documented risks (%d%%).**\n\n", detected, total, pct)
 	b.WriteString("This runs in CI (`go test ./bench/realworld/...`), so the guarantee can't silently rot.\n\n")
 
 	b.WriteString("| # | Risk | Source | Keyway check | Result |\n")
@@ -42,7 +42,7 @@ func MarkdownReport() (md string, detected, total int) {
 
 	b.WriteString("## How each case is validated\n\n")
 	b.WriteString("- **Token-level risks (RW-01…RW-07)** — a minimal HTTP service is stood up that\n")
-	b.WriteString("  reproduces the vulnerable behaviour (e.g. accepting an `alg=none` token, or\n")
+	b.WriteString("  reproduces the vulnerable behavior (e.g. accepting an `alg=none` token, or\n")
 	b.WriteString("  verifying an `HS256` token with the RSA *public* key). Keyway's probe engine\n")
 	b.WriteString("  fires its synthetic attack token at it; a probe that the service wrongly\n")
 	b.WriteString("  accepts is reported as a finding. If the server returns `200` to the attack,\n")

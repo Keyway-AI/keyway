@@ -6,13 +6,14 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
+
 	"github.com/nometria/keyway/internal/config"
 	"github.com/nometria/keyway/internal/diff"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/store"
 	"github.com/nometria/keyway/internal/store/open"
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 const defaultConfigPath = "keyway.yaml"

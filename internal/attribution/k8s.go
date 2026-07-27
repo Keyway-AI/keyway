@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/nometria/keyway/internal/model"
 	"gopkg.in/yaml.v3"
+
+	"github.com/nometria/keyway/internal/model"
 )
 
 // K8sDeployAttributor attributes a change to a Kubernetes deploy by reading the

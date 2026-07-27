@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/probe"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nometria/keyway/internal/model"
+	"github.com/nometria/keyway/internal/probe"
 )
 
 func intp(i int) *int    { return &i }
@@ -74,7 +75,7 @@ func TestRotateKeyCanaryEvidenceWins(t *testing.T) {
 
 // TestRotateKeyMeasuredWindow verifies that when the canary probe history shows
 // a real fail→pass transition, the grace period is based on that MEASURED pickup
-// latency rather than the cache-TTL default, and the basis is labelled (KI-25).
+// latency rather than the cache-TTL default, and the basis is labeled (KI-25).
 func TestRotateKeyMeasuredWindow(t *testing.T) {
 	// Cache TTL of 6h would recommend a 9h grace. The measured pickup is tighter.
 	c := consumerUsing("payments-api", model.JWKSBehavior{CacheTTLSec: intp(6 * 3600), Source: model.SrcConfig})

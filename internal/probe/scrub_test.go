@@ -8,7 +8,7 @@ import (
 )
 
 // TestScrubTokens ensures reflected JWTs never survive into stored responses
-// (defence-in-depth for PRD OPEN-4).
+// (defense-in-depth for PRD OPEN-4).
 func TestScrubTokens(t *testing.T) {
 	jwt := "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJrZXl3YXkifQ.c2lnbmF0dXJl"
 	body := "invalid token: " + jwt + " rejected"

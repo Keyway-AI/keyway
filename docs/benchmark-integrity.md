@@ -182,10 +182,17 @@ Two properties make this trustworthy rather than circular:
 Because the generators are driven by the taxonomy, adding a new threat entry and
 a generator for it is the whole change — coverage goes up by construction, and
 the bridge test refuses to let the number claim more than the corpus can actually
-detect at a single endpoint. (Live scanning of real services reuses the probe
-engine's issuer minting so claim-level attacks are signed by the real key; that
-integration is the next step and is why `jku`/`x5u` are generated but not yet
-counted.)
+detect at a single endpoint.
+
+**Live scanning** is wired in: `Engine.RunHarness` (`internal/probe`) fires the
+corpus at real consumer endpoints through the same safety machinery as the fixed
+probes (staging allowlist, response scrubbing, dry-run), signing the control and
+claim-level attacks with the **real issuer** via the engine's `MintFunc` — so a
+target's signature check passes and its *claim* validation is what's under test.
+`keyway probe --harness` runs it; `app.Deps.HarnessRun` is the use-case. An
+end-to-end test proves it both ways: zero findings against an oracle-backed
+target, and a finding on every attack against an accept-all one. (`jku`/`x5u`
+remain generated-but-uncounted until the attacker-JWKS callback server lands.)
 
 ## 5. Where the real risk actually lives
 

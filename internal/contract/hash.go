@@ -24,7 +24,7 @@ import (
 //   - Edges are keyed by *stable* identifiers (issuer URL + consumer StableID),
 //     never by the volatile UUID IDs they carry at runtime.
 //   - Every slice is sorted deterministically and every inner string slice is
-//     sorted lexicographically before marshalling.
+//     sorted lexicographically before marshaling.
 //
 // The canonical form contains no Go maps, so field/element ordering is fully
 // determined by struct declaration order and the sorts below.
@@ -32,7 +32,7 @@ func Hash(v model.ContractVersion) string {
 	c := canonicalize(v)
 	b, err := json.Marshal(c)
 	if err != nil {
-		// The canonical form contains only JSON-safe scalars/slices; marshalling
+		// The canonical form contains only JSON-safe scalars/slices; marshaling
 		// cannot fail. Panic would only fire on a programming error here.
 		panic("contract: canonical marshal failed: " + err.Error())
 	}

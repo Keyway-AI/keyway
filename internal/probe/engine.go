@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/nometria/keyway/internal/model"
 )
 
@@ -114,7 +115,7 @@ func NewEngine(cfg EngineConfig) *Engine {
 // WithClock injects a clock (tests).
 func (e *Engine) WithClock(now func() time.Time) *Engine { e.now = now; return e }
 
-// ConsumerOutcome summarises what happened for one consumer.
+// ConsumerOutcome summarizes what happened for one consumer.
 type ConsumerOutcome struct {
 	ConsumerID string
 	Verified   bool // baseline valid-token probe passed
@@ -291,7 +292,7 @@ func (e *Engine) execute(ctx context.Context, p Probe, mc MintContext, ep model.
 		return model.ProbeResult{RawResponse: skipMarker}, -1
 	}
 	if err != nil {
-		res.RawResponse = truncate("mint error: "+err.Error(), 512)
+		res.RawResponse = truncate("mint error: " + err.Error())
 		return res, 0
 	}
 	if e.cfg.DryRun {
@@ -309,7 +310,7 @@ func (e *Engine) execute(ctx context.Context, p Probe, mc MintContext, ep model.
 	defer cancel()
 	req, err := http.NewRequestWithContext(reqCtx, method, reqURL, nil)
 	if err != nil {
-		res.RawResponse = truncate("request error: "+err.Error(), 512)
+		res.RawResponse = truncate("request error: " + err.Error())
 		return res, 0
 	}
 	if authHeader != "" {
@@ -323,13 +324,13 @@ func (e *Engine) execute(ctx context.Context, p Probe, mc MintContext, ep model.
 	resp, err := e.client.Do(req)
 	res.LatencyMs = int(e.now().Sub(start).Milliseconds())
 	if err != nil {
-		res.RawResponse = truncate("transport error: "+err.Error(), 512)
+		res.RawResponse = truncate("transport error: " + err.Error())
 		return res, 0
 	}
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
 	res.StatusCode = resp.StatusCode
-	res.RawResponse = truncate(scrubTokens(string(body)), 512)
+	res.RawResponse = truncate(scrubTokens(string(body)))
 	res.Passed = p.Expect.Accepts(resp.StatusCode)
 	return res, resp.StatusCode
 }
@@ -390,9 +391,13 @@ func hostOf(rawURL string) string {
 	return u.Hostname()
 }
 
-func truncate(s string, n int) string {
-	if len(s) <= n {
+// truncate caps a stored response string at maxResponseBytes.
+func truncate(s string) string {
+	if len(s) <= maxResponseBytes {
 		return s
 	}
-	return s[:n]
+	return s[:maxResponseBytes]
 }
+
+// maxResponseBytes bounds how much of a probed response Keyway stores.
+const maxResponseBytes = 512

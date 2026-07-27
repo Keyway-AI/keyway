@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nometria/keyway/internal/version"
 	"github.com/spf13/cobra"
+
+	"github.com/nometria/keyway/internal/version"
 )
 
 // Options configures the root command tree.
@@ -84,11 +85,4 @@ func newVersionCmd() *cobra.Command {
 			fmt.Fprintln(cmd.OutOrStdout(), version.String())
 		},
 	}
-}
-
-// notImplemented is a placeholder for milestones not yet built. Each returns a
-// clear, greppable error tied to the tracker so the surface is complete now and
-// the wiring lands per PROGRESS.md.
-func notImplemented(milestone, what string) error {
-	return fmt.Errorf("%s is not implemented yet (%s — see PROGRESS.md)", what, milestone)
 }

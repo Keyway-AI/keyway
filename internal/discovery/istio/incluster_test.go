@@ -85,7 +85,7 @@ func TestInClusterDiscover(t *testing.T) {
 	assert.Contains(t, c.Provenance["expects.issuers"][0].Locator, "cluster://staging-cluster/prod/")
 }
 
-// TestInClusterNamespaceScope verifies namespace filtering is honoured.
+// TestInClusterNamespaceScope verifies namespace filtering is honored.
 func TestInClusterNamespaceScope(t *testing.T) {
 	client := newFakeClient(
 		raObj("prod", "api-a", "https://kc/realms/main", "api-a"),

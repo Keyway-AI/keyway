@@ -5,13 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/discovery/envoy"
 	"github.com/nometria/keyway/internal/discovery/istio"
 	"github.com/nometria/keyway/internal/discovery/k8s"
 	"github.com/nometria/keyway/internal/model"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const refDir = "../../testdata/discovery/reference"

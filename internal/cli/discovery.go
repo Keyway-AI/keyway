@@ -8,6 +8,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/spf13/cobra"
+
 	"github.com/nometria/keyway/internal/app"
 	"github.com/nometria/keyway/internal/attribution"
 	"github.com/nometria/keyway/internal/config"
@@ -21,7 +23,6 @@ import (
 	"github.com/nometria/keyway/internal/libdefaults"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/store/open"
-	"github.com/spf13/cobra"
 )
 
 // buildScope constructs a discovery scope from common flags.
@@ -202,7 +203,7 @@ func runSnapshot(cmd *cobra.Command) error {
 	}
 	cfg, _ := config.Load(configPath(cmd))
 	libs, _ := libdefaults.Load()
-	// Same use-case the HTTP API and scheduler run, so behaviour can't drift.
+	// Same use-case the HTTP API and scheduler run, so behavior can't drift.
 	res, err := app.Deps{
 		Store: st, Discoverers: ds, Scope: scope, Libs: libs,
 		Attributor: buildAttributor(cfg, attrRoot),

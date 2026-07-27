@@ -30,7 +30,7 @@ func DetectDir(dir string) []model.LibraryInfo {
 }
 
 // DetectFor scans a directory and returns the first library present in the DB
-// together with its resolved JWKS behaviour. This is the AC-6 path: a repo using
+// together with its resolved JWKS behavior. This is the AC-6 path: a repo using
 // keyfunc v1.9.0 yields RefreshesOnUnknownKID=false with zero probes.
 func (db *DB) DetectFor(dir string) (*model.LibraryInfo, model.JWKSBehavior, bool) {
 	for _, lib := range DetectDir(dir) {
@@ -42,7 +42,7 @@ func (db *DB) DetectFor(dir string) (*model.LibraryInfo, model.JWKSBehavior, boo
 	return nil, model.JWKSBehavior{}, false
 }
 
-// Enrich fills a consumer's unknown JWKS behaviour fields from its library's
+// Enrich fills a consumer's unknown JWKS behavior fields from its library's
 // documented defaults. Config/observed/probed values already present take
 // precedence — library defaults only fill gaps. Returns true if it matched.
 func (db *DB) Enrich(c *model.Consumer) bool {

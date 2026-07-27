@@ -6,11 +6,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/discovery/istio"
 	"github.com/nometria/keyway/internal/discovery/k8s"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // TestCrossSourceMergeByAlias is the KI-28 regression test: the SAME workload is

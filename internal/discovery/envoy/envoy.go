@@ -1,6 +1,6 @@
 // Package envoy discovers consumers from Envoy jwt_authn provider configuration.
-// cache_duration is a direct, high-confidence read of JWKS behaviour, which is
-// why this adapter is prioritised for that signal (PRD §7.2).
+// cache_duration is a direct, high-confidence read of JWKS behavior, which is
+// why this adapter is prioritized for that signal (PRD §7.2).
 package envoy
 
 import (
@@ -10,9 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/model"
-	"gopkg.in/yaml.v3"
 )
 
 // Discoverer parses Envoy static config or admin /config_dump.

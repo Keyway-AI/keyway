@@ -1,5 +1,5 @@
-// Package libdefaults ships Keyway's library-behaviour database and looks up
-// known JWKS behaviour by library name and version. This is the only source for
+// Package libdefaults ships Keyway's library-behavior database and looks up
+// known JWKS behavior by library name and version. This is the only source for
 // RefreshesOnUnknownKID when probing is unavailable (PRD §7.5).
 package libdefaults
 
@@ -9,14 +9,15 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/nometria/keyway/internal/model"
 	"gopkg.in/yaml.v3"
+
+	"github.com/nometria/keyway/internal/model"
 )
 
 //go:embed data/defaults.yaml
 var embedded []byte
 
-// VersionEntry is one version-constrained behaviour record.
+// VersionEntry is one version-constrained behavior record.
 type VersionEntry struct {
 	Constraint   string           `yaml:"constraint"`
 	JWKSBehavior jwksBehaviorYAML `yaml:"jwks_behavior"`
@@ -59,14 +60,14 @@ func Load() (*DB, error) {
 	return db, nil
 }
 
-// Match returns the JWKS behaviour and metadata for a library at a version. The
+// Match returns the JWKS behavior and metadata for a library at a version. The
 // library name is matched exactly or by path suffix (so a go.mod module path
 // "github.com/MicahParks/keyfunc" matches the DB entry "MicahParks/keyfunc").
 // The version is matched against each entry's semver constraint. If no
 // version-specific constraint matches, an explicit catch-all entry (empty
 // Constraint) is used when the library defines one; otherwise the version is out
 // of the known range and Match returns ok=false — Keyway must not label an
-// unknown/out-of-range version with a specific version's known-bad behaviour.
+// unknown/out-of-range version with a specific version's known-bad behavior.
 func (db *DB) Match(name, version string) (model.JWKSBehavior, VersionEntry, bool) {
 	lib, ok := db.lookup(name)
 	if !ok || len(lib.Versions) == 0 {
@@ -96,7 +97,7 @@ func (db *DB) Match(name, version string) (model.JWKSBehavior, VersionEntry, boo
 		return behaviorOf(entry), entry, true
 	}
 	// Known library, but the version matches no constraint (or is unparseable):
-	// unknown behaviour, not a specific known-bad one.
+	// unknown behavior, not a specific known-bad one.
 	return model.JWKSBehavior{}, VersionEntry{}, false
 }
 

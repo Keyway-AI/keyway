@@ -6,15 +6,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/store/open"
-	"github.com/spf13/cobra"
 )
 
 func newReportCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "report",
-		Short: "Summarise recent contract changes",
+		Short: "Summarize recent contract changes",
 		RunE:  runReport,
 	}
 	cmd.Flags().String("since", "7d", "time window, e.g. 7d or 24h")

@@ -3,8 +3,9 @@ package notify
 import (
 	"testing"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/nometria/keyway/internal/model"
 )
 
 func TestShouldNotify(t *testing.T) {

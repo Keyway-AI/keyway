@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nometria/keyway/internal/model"
 )
 
 func gitInit(t *testing.T) (string, string) {

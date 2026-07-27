@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/nometria/keyway/bench/mutations"
 	"github.com/nometria/keyway/internal/contract"
 	"github.com/nometria/keyway/internal/diff"
@@ -13,7 +15,6 @@ import (
 	"github.com/nometria/keyway/internal/discovery/istio"
 	"github.com/nometria/keyway/internal/discovery/k8s"
 	"github.com/nometria/keyway/internal/model"
-	"gopkg.in/yaml.v3"
 )
 
 // fileScenario is a benchmark case backed by before/after manifest directories

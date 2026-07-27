@@ -9,9 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nometria/keyway/internal/model"
 )
 
 // mockKeycloakAdmin serves the admin-cli token grant and an admin-events log.
@@ -54,7 +55,7 @@ func TestKeycloakAdminAttributeIdPSide(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// A JWKS-behaviour change is IdP-side, so the attributor engages.
+	// A JWKS-behavior change is IdP-side, so the attributor engages.
 	ev := model.ChangeEvent{
 		Field:      "jwks_behavior.refreshes_on_unknown_kid",
 		DetectedAt: ref,

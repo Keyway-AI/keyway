@@ -4,12 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/nometria/keyway/internal/blastradius"
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/model"
 	"github.com/nometria/keyway/internal/store/memory"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // staticDiscoverer returns a fixed consumer set — a stand-in adapter so the app

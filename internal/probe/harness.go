@@ -108,7 +108,7 @@ func (e *Engine) sendHarnessToken(ctx context.Context, c model.Consumer, ep mode
 	}
 	status, body := e.sendToken(ctx, ep, tok.JWS)
 	res.StatusCode = status
-	res.RawResponse = truncate(scrubTokens(body), 512)
+	res.RawResponse = truncate(scrubTokens(body))
 	accepted := status == 200 || status == 201 || status == 202 || status == 204
 	actual := attack.Reject
 	if accepted {

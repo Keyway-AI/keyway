@@ -21,7 +21,9 @@ import (
 	rw "github.com/nometria/keyway/bench/realworld"
 )
 
-func main() {
+func main() { os.Exit(run()) }
+
+func run() int {
 	var (
 		corpus    = flag.String("corpus", "./bench/corpus", "path to file-based scenarios")
 		adversary = flag.String("adversarial", "./bench/corpus/adversarial", "path to the held-out adversarial corpus (scored separately, not gated)")
@@ -38,20 +40,20 @@ func main() {
 		md, detected, total := rw.MarkdownReport()
 		if err := os.WriteFile("docs/realworld-validation.md", []byte(md), 0o644); err != nil {
 			fmt.Fprintln(os.Stderr, "harness: write realworld report:", err)
-			os.Exit(1)
+			return 1
 		}
 		fmt.Printf("harness: real-world validation %d/%d documented risks detected -> docs/realworld-validation.md\n", detected, total)
 		if *ciGate && detected < total {
-			os.Exit(3)
+			return 3
 		}
-		return
+		return 0
 	}
 
 	generated := mutations.Generate(*rounds)
 	fileScenarios, err := loadFileScenarios(*corpus)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "harness: load file scenarios:", err)
-		os.Exit(1)
+		return 1
 	}
 
 	// Realistic scenarios: rendered YAML run through the actual discovery
@@ -60,7 +62,7 @@ func main() {
 	realisticScenarios, cleanup, rerr := loadGeneratedRealistic(*realistic)
 	if rerr != nil {
 		fmt.Fprintln(os.Stderr, "harness: generate realistic scenarios:", rerr)
-		os.Exit(1)
+		return 1
 	}
 	defer cleanup()
 
@@ -102,13 +104,13 @@ func main() {
 
 	if err := os.MkdirAll(*out, 0o755); err != nil {
 		fmt.Fprintln(os.Stderr, "harness: mkdir out:", err)
-		os.Exit(1)
+		return 1
 	}
 	scorePath := filepath.Join(*out, "scorecard.json")
 	b, _ := json.MarshalIndent(cards, "", "  ")
 	if err := os.WriteFile(scorePath, b, 0o644); err != nil {
 		fmt.Fprintln(os.Stderr, "harness: write scorecard:", err)
-		os.Exit(1)
+		return 1
 	}
 
 	fmt.Printf("harness: %d generated + %d file + %d realistic scenario(s)\n", len(generated), len(fileScenarios), len(realisticScenarios))
@@ -131,16 +133,17 @@ func main() {
 		}
 		if err := writeReport(*out, rd); err != nil {
 			fmt.Fprintln(os.Stderr, "harness: write report:", err)
-			os.Exit(1)
+			return 1
 		}
 		fmt.Printf("  report -> %s\n", filepath.Join(*out, "report.html"))
 	}
 
 	if *ciGate {
 		if checkGates(cards) {
-			os.Exit(2)
+			return 2
 		}
 	}
+	return 0
 }
 
 // l1Card approximates derivation recall: a scenario "found" its consumers when

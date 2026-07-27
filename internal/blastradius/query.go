@@ -48,6 +48,8 @@ type AffectedConsumer struct {
 }
 
 // BlastRadiusResult is the full answer (PRD §10.1).
+//
+//nolint:revive // established public type; the name is part of the API and web DTO contract.
 type BlastRadiusResult struct {
 	Proposal ChangeProposal     `json:"proposal"`
 	Affected []AffectedConsumer `json:"affected"`
@@ -81,9 +83,9 @@ func Resolve(v model.ContractVersion, p ChangeProposal, history map[string][]mod
 	case KindRemoveClaim:
 		affected, unknown = resolveRemoveClaim(v, p, history)
 	case KindChangeIssuer:
-		affected, unknown = resolveChangeIssuer(v, p)
+		affected = resolveChangeIssuer(v, p)
 	case KindDropAlgorithm:
-		affected, unknown = resolveDropAlgorithm(v, p)
+		affected = resolveDropAlgorithm(v, p)
 	default:
 		return res, fmt.Errorf("blastradius: unknown proposal kind %q", p.Kind)
 	}
@@ -93,7 +95,7 @@ func Resolve(v model.ContractVersion, p ChangeProposal, history map[string][]mod
 
 	// Grace period from the ready consumers' refresh windows (PRD §10.3). A
 	// window measured from a real announce→pickup (KI-25) is preferred to a
-	// default one at the same duration, and the basis is labelled accordingly.
+	// default one at the same duration, and the basis is labeled accordingly.
 	if len(windows) > 0 {
 		durations := make([]time.Duration, 0, len(windows))
 		var maxW time.Duration
@@ -231,7 +233,7 @@ func resolveRemoveClaim(v model.ContractVersion, p ChangeProposal, history map[s
 	return affected, unknown
 }
 
-func resolveChangeIssuer(v model.ContractVersion, p ChangeProposal) ([]AffectedConsumer, []model.Consumer) {
+func resolveChangeIssuer(v model.ContractVersion, p ChangeProposal) []AffectedConsumer {
 	old := issuerURL(v, p.IssuerID)
 	var affected []AffectedConsumer
 	for _, c := range v.Consumers {
@@ -243,10 +245,10 @@ func resolveChangeIssuer(v model.ContractVersion, p ChangeProposal) ([]AffectedC
 			})
 		}
 	}
-	return affected, nil
+	return affected
 }
 
-func resolveDropAlgorithm(v model.ContractVersion, p ChangeProposal) ([]AffectedConsumer, []model.Consumer) {
+func resolveDropAlgorithm(v model.ContractVersion, p ChangeProposal) []AffectedConsumer {
 	var affected []AffectedConsumer
 	scoped := p.IssuerID != ""
 	url := issuerURL(v, p.IssuerID)
@@ -263,7 +265,7 @@ func resolveDropAlgorithm(v model.ContractVersion, p ChangeProposal) ([]Affected
 			})
 		}
 	}
-	return affected, nil
+	return affected
 }
 
 // --- helpers ----------------------------------------------------------------

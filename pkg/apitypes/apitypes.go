@@ -74,7 +74,7 @@ type PromoteKeyRequest struct {
 	KID      string `json:"kid"`
 }
 
-// CoverageResponse summarises how much of the contract Keyway can vouch for.
+// CoverageResponse summarizes how much of the contract Keyway can vouch for.
 type CoverageResponse struct {
 	Total         int `json:"total"`
 	Resolved      int `json:"resolved"`

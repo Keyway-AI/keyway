@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nometria/keyway/internal/model"
 )
 
 // fakeStore is a minimal in-memory store.Store for the snapshot flow. It records
@@ -107,7 +108,7 @@ func TestSnapshotWithAttribution(t *testing.T) {
 }
 
 // TestSnapshotNilAttributorIsNoop verifies a nil attributor leaves events
-// unattributed (behaviour-preserving for callers that don't supply one).
+// unattributed (behavior-preserving for callers that don't supply one).
 func TestSnapshotNilAttributorIsNoop(t *testing.T) {
 	ctx := context.Background()
 	st := newFakeStore()

@@ -40,7 +40,7 @@ func Snapshot(ctx context.Context, st store.Store, v model.ContractVersion) (Sna
 
 // SnapshotWithAttribution is Snapshot plus a step that attributes each emitted
 // change event to its cause before persistence. A nil attributor is a no-op, so
-// this is behaviour-preserving for callers that don't supply one.
+// this is behavior-preserving for callers that don't supply one.
 func SnapshotWithAttribution(ctx context.Context, st store.Store, v model.ContractVersion, attr Attributor) (SnapshotResult, error) {
 	// Ensure the hash reflects the current graph.
 	v.Hash = Hash(v)

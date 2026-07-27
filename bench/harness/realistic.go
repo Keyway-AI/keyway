@@ -307,7 +307,7 @@ func noopExp(consumer string) mutations.Expected {
 
 // catalog is the full set of factories, cycled to produce the corpus. It leans
 // slightly true-positive (12 TP : 8 TN); the generated struct corpus supplies
-// the exact 50/50 split, so this set prioritises risk-class breadth.
+// the exact 50/50 split, so this set prioritizes risk-class breadth.
 var catalog = []factory{
 	fAudienceAdded, fAudienceRemoved, fIssuerAdded, fIssuerRemoved,
 	fClaimAdded, fClaimRemoved, fEnvoyAudienceAdded, fEnvoyCacheUp,

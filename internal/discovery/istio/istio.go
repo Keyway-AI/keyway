@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/nometria/keyway/internal/discovery"
 	"github.com/nometria/keyway/internal/model"
-	"gopkg.in/yaml.v3"
 )
 
 // Discoverer reads Istio security CRDs.
@@ -243,7 +244,7 @@ func claimKey(key string) (string, bool) {
 
 // workloadLabelKeys are the selector labels, in preference order, that name the
 // workload a policy targets. Beyond the app.kubernetes.io convention this
-// recognises Istio gateway (`istio`) and legacy (`k8s-app`) selectors, so a
+// recognizes Istio gateway (`istio`) and legacy (`k8s-app`) selectors, so a
 // gateway RequestAuthentication is named for its workload rather than the policy
 // (KI-33). Falls back to the resource name when no selector matches.
 var workloadLabelKeys = []string{"app", "app.kubernetes.io/name", "istio", "k8s-app"}

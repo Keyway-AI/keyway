@@ -125,6 +125,34 @@ checking structured config against explicit rules does not infer, so it can be
 near-exact on the cases the rules cover — and the adversarial set shows where the
 rules stop covering.*
 
+## 4b. The honest denominator: coverage of the *threat space*
+
+The scores above answer "does the classifier do what the rules say?" They do
+**not** answer the more important question a security tool must face: **of all
+the ways a JWT verifier can be attacked, what fraction does Keyway even check
+for?** A tool that catches 100% of the handful of issue types it knows about, and
+is silent on the rest, is not comprehensive — and a corpus/CVE list we curated
+around our own probes cannot reveal that gap, because it only contains things we
+already detect.
+
+So coverage is now measured against an **external threat taxonomy**
+([`internal/threats`](../internal/threats)) — every documented JWT/JWKS/OIDC
+verifier threat we could source from RFC 8725, OWASP, CVEs, CWE, and the
+PortSwigger catalog — not against our own corpus. The generated report is
+[threat-coverage.md](./threat-coverage.md) (`keyway threats coverage`).
+
+**Current coverage: 12 of 35 documented threats (~34%).** Whole categories are
+still uncovered — header key-injection (`jku`/`x5u`/`jwk`/`x5c`/`kid`, 0/6),
+JWKS delivery (0/2), and encoding/parsing (0/3). Those 23 gaps are named and
+cited in the report; they are the roadmap. The `100%`/`8-of-8` figures elsewhere
+in this repo are recall *against what we check* — this 34% is recall *against the
+known universe*, and it is the number that should go up.
+
+The taxonomy is kept honest in two ways: a test asserts every "covered" mapping
+points at a probe that actually exists in the registry, and a test fails if the
+catalog ever claims 100% coverage of the whole space (the exact overclaim this
+page exists to prevent).
+
 ## 5. Where the real risk actually lives
 
 Because the classifier is deterministic, classifier accuracy is **not** where

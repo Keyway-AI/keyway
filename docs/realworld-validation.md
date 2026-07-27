@@ -8,6 +8,13 @@
 
 This runs in CI (`go test ./bench/realworld/...`), so the guarantee can't silently rot.
 
+> **Read this the right way.** 8-of-8 is recall *against the risk classes Keyway
+> already checks*. It is **not** a claim of comprehensive JWT security coverage.
+> For recall against the full documented threat universe — currently ~34%, with
+> every gap named — see [threat-coverage.md](./threat-coverage.md)
+> (`keyway threats coverage`). These reproductions are the "covered" end of that
+> taxonomy; the gaps there are the roadmap.
+
 | # | Risk | Source | Keyway check | Result |
 |---|---|---|---|---|
 | RW-01 | alg=none signature bypass | [CVE-2022-23540](https://nvd.nist.gov/vuln/detail/CVE-2022-23540) | `probe: alg_none` | ✅ flagged |

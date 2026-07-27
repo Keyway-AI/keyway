@@ -29,6 +29,7 @@ type DetectorKind string
 
 const (
 	DetProbe       DetectorKind = "probe"       // a dynamic attack-token probe (internal/probe)
+	DetHarness     DetectorKind = "harness"     // a generative attack-token check (internal/attack)
 	DetDiff        DetectorKind = "diff"        // a contract-change classifier rule (internal/diff)
 	DetLibDefaults DetectorKind = "libdefaults" // a known library-default finding (internal/libdefaults)
 	DetBlast       DetectorKind = "blast"       // a blast-radius resolver (internal/blastradius)
@@ -85,6 +86,7 @@ func portswigger(anchor string) Source {
 func owasp(ref, url string) Source { return Source{Kind: "OWASP", Ref: ref, URL: url} }
 
 func probeDet(id string) Detection      { return Detection{Kind: DetProbe, ID: id} }
+func harnessDet(id string) Detection    { return Detection{Kind: DetHarness, ID: id} }
 func libDefaultDet(id string) Detection { return Detection{Kind: DetLibDefaults, ID: id} }
 func blastDet(id string) Detection      { return Detection{Kind: DetBlast, ID: id} }
 
@@ -98,21 +100,21 @@ func Catalog() []Threat {
 			Description: "Verifier accepts a token whose header sets alg=none (no signature), trusting arbitrary claims.",
 			Invariant:   "A token with alg=none MUST be rejected unless unsecured JWTs are explicitly, separately enabled.",
 			Sources:     []Source{rfc8725("3.2", "Use Appropriate Algorithms"), cve("CVE-2015-9235"), cwe("347", "Improper Verification of Cryptographic Signature")},
-			Detections:  []Detection{probeDet("alg_none")},
+			Detections:  []Detection{probeDet("alg_none"), harnessDet("alg_none")},
 		},
 		{
 			ID: "SIG-02", Title: "signature not verified", Category: CatSignature, Severity: model.SeverityCritical,
 			Description: "Verifier decodes and trusts claims without cryptographically verifying the signature at all.",
 			Invariant:   "Claims MUST NOT be trusted unless the signature verifies under a trusted key.",
 			Sources:     []Source{cwe("347", "Improper Verification of Cryptographic Signature"), cwe("345", "Insufficient Verification of Data Authenticity")},
-			Detections:  []Detection{probeDet("tampered_signature")},
+			Detections:  []Detection{probeDet("tampered_signature"), harnessDet("tampered_signature")},
 		},
 		{
 			ID: "SIG-03", Title: "empty signature with a signing alg", Category: CatSignature, Severity: model.SeverityCritical,
 			Description: "Token declares a real alg (e.g. RS256) but carries an empty signature segment; some libraries treat verification as vacuously true.",
 			Invariant:   "A signing alg with an empty/missing signature MUST fail verification.",
 			Sources:     []Source{rfc8725("3.1", "Perform Algorithm Verification"), cwe("347", "Improper Verification of Cryptographic Signature")},
-			// gap
+			Detections:  []Detection{harnessDet("empty_signature_rs256")},
 		},
 
 		// ---- algorithm -----------------------------------------------------
@@ -121,7 +123,7 @@ func Catalog() []Threat {
 			Description: "Verifier configured for RS256 also accepts HS256, letting an attacker sign with the (public) RSA key as the HMAC secret.",
 			Invariant:   "The accepted algorithm MUST be pinned; an asymmetric-keyed verifier MUST reject symmetric algs.",
 			Sources:     []Source{rfc8725("3.1", "Perform Algorithm Verification"), cve("CVE-2016-5431"), cve("CVE-2022-23541")},
-			Detections:  []Detection{probeDet("alg_confusion")},
+			Detections:  []Detection{probeDet("alg_confusion"), harnessDet("alg_confusion_rs_hs")},
 		},
 		{
 			ID: "ALG-02", Title: "algorithm downgrade / unpinned alg", Category: CatAlgorithm, Severity: model.SeverityHigh,
@@ -135,14 +137,14 @@ func Catalog() []Threat {
 			Description: "Bypass of an alg blocklist via casing or padding, e.g. \"nONE\", \"None\", \"none \".",
 			Invariant:   "Algorithm matching MUST be exact; normalized variants of \"none\" MUST all be rejected.",
 			Sources:     []Source{rfc8725("3.1", "Perform Algorithm Verification"), portswigger("none variants")},
-			// gap
+			Detections:  []Detection{harnessDet("alg_none_variants")},
 		},
 		{
 			ID: "ALG-04", Title: "invalid ECDSA signature (0,0) — \"psychic signature\"", Category: CatAlgorithm, Severity: model.SeverityCritical,
 			Description: "ECDSA verifier accepts r=0,s=0 (or other degenerate values) as a valid signature.",
 			Invariant:   "Cryptographic inputs MUST be validated; degenerate ECDSA values MUST be rejected.",
 			Sources:     []Source{rfc8725("3.4", "Validate Cryptographic Inputs"), cve("CVE-2022-21449")},
-			// gap
+			Detections:  []Detection{harnessDet("psychic_signature_es256")},
 		},
 
 		// ---- header key injection -----------------------------------------
@@ -165,7 +167,7 @@ func Catalog() []Threat {
 			Description: "Verifier trusts a public key embedded in the token's jwk header, letting the attacker sign with a matching private key.",
 			Invariant:   "A key embedded in the token header MUST NOT be used to verify that token.",
 			Sources:     []Source{cve("CVE-2018-0114"), portswigger("embedded jwk"), cwe("347", "Improper Verification of Cryptographic Signature")},
-			// gap
+			Detections:  []Detection{harnessDet("embedded_jwk")},
 		},
 		{
 			ID: "HDR-04", Title: "x5c embedded certificate chain", Category: CatHeaderKey, Severity: model.SeverityHigh,
@@ -179,7 +181,7 @@ func Catalog() []Threat {
 			Description: "kid is used to build a filesystem path to a key; ../ escapes let the attacker point at a predictable file (e.g. /dev/null → empty HMAC key).",
 			Invariant:   "kid MUST be treated as an opaque lookup key, never interpolated into a path or query.",
 			Sources:     []Source{portswigger("kid path traversal"), cwe("22", "Improper Limitation of a Pathname (Path Traversal)")},
-			// gap
+			Detections:  []Detection{harnessDet("kid_path_traversal")},
 		},
 		{
 			ID: "HDR-06", Title: "kid SQL / command injection", Category: CatHeaderKey, Severity: model.SeverityHigh,
@@ -195,28 +197,28 @@ func Catalog() []Threat {
 			Description: "Verifier does not check exp, so revoked/aged tokens keep working.",
 			Invariant:   "exp MUST be validated against current time (with bounded skew).",
 			Sources:     []Source{rfc8725("3.9", "Use and Validate Audience"), owasp("JWT Cheat Sheet: token expiration", "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html")},
-			Detections:  []Detection{probeDet("expired")},
+			Detections:  []Detection{probeDet("expired"), harnessDet("expired")},
 		},
 		{
 			ID: "CLM-02", Title: "not-yet-valid token accepted (nbf ignored)", Category: CatClaims, Severity: model.SeverityMedium,
 			Description: "Verifier ignores nbf, accepting tokens before their validity window.",
 			Invariant:   "nbf MUST be validated against current time (with bounded skew).",
 			Sources:     []Source{rfc8725("3.9", "Use and Validate Audience")},
-			Detections:  []Detection{probeDet("not_yet_valid")},
+			Detections:  []Detection{probeDet("not_yet_valid"), harnessDet("not_yet_valid")},
 		},
 		{
 			ID: "CLM-03", Title: "issuer not validated", Category: CatClaims, Severity: model.SeverityHigh,
 			Description: "Verifier accepts a well-formed token from any issuer, so a token minted by a different (attacker-controlled) IdP is trusted.",
 			Invariant:   "iss MUST match the expected issuer exactly.",
 			Sources:     []Source{rfc8725("3.8", "Validate Issuer and Subject")},
-			Detections:  []Detection{probeDet("wrong_issuer")},
+			Detections:  []Detection{probeDet("wrong_issuer"), harnessDet("wrong_issuer")},
 		},
 		{
 			ID: "CLM-04", Title: "audience not validated", Category: CatClaims, Severity: model.SeverityHigh,
 			Description: "Verifier does not check aud, so a token minted for service A is accepted by service B (token replay across audiences).",
 			Invariant:   "aud MUST contain this service's expected value.",
 			Sources:     []Source{rfc8725("3.9", "Use and Validate Audience")},
-			Detections:  []Detection{probeDet("wrong_audience")},
+			Detections:  []Detection{probeDet("wrong_audience"), harnessDet("wrong_audience")},
 		},
 		{
 			ID: "CLM-05", Title: "required authorization claim not enforced", Category: CatClaims, Severity: model.SeverityHigh,
@@ -230,7 +232,7 @@ func Catalog() []Threat {
 			Description: "aud may be a string or an array; a verifier that only handles one shape can be bypassed by sending the other.",
 			Invariant:   "Audience matching MUST handle both the string and array encodings of aud.",
 			Sources:     []Source{rfc8725("3.9", "Use and Validate Audience"), owasp("API2:2023 Broken Authentication", "https://owasp.org/API-Security/editions/2023/en/0xa2-broken-authentication/")},
-			// gap
+			Detections:  []Detection{harnessDet("aud_array_confusion")},
 		},
 		{
 			ID: "CLM-07", Title: "claim type confusion", Category: CatClaims, Severity: model.SeverityMedium,
@@ -244,7 +246,7 @@ func Catalog() []Threat {
 			Description: "A token that simply omits exp is accepted as never-expiring.",
 			Invariant:   "A token lacking exp MUST be rejected where expiry is required by policy.",
 			Sources:     []Source{owasp("JWT Cheat Sheet: token expiration", "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html")},
-			// gap
+			Detections:  []Detection{harnessDet("missing_exp")},
 		},
 		{
 			ID: "CLM-09", Title: "explicit typing not enforced (typ/cty)", Category: CatClaims, Severity: model.SeverityMedium,
@@ -336,14 +338,14 @@ func Catalog() []Threat {
 			Description: "Tokens with the wrong number of segments or trailing data are accepted by a lax parser.",
 			Invariant:   "A JWS MUST have exactly three base64url segments; anything else MUST be rejected.",
 			Sources:     []Source{rfc8725("3.1", "Perform Algorithm Verification"), cwe("20", "Improper Input Validation")},
-			// gap
+			Detections:  []Detection{harnessDet("extra_segments")},
 		},
 		{
 			ID: "ENC-02", Title: "lax base64 / non-canonical encoding", Category: CatEncoding, Severity: model.SeverityLow,
 			Description: "Standard-base64 or padded input is accepted where only base64url is valid, enabling smuggling past filters.",
 			Invariant:   "Segments MUST be strict base64url without padding.",
 			Sources:     []Source{rfc8725("3.7", "Use UTF-8")},
-			// gap
+			Detections:  []Detection{harnessDet("non_base64url")},
 		},
 		{
 			ID: "ENC-03", Title: "JWE decompression bomb", Category: CatEncoding, Severity: model.SeverityMedium,

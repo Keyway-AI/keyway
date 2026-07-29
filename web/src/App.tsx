@@ -11,12 +11,20 @@ import Probes from "./pages/Probes";
 import Coverage from "./pages/Coverage";
 import Agent from "./pages/Agent";
 import Marketing from "./pages/Marketing";
+import Features from "./pages/Features";
+import Pricing from "./pages/Pricing";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 export default function App() {
   return (
     <ToastProvider>
       <Routes>
         <Route path="/" element={<Marketing />} />
+        <Route path="/features" element={<Features />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/app" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="findings" element={<Findings />} />

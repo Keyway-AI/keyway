@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { ThemeToggle } from "../components/ThemeToggle";
+import { MarketingShell } from "../components/MarketingChrome";
+import { AppPreview } from "../components/AppPreview";
 import { IconAgent, IconBlast, IconCoverage, IconFindings, IconProbes, IconChanges } from "../components/icons";
 
 const features = [
@@ -35,62 +36,42 @@ const features = [
   },
 ];
 
-function Nav() {
-  return (
-    <header className="sticky top-0 z-30 border-b border-border/70 bg-bg/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5 sm:px-8">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-[0.95rem] text-accent-fg shadow-xs">🔑</span>
-          <span className="text-[1.05rem] font-semibold tracking-tight">Keyway</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-          <Link
-            to="/app"
-            className="inline-flex h-9 items-center rounded-md bg-accent px-4 text-body font-medium text-accent-fg shadow-xs transition hover:bg-accent-strong active:scale-[0.98]"
-          >
-            Open app
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
 function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-border">
-      {/* soft ambient accent wash */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-40 mx-auto h-80 max-w-3xl rounded-full opacity-60 blur-3xl"
         style={{ background: "radial-gradient(closest-side, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent)" }}
       />
-      <div className="mx-auto max-w-6xl px-5 py-20 text-center sm:px-8 sm:py-28">
+      <div className="mx-auto max-w-6xl px-5 pt-16 text-center sm:px-8 sm:pt-24">
         <span className="inline-flex items-center gap-2 rounded-pill border border-border bg-surface px-3 py-1 text-caption font-medium text-muted shadow-xs">
           <span className="h-1.5 w-1.5 rounded-full bg-low" />
           Open-source · JWT &amp; agent-auth verification
         </span>
         <h1 className="mx-auto mt-6 max-w-3xl text-[2.5rem] font-semibold leading-[1.05] tracking-tight sm:text-display">
-          Know your token contracts hold —{" "}
-          <span className="text-accent">before</span> they break.
+          Know your token contracts hold — <span className="text-accent">before</span> they break.
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-body-lg text-muted">
           Keyway discovers what your services expect from JWTs, versions it as a contract, and adversarially tests that a correct verifier is enforced — for classic services and AI agents alike.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
-            to="/app"
+            to="/signup"
             className="inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-medium text-accent-fg shadow-sm transition hover:bg-accent-strong active:scale-[0.98]"
           >
-            Open the app
+            Get started — free
           </Link>
-          <a
-            href="https://github.com/nometria/keyway"
+          <Link
+            to="/app"
             className="inline-flex h-11 items-center rounded-md border border-border bg-surface px-5 text-body font-medium text-text shadow-xs transition hover:bg-surface-2 active:scale-[0.98]"
           >
-            View on GitHub
-          </a>
+            Explore the demo
+          </Link>
+        </div>
+        {/* product screenshot */}
+        <div className="mx-auto mt-14 max-w-4xl pb-16 sm:mt-16">
+          <AppPreview />
         </div>
       </div>
     </section>
@@ -105,10 +86,10 @@ function Stats() {
     { n: "0", l: "corpus we grade ourselves on" },
   ];
   return (
-    <section className="border-b border-border bg-surface-2">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden px-5 py-12 sm:grid-cols-4 sm:px-8">
+    <section className="border-b border-border bg-surface-2/50">
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-5 py-12 sm:grid-cols-4 sm:px-8">
         {stats.map((s) => (
-          <div key={s.l} className="px-2 text-center">
+          <div key={s.l} className="text-center">
             <div className="text-h1 font-semibold tracking-tight tabular-nums text-accent">{s.n}</div>
             <div className="mt-1 text-caption text-muted">{s.l}</div>
           </div>
@@ -118,28 +99,34 @@ function Stats() {
   );
 }
 
+export function FeatureGrid() {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {features.map((f) => (
+        <div key={f.title} className="rounded-xl border border-border bg-surface p-6 shadow-xs">
+          <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent">
+            <f.icon />
+          </span>
+          <h3 className="mt-4 text-[1.05rem] font-semibold tracking-tight">{f.title}</h3>
+          <p className="mt-2 text-body text-muted">{f.body}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Features() {
   return (
     <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8">
       <div className="max-w-2xl">
         <div className="eyebrow">What it does</div>
-        <h2 className="mt-2 text-h2 font-semibold tracking-tight">
-          Verification, not another gateway.
-        </h2>
+        <h2 className="mt-2 text-h2 font-semibold tracking-tight">Verification, not another gateway.</h2>
         <p className="mt-3 text-body-lg text-muted">
           The market issues and enforces auth. Keyway proves it&apos;s correct — the part everyone else assumes.
         </p>
       </div>
-      <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map((f) => (
-          <div key={f.title} className="rounded-xl border border-border bg-surface p-6 shadow-xs">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent">
-              <f.icon />
-            </span>
-            <h3 className="mt-4 text-[1.05rem] font-semibold tracking-tight">{f.title}</h3>
-            <p className="mt-2 text-body text-muted">{f.body}</p>
-          </div>
-        ))}
+      <div className="mt-10">
+        <FeatureGrid />
       </div>
     </section>
   );
@@ -149,17 +136,15 @@ function CTA() {
   return (
     <section className="border-t border-border">
       <div className="mx-auto max-w-6xl px-5 py-20 text-center sm:px-8">
-        <h2 className="mx-auto max-w-xl text-h1 font-semibold tracking-tight">
-          See it on your own contracts.
-        </h2>
+        <h2 className="mx-auto max-w-xl text-h1 font-semibold tracking-tight">See it on your own contracts.</h2>
         <p className="mx-auto mt-3 max-w-md text-body-lg text-muted">
           The app runs on sample data out of the box — no backend required.
         </p>
         <Link
-          to="/app"
+          to="/signup"
           className="mt-7 inline-flex h-11 items-center rounded-md bg-accent px-6 text-body font-medium text-accent-fg shadow-sm transition hover:bg-accent-strong active:scale-[0.98]"
         >
-          Open the app
+          Get started
         </Link>
       </div>
     </section>
@@ -168,18 +153,11 @@ function CTA() {
 
 export default function Marketing() {
   return (
-    <div className="min-h-screen">
-      <Nav />
+    <MarketingShell>
       <Hero />
       <Stats />
       <Features />
       <CTA />
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-caption text-faint sm:flex-row sm:px-8">
-          <span>Keyway — contract verification for JWT &amp; agent auth.</span>
-          <span>Open source · MIT</span>
-        </div>
-      </footer>
-    </div>
+    </MarketingShell>
   );
 }

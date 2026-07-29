@@ -10,6 +10,18 @@ package threats
 
 import "github.com/nometria/keyway/internal/model"
 
+// Domain groups threats by the problem space they belong to. The taxonomy spans
+// two: the classic JWT/JWKS/OIDC verifier surface, and the newer auth surface of
+// AI agents (MCP, on-behalf-of delegation, agent identity). Coverage is reported
+// per domain so a nascent frontier (agent auth) does not dilute or inflate the
+// mature one (jwt).
+type Domain string
+
+const (
+	DomainJWT   Domain = "jwt"   // JWT/JWKS/OIDC verifier threats
+	DomainAgent Domain = "agent" // AI-agent auth: MCP, delegation, agent identity
+)
+
 // Category groups threats by the part of the verification pipeline they attack.
 type Category string
 
@@ -22,6 +34,14 @@ const (
 	CatJWKS      Category = "jwks"                 // key-set delivery/refresh
 	CatEncoding  Category = "encoding_parsing"     // structural / decoding weaknesses
 	CatAuthz     Category = "authorization"        // token accepted but for the wrong principal/scope
+
+	// Agent-auth categories.
+	CatTokenBinding  Category = "token_binding"  // audience/resource-indicator binding, passthrough
+	CatConsent       Category = "consent"        // confused-deputy, redirect/DCR, consent reuse
+	CatDelegation    Category = "delegation"     // on-behalf-of, act/may_act, token exchange, chains
+	CatScope         Category = "scope"          // over-scope, non-minimization, non-expiry
+	CatAgentIdentity Category = "agent_identity" // agent vs user identity, sessions, workload identity
+	CatAgency        Category = "agency"         // excessive agency: injection→tool misuse, tool poisoning
 )
 
 // DetectorKind identifies the family of Keyway detector that covers a threat.
@@ -51,10 +71,11 @@ type Source struct {
 	URL  string
 }
 
-// Threat is one documented way a JWT/JWKS/OIDC verifier can be attacked.
+// Threat is one documented way an auth verifier can be attacked.
 type Threat struct {
 	ID          string // stable, e.g. "SIG-01"
 	Title       string // one-line name
+	Domain      Domain // set by Catalog(); jwt or agent
 	Category    Category
 	Severity    model.Severity
 	Description string      // what the attack does
@@ -85,14 +106,44 @@ func portswigger(anchor string) Source {
 }
 func owasp(ref, url string) Source { return Source{Kind: "OWASP", Ref: ref, URL: url} }
 
+// rfc cites a generic RFC by number and title (RFC 8693/8707/9728/9700/7591, …).
+func rfc(num, title string) Source {
+	return Source{Kind: "RFC " + num, Ref: "RFC " + num + " " + title,
+		URL: "https://datatracker.ietf.org/doc/html/rfc" + num}
+}
+
+// mcp cites the Model Context Protocol authorization / security spec.
+func mcp(ref string) Source {
+	return Source{Kind: "MCP", Ref: "MCP spec: " + ref,
+		URL: "https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices"}
+}
+
+// draft cites an IETF/OpenID draft or whitepaper by title + URL.
+func draft(ref, url string) Source { return Source{Kind: "Draft", Ref: ref, URL: url} }
+
 func probeDet(id string) Detection      { return Detection{Kind: DetProbe, ID: id} }
 func harnessDet(id string) Detection    { return Detection{Kind: DetHarness, ID: id} }
 func libDefaultDet(id string) Detection { return Detection{Kind: DetLibDefaults, ID: id} }
 func blastDet(id string) Detection      { return Detection{Kind: DetBlast, ID: id} }
 
-// Catalog returns the full threat taxonomy. It is deliberately broader than what
-// Keyway currently detects: the uncovered entries are the roadmap.
+// Catalog returns the full threat taxonomy across both domains, with each
+// threat's Domain stamped. It is deliberately broader than what Keyway currently
+// detects: the uncovered entries are the roadmap.
 func Catalog() []Threat {
+	out := make([]Threat, 0, 64)
+	for _, t := range jwtThreats() {
+		t.Domain = DomainJWT
+		out = append(out, t)
+	}
+	for _, t := range agentThreats() {
+		t.Domain = DomainAgent
+		out = append(out, t)
+	}
+	return out
+}
+
+// jwtThreats is the JWT/JWKS/OIDC verifier threat surface.
+func jwtThreats() []Threat {
 	return []Threat{
 		// ---- signature -----------------------------------------------------
 		{

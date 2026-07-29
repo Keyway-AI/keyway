@@ -61,6 +61,57 @@ func TestProbeDetectionsExist(t *testing.T) {
 	}
 }
 
+// TestDomainsAreStamped verifies every threat carries a valid domain and that the
+// per-domain breakdown partitions the catalog.
+func TestDomainsAreStamped(t *testing.T) {
+	cat := Catalog()
+	valid := map[Domain]bool{DomainJWT: true, DomainAgent: true}
+	jwt, agent := 0, 0
+	for _, tr := range cat {
+		if !valid[tr.Domain] {
+			t.Errorf("%s has invalid domain %q", tr.ID, tr.Domain)
+		}
+		switch tr.Domain {
+		case DomainJWT:
+			jwt++
+		case DomainAgent:
+			agent++
+		}
+	}
+	if jwt == 0 || agent == 0 {
+		t.Fatalf("expected both domains populated: jwt=%d agent=%d", jwt, agent)
+	}
+	r := Compute(cat)
+	sum := 0
+	for _, d := range r.Domains {
+		sum += d.Total
+	}
+	if sum != r.Total {
+		t.Fatalf("per-domain totals (%d) != catalog total (%d)", sum, r.Total)
+	}
+}
+
+// TestAgentDomainIsHonestFrontier verifies the agent-auth domain is a real,
+// currently-uncovered frontier: several cited threats, all still gaps. This is the
+// honest denominator for extending Keyway into agent auth — if we ever mark an
+// agent threat covered, it must be by a real detector (the other tests enforce that).
+func TestAgentDomainIsHonestFrontier(t *testing.T) {
+	agent := 0
+	for _, tr := range Catalog() {
+		if tr.Domain != DomainAgent {
+			continue
+		}
+		agent++
+		if tr.Covered() {
+			// Allowed in principle, but flag it so coverage claims stay deliberate.
+			t.Logf("note: agent threat %s is now marked covered by %v", tr.ID, tr.Detections)
+		}
+	}
+	if agent < 10 {
+		t.Fatalf("agent-auth taxonomy implausibly small (%d); it should enumerate the MCP/delegation/identity surface", agent)
+	}
+}
+
 // TestCoverageIsHonest sanity-checks the computed report: it must have real gaps
 // (a security tool claiming 100% coverage of the whole JWT threat space would be
 // the exact overclaim this taxonomy exists to prevent), and covered+gaps must

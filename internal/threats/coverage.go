@@ -20,7 +20,11 @@ var severityRank = map[model.Severity]int{
 // categoryOrder is the display order of categories in the report.
 var categoryOrder = []Category{
 	CatSignature, CatAlgorithm, CatHeaderKey, CatClaims, CatAuthz, CatKeyMgmt, CatJWKS, CatEncoding,
+	CatTokenBinding, CatConsent, CatDelegation, CatScope, CatAgentIdentity, CatAgency,
 }
+
+// domainOrder is the display order of domains in the report.
+var domainOrder = []Domain{DomainJWT, DomainAgent}
 
 // CategoryStat is per-category coverage.
 type CategoryStat struct {
@@ -29,10 +33,26 @@ type CategoryStat struct {
 	Covered  int
 }
 
+// DomainStat is per-domain coverage.
+type DomainStat struct {
+	Domain  Domain
+	Total   int
+	Covered int
+}
+
+// Pct is the integer coverage percentage for a domain.
+func (d DomainStat) Pct() int {
+	if d.Total == 0 {
+		return 0
+	}
+	return int(float64(d.Covered) / float64(d.Total) * 100)
+}
+
 // Report is the computed coverage of the taxonomy.
 type Report struct {
 	Total       int
 	Covered     int
+	Domains     []DomainStat
 	Categories  []CategoryStat
 	Gaps        []Threat // uncovered, most-severe first
 	CoveredList []Threat // covered, most-severe first
@@ -55,19 +75,35 @@ func Compute(cat []Threat) Report {
 	for _, c := range categoryOrder {
 		catIndex[c] = &CategoryStat{Category: c}
 	}
+	domIndex := map[Domain]*DomainStat{}
+	for _, d := range domainOrder {
+		domIndex[d] = &DomainStat{Domain: d}
+	}
 	for _, t := range cat {
 		cs := catIndex[t.Category]
 		if cs == nil {
 			cs = &CategoryStat{Category: t.Category}
 			catIndex[t.Category] = cs
 		}
+		ds := domIndex[t.Domain]
+		if ds == nil {
+			ds = &DomainStat{Domain: t.Domain}
+			domIndex[t.Domain] = ds
+		}
 		cs.Total++
+		ds.Total++
 		if t.Covered() {
 			r.Covered++
 			cs.Covered++
+			ds.Covered++
 			r.CoveredList = append(r.CoveredList, t)
 		} else {
 			r.Gaps = append(r.Gaps, t)
+		}
+	}
+	for _, d := range domainOrder {
+		if ds := domIndex[d]; ds != nil && ds.Total > 0 {
+			r.Domains = append(r.Domains, *ds)
 		}
 	}
 	for _, c := range categoryOrder {
@@ -112,15 +148,23 @@ func srcString(ss []Source) string {
 // (e.g. the command that regenerates it) so the file is clearly a build artifact.
 func (r Report) Markdown(generatedNote string) string {
 	var b strings.Builder
-	b.WriteString("# JWT/JWKS/OIDC threat coverage\n\n")
+	b.WriteString("# Threat coverage\n\n")
 	b.WriteString("> Auto-generated from the threat taxonomy in `internal/threats`. This is the\n")
-	b.WriteString("> **denominator**: coverage is measured against the documented universe of JWT\n")
-	b.WriteString("> verifier threats (RFC 8725, OWASP, CVEs, CWE, PortSwigger), not against a\n")
-	b.WriteString("> corpus we wrote. Every gap below is a named, cited threat Keyway does not yet\n")
-	b.WriteString("> detect — the roadmap, kept honest.\n\n")
+	b.WriteString("> **denominator**: coverage is measured against the documented universe of auth\n")
+	b.WriteString("> verifier threats (RFC 8725, the MCP spec, OAuth RFCs, OWASP LLM/Agentic Top\n")
+	b.WriteString("> 10s, CVEs, CWE, PortSwigger), not against a corpus we wrote. Every gap below is\n")
+	b.WriteString("> a named, cited threat Keyway does not yet detect — the roadmap, kept honest.\n")
+	b.WriteString("> The taxonomy spans two domains: **jwt** (mature) and **agent** (a new frontier).\n\n")
 
 	fmt.Fprintf(&b, "**Coverage: %d of %d documented threats (%d%%).** %d gaps remain.\n\n",
 		r.Covered, r.Total, r.Pct(), len(r.Gaps))
+
+	b.WriteString("## Coverage by domain\n\n")
+	b.WriteString("| Domain | Covered | Total | % |\n|---|---|---|---|\n")
+	for _, d := range r.Domains {
+		fmt.Fprintf(&b, "| %s | %d | %d | %d%% |\n", d.Domain, d.Covered, d.Total, d.Pct())
+	}
+	b.WriteString("\n")
 
 	b.WriteString("## Coverage by category\n\n")
 	b.WriteString("| Category | Covered | Total |\n|---|---|---|\n")
@@ -133,19 +177,19 @@ func (r Report) Markdown(generatedNote string) string {
 	if len(r.Gaps) == 0 {
 		b.WriteString("_None — every cataloged threat has a detector._\n\n")
 	} else {
-		b.WriteString("| ID | Severity | Threat | Invariant | Sources |\n|---|---|---|---|---|\n")
+		b.WriteString("| ID | Domain | Severity | Threat | Invariant | Sources |\n|---|---|---|---|---|---|\n")
 		for _, t := range r.Gaps {
-			fmt.Fprintf(&b, "| %s | %s | %s | %s | %s |\n",
-				t.ID, t.Severity, t.Title, t.Invariant, srcString(t.Sources))
+			fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s |\n",
+				t.ID, t.Domain, t.Severity, t.Title, t.Invariant, srcString(t.Sources))
 		}
 		b.WriteString("\n")
 	}
 
 	b.WriteString("## Covered\n\n")
-	b.WriteString("| ID | Severity | Threat | Detector | Sources |\n|---|---|---|---|---|\n")
+	b.WriteString("| ID | Domain | Severity | Threat | Detector | Sources |\n|---|---|---|---|---|---|\n")
 	for _, t := range r.CoveredList {
-		fmt.Fprintf(&b, "| %s | %s | %s | %s | %s |\n",
-			t.ID, t.Severity, t.Title, detString(t.Detections), srcString(t.Sources))
+		fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s |\n",
+			t.ID, t.Domain, t.Severity, t.Title, detString(t.Detections), srcString(t.Sources))
 	}
 	b.WriteString("\n")
 

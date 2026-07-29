@@ -7,14 +7,14 @@
 > a named, cited threat Keyway does not yet detect — the roadmap, kept honest.
 > The taxonomy spans two domains: **jwt** (mature) and **agent** (a new frontier).
 
-**Coverage: 26 of 50 documented threats (52%).** 24 gaps remain.
+**Coverage: 27 of 50 documented threats (54%).** 23 gaps remain.
 
 ## Coverage by domain
 
 | Domain | Covered | Total | % |
 |---|---|---|---|
 | jwt | 21 | 35 | 60% |
-| agent | 5 | 15 | 33% |
+| agent | 6 | 15 | 40% |
 
 ## Coverage by category
 
@@ -30,7 +30,7 @@
 | encoding_parsing | 2 | 3 |
 | token_binding | 2 | 2 |
 | consent | 0 | 2 |
-| delegation | 1 | 4 |
+| delegation | 2 | 4 |
 | scope | 2 | 3 |
 | agent_identity | 0 | 2 |
 | agency | 0 | 2 |
@@ -48,7 +48,6 @@
 | ALG-02 | jwt | high | algorithm downgrade / unpinned alg | The verifier MUST accept only an explicit allowlist of algorithms, not whatever the token's header requests. | [§3.1 Perform Algorithm Verification](https://datatracker.ietf.org/doc/html/rfc8725#section-3.1); [CVE-2022-23540](https://nvd.nist.gov/vuln/detail/CVE-2022-23540) |
 | CD-02 | agent | high | dynamic client registration abuse | DCR MUST validate and constrain client metadata (redirect_uris, grant types); prefer Client-ID Metadata Documents over open RFC 7591 registration. | [RFC 7591 OAuth 2.0 Dynamic Client Registration](https://datatracker.ietf.org/doc/html/rfc7591); [MCP spec: client registration](https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices); [OAuth Client ID Metadata Documents](https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/) |
 | CLM-10 | jwt | high | cross-type token substitution | Different JWT kinds MUST have mutually exclusive validation rules (distinct aud/typ/issuer scoping). | [§3.12 Use Mutually Exclusive Validation Rules for Different Kinds of JWTs](https://datatracker.ietf.org/doc/html/rfc8725#section-3.12) |
-| DEL-02 | agent | high | delegation-chain / transitive-trust abuse | Each hop MUST independently validate audience and the delegation purpose; a token bound to one hop MUST NOT be accepted at another. | [RFC 8693 OAuth 2.0 Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693); [OWASP Agentic Top 10 (2025)](https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/); [RFC 9700 OAuth 2.0 Security BCP](https://datatracker.ietf.org/doc/html/rfc9700) |
 | DEL-03 | agent | high | may_act not enforced on token exchange | Token exchange MUST honor `may_act`: only pre-authorized actors may obtain a delegated token for a subject. | [RFC 8693 OAuth 2.0 Token Exchange (may_act)](https://datatracker.ietf.org/doc/html/rfc8693) |
 | HDR-04 | jwt | high | x5c embedded certificate chain | An embedded x5c chain MUST be validated against a pre-configured trust anchor, never trusted on its own. | [§3.4 Validate Cryptographic Inputs](https://datatracker.ietf.org/doc/html/rfc8725#section-3.4) |
 | HDR-06 | jwt | high | kid SQL / command injection | kid MUST NOT be interpolated into SQL/commands; use parameterized lookups. | [JWT attacks: kid injection](https://portswigger.net/web-security/jwt); [CWE-89 SQL Injection](https://cwe.mitre.org/data/definitions/89.html) |
@@ -72,7 +71,7 @@
 | ALG-04 | jwt | critical | invalid ECDSA signature (0,0) — "psychic signature" | `harness:psychic_signature_es256` | [§3.4 Validate Cryptographic Inputs](https://datatracker.ietf.org/doc/html/rfc8725#section-3.4); [CVE-2022-21449](https://nvd.nist.gov/vuln/detail/CVE-2022-21449) |
 | AUTHZ-02 | jwt | critical | identity header trusted without a token | `probe:header_bypass` | [CWE-290 Authentication Bypass by Spoofing](https://cwe.mitre.org/data/definitions/290.html) |
 | HDR-03 | jwt | critical | embedded jwk self-signed token | `harness:embedded_jwk` | [CVE-2018-0114](https://nvd.nist.gov/vuln/detail/CVE-2018-0114); [JWT attacks: embedded jwk](https://portswigger.net/web-security/jwt); [CWE-347 Improper Verification of Cryptographic Signature](https://cwe.mitre.org/data/definitions/347.html) |
-| MCP-01 | agent | critical | token passthrough (wrong-audience token accepted) | `analyzer:aud_mismatch` | [MCP spec: token passthrough anti-pattern](https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices); [RFC 8707 Resource Indicators for OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc8707); [CWE-287 Improper Authentication](https://cwe.mitre.org/data/definitions/287.html) |
+| MCP-01 | agent | critical | token passthrough (wrong-audience token accepted) | `analyzer:aud_mismatch`, `harness:resource_passthrough` | [MCP spec: token passthrough anti-pattern](https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices); [RFC 8707 Resource Indicators for OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc8707); [CWE-287 Improper Authentication](https://cwe.mitre.org/data/definitions/287.html) |
 | SIG-01 | jwt | critical | none algorithm accepted | `probe:alg_none`, `harness:alg_none` | [§3.2 Use Appropriate Algorithms](https://datatracker.ietf.org/doc/html/rfc8725#section-3.2); [CVE-2015-9235](https://nvd.nist.gov/vuln/detail/CVE-2015-9235); [CWE-347 Improper Verification of Cryptographic Signature](https://cwe.mitre.org/data/definitions/347.html) |
 | SIG-02 | jwt | critical | signature not verified | `probe:tampered_signature`, `harness:tampered_signature` | [CWE-347 Improper Verification of Cryptographic Signature](https://cwe.mitre.org/data/definitions/347.html); [CWE-345 Insufficient Verification of Data Authenticity](https://cwe.mitre.org/data/definitions/345.html) |
 | SIG-03 | jwt | critical | empty signature with a signing alg | `harness:empty_signature_rs256` | [§3.1 Perform Algorithm Verification](https://datatracker.ietf.org/doc/html/rfc8725#section-3.1); [CWE-347 Improper Verification of Cryptographic Signature](https://cwe.mitre.org/data/definitions/347.html) |
@@ -83,10 +82,11 @@
 | CLM-04 | jwt | high | audience not validated | `probe:wrong_audience`, `harness:wrong_audience` | [§3.9 Use and Validate Audience](https://datatracker.ietf.org/doc/html/rfc8725#section-3.9) |
 | CLM-05 | jwt | high | required authorization claim not enforced | `probe:missing_required_claim` | [§3.10 Do Not Trust Received Claims](https://datatracker.ietf.org/doc/html/rfc8725#section-3.10) |
 | DEL-01 | agent | high | missing or forged act (delegation) claim | `analyzer:missing_act` | [RFC 8693 OAuth 2.0 Token Exchange (act/may_act)](https://datatracker.ietf.org/doc/html/rfc8693); [On-Behalf-Of User for AI Agents](https://www.ietf.org/archive/id/draft-oauth-ai-agents-on-behalf-of-user-00.html) |
+| DEL-02 | agent | high | delegation-chain / transitive-trust abuse | `harness:sibling_resource` | [RFC 8693 OAuth 2.0 Token Exchange](https://datatracker.ietf.org/doc/html/rfc8693); [OWASP Agentic Top 10 (2025)](https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/); [RFC 9700 OAuth 2.0 Security BCP](https://datatracker.ietf.org/doc/html/rfc9700) |
 | HDR-05 | jwt | high | kid path traversal | `harness:kid_path_traversal` | [JWT attacks: kid path traversal](https://portswigger.net/web-security/jwt); [CWE-22 Improper Limitation of a Pathname (Path Traversal)](https://cwe.mitre.org/data/definitions/22.html) |
 | KEY-01 | jwt | high | retired key still accepted | `probe:retired_key` | [§3.5 Ensure Cryptographic Keys Have Sufficient Entropy](https://datatracker.ietf.org/doc/html/rfc8725#section-3.5) |
 | KEY-02 | jwt | high | unknown-kid rotation outage | `libdefaults:refreshes_on_unknown_kid`, `blast:rotate_key`, `probe:canary_key` | [JWKS rotation guidance](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html) |
-| MCP-02 | agent | high | missing resource indicator / unbound audience | `analyzer:aud_unbound` | [RFC 8707 Resource Indicators for OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc8707); [RFC 9728 OAuth 2.0 Protected Resource Metadata](https://datatracker.ietf.org/doc/html/rfc9728); [MCP spec: authorization](https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices) |
+| MCP-02 | agent | high | missing resource indicator / unbound audience | `analyzer:aud_unbound`, `harness:unbound_audience` | [RFC 8707 Resource Indicators for OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc8707); [RFC 9728 OAuth 2.0 Protected Resource Metadata](https://datatracker.ietf.org/doc/html/rfc9728); [MCP spec: authorization](https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices) |
 | SCOPE-01 | agent | high | over-scoped agent credential | `analyzer:over_scope` | [MCP spec: scope minimization](https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices); [OWASP LLM06 Excessive Agency (2025)](https://owasp.org/www-project-top-10-for-large-language-model-applications/) |
 | SCOPE-02 | agent | high | non-expiring / long-lived agent token | `analyzer:non_expiring` | [2026 State of AI Agent Identity](https://securityboulevard.com/2026/07/the-agent-identity-problem-non-human-identities-outnumber-humans-45-to-1-and-ai-agents-are-making-it-worse/); [CWE-798 Use of Hard-coded Credentials](https://cwe.mitre.org/data/definitions/798.html) |
 | CLM-02 | jwt | medium | not-yet-valid token accepted (nbf ignored) | `probe:not_yet_valid`, `harness:not_yet_valid` | [§3.9 Use and Validate Audience](https://datatracker.ietf.org/doc/html/rfc8725#section-3.9) |

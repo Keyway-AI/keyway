@@ -101,7 +101,7 @@ Each existing Keyway capability maps cleanly onto the unowned verification layer
 | Priority | Move | Maps to |
 |---|---|---|
 | **P1** ✅ | Agent-auth threat taxonomy (this domain) — MCP passthrough, confused-deputy, DCR abuse, missing/forged `act`, delegation-chain abuse, over-scope, non-expiring creds, session-as-auth, injection escalation, tool poisoning — all cited, all currently gaps. | threat taxonomy + coverage report |
-| **P2** | Contract-verify delegated & MCP resource-server tokens: `aud` bound to the server's canonical URI (RFC 8707/9728)? `act`/`may_act` present & well-formed? scopes minimal vs declared tools? flag over-scoped / non-expiring tokens; diff for drift. | contract discovery + diff |
+| **P2** ✅ | Contract-verify delegated & MCP resource-server tokens — `internal/agentauth` statically checks `aud` binding (RFC 8707/9728), the delegation `act` claim (RFC 8693), scope minimization, and expiry. `keyway agent inspect`; covers MCP-01/02, DEL-01, SCOPE-01/02 (agent domain 0 → 33%). | contract discovery + diff |
 | **P3** | Generative attack corpus for agent/delegation flows: wrong-audience token accepted (passthrough), confused-deputy `redirect_uri`, scope-escalated exchange, delegation token missing `act`, plus alg=none / key-confusion / `jku` forgeries on OBO tokens. | generative / invariant attack harness |
 | **P4** | Delegation-chain blast radius: if an agent's key, scope, or issuer changes — or a delegate is revoked — which downstream hops break or over-trust a token they shouldn't accept? | blast-radius resolver |
 

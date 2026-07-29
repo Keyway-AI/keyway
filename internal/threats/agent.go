@@ -17,12 +17,14 @@ func agentThreats() []Threat {
 			Description: "An MCP/resource server accepts an access token that was not issued to it and forwards it downstream, breaking audience validation, rate-limiting, and the audit trail — turning the server into an exfiltration proxy for a stolen token.",
 			Invariant:   "A resource server MUST reject any token whose audience is not its own canonical URI; it MUST NOT accept or forward tokens issued for another party.",
 			Sources:     []Source{mcp("token passthrough anti-pattern"), rfc("8707", "Resource Indicators for OAuth 2.0"), cwe("287", "Improper Authentication")},
+			Detections:  []Detection{analyzerDet("aud_mismatch")},
 		},
 		{
 			ID: "MCP-02", Title: "missing resource indicator / unbound audience", Category: CatTokenBinding, Severity: model.SeverityHigh,
 			Description: "The client omits the `resource` parameter, so the issued token is not bound to the specific MCP server and can be replayed against a different one.",
 			Invariant:   "Clients MUST send the `resource` indicator on authorization and token requests; issued tokens MUST be audience-bound to the target resource.",
 			Sources:     []Source{rfc("8707", "Resource Indicators for OAuth 2.0"), rfc("9728", "OAuth 2.0 Protected Resource Metadata"), mcp("authorization")},
+			Detections:  []Detection{analyzerDet("aud_unbound")},
 		},
 
 		// ---- consent / confused deputy -------------------------------------
@@ -45,6 +47,7 @@ func agentThreats() []Threat {
 			Description: "An on-behalf-of token omits the `act` claim (or carries a forged one), so the agent is treated as the user with no verifiable record of who is acting for whom — the delegation audit chain is broken.",
 			Invariant:   "A delegated token MUST carry a verifiable `act` chain recording the actor; verifiers requiring delegation MUST reject tokens without it.",
 			Sources:     []Source{rfc("8693", "OAuth 2.0 Token Exchange (act/may_act)"), draft("On-Behalf-Of User for AI Agents", "https://www.ietf.org/archive/id/draft-oauth-ai-agents-on-behalf-of-user-00.html")},
+			Detections:  []Detection{analyzerDet("missing_act")},
 		},
 		{
 			ID: "DEL-02", Title: "delegation-chain / transitive-trust abuse", Category: CatDelegation, Severity: model.SeverityHigh,
@@ -71,12 +74,14 @@ func agentThreats() []Threat {
 			Description: "The agent holds omnibus scopes (files:*, admin:*, full-access) far beyond the tools it uses, so a single injection or token leak grants wide lateral movement and privilege chaining.",
 			Invariant:   "Agent tokens MUST follow least privilege: granted scopes minimal versus the tools the agent actually declares/uses.",
 			Sources:     []Source{mcp("scope minimization"), owasp("OWASP LLM06 Excessive Agency (2025)", "https://owasp.org/www-project-top-10-for-large-language-model-applications/")},
+			Detections:  []Detection{analyzerDet("over_scope")},
 		},
 		{
 			ID: "SCOPE-02", Title: "non-expiring / long-lived agent token", Category: CatScope, Severity: model.SeverityHigh,
 			Description: "The agent authenticates with a static, long-lived key that is never rotated or revoked — the most common non-human-identity failure, with NHIs now vastly outnumbering humans.",
 			Invariant:   "Agent credentials MUST be short-lived and rotatable, with zero standing privilege between tasks.",
 			Sources:     []Source{owasp("2026 State of AI Agent Identity", "https://securityboulevard.com/2026/07/the-agent-identity-problem-non-human-identities-outnumber-humans-45-to-1-and-ai-agents-are-making-it-worse/"), cwe("798", "Use of Hard-coded Credentials")},
+			Detections:  []Detection{analyzerDet("non_expiring")},
 		},
 		{
 			ID: "SCOPE-03", Title: "agent reuses the human's root credential", Category: CatScope, Severity: model.SeverityHigh,

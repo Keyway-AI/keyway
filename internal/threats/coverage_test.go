@@ -92,23 +92,29 @@ func TestDomainsAreStamped(t *testing.T) {
 }
 
 // TestAgentDomainIsHonestFrontier verifies the agent-auth domain is a real,
-// currently-uncovered frontier: several cited threats, all still gaps. This is the
-// honest denominator for extending Keyway into agent auth — if we ever mark an
-// agent threat covered, it must be by a real detector (the other tests enforce that).
+// partially-covered frontier: a substantial set of cited threats, with real
+// detection starting to land (the static analyzer) but genuine gaps remaining.
+// Any covered agent threat must be backed by a real detector (the other tests
+// enforce that); this guards against both an empty and an over-claimed frontier.
 func TestAgentDomainIsHonestFrontier(t *testing.T) {
-	agent := 0
+	agent, covered := 0, 0
 	for _, tr := range Catalog() {
 		if tr.Domain != DomainAgent {
 			continue
 		}
 		agent++
 		if tr.Covered() {
-			// Allowed in principle, but flag it so coverage claims stay deliberate.
-			t.Logf("note: agent threat %s is now marked covered by %v", tr.ID, tr.Detections)
+			covered++
 		}
 	}
 	if agent < 10 {
 		t.Fatalf("agent-auth taxonomy implausibly small (%d); it should enumerate the MCP/delegation/identity surface", agent)
+	}
+	if covered == 0 {
+		t.Fatal("expected agent auth to have some real detection now (the analyzer)")
+	}
+	if covered == agent {
+		t.Fatal("agent auth claims 100% coverage — the exact overclaim the taxonomy guards against")
 	}
 }
 

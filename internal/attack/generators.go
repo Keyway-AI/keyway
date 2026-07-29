@@ -167,6 +167,23 @@ func Corpus(c GenContext) ([]Token, error) {
 	add(extraSegmentsToken(c)) // ENC-01
 	add(nonB64URLToken(c))     // ENC-02
 
+	// --- agent auth: resource / audience binding (live) ---------------------
+	// These are validly signed by the trusted issuer, but bound to the wrong
+	// resource (or nothing). A correct MCP/agent resource server MUST reject them
+	// (RFC 8707/9728) — accepting one is a live token-passthrough vulnerability,
+	// the #1 MCP threat. This is the live counterpart of the static analyzer.
+	passthrough := c.baseClaims()
+	passthrough["aud"] = "https://passthrough.keyway.test/other-resource"
+	add(trusted("MCP-01", "resource_passthrough", "a token issued for another resource must be rejected — no passthrough", true, Reject, passthrough))
+
+	unbound := c.baseClaims()
+	delete(unbound, "aud")
+	add(trusted("MCP-02", "unbound_audience", "a token with no audience is bound to nothing and must be rejected", true, Reject, unbound))
+
+	sibling := c.baseClaims()
+	sibling["aud"] = "https://sibling.keyway.test/api"
+	add(trusted("DEL-02", "sibling_resource", "a token bound to a sibling hop must not be accepted here — trust is not transitive", true, Reject, sibling))
+
 	if len(errs) > 0 {
 		return out, fmt.Errorf("attack: corpus generation errors: %s", strings.Join(errs, "; "))
 	}

@@ -17,14 +17,14 @@ func agentThreats() []Threat {
 			Description: "An MCP/resource server accepts an access token that was not issued to it and forwards it downstream, breaking audience validation, rate-limiting, and the audit trail — turning the server into an exfiltration proxy for a stolen token.",
 			Invariant:   "A resource server MUST reject any token whose audience is not its own canonical URI; it MUST NOT accept or forward tokens issued for another party.",
 			Sources:     []Source{mcp("token passthrough anti-pattern"), rfc("8707", "Resource Indicators for OAuth 2.0"), cwe("287", "Improper Authentication")},
-			Detections:  []Detection{analyzerDet("aud_mismatch")},
+			Detections:  []Detection{analyzerDet("aud_mismatch"), harnessDet("resource_passthrough")},
 		},
 		{
 			ID: "MCP-02", Title: "missing resource indicator / unbound audience", Category: CatTokenBinding, Severity: model.SeverityHigh,
 			Description: "The client omits the `resource` parameter, so the issued token is not bound to the specific MCP server and can be replayed against a different one.",
 			Invariant:   "Clients MUST send the `resource` indicator on authorization and token requests; issued tokens MUST be audience-bound to the target resource.",
 			Sources:     []Source{rfc("8707", "Resource Indicators for OAuth 2.0"), rfc("9728", "OAuth 2.0 Protected Resource Metadata"), mcp("authorization")},
-			Detections:  []Detection{analyzerDet("aud_unbound")},
+			Detections:  []Detection{analyzerDet("aud_unbound"), harnessDet("unbound_audience")},
 		},
 
 		// ---- consent / confused deputy -------------------------------------
@@ -54,6 +54,7 @@ func agentThreats() []Threat {
 			Description: "In agent-to-agent or on-behalf-of chains, a token minted for one hop is accepted at another because each hop does not independently validate audience and delegation purpose — trust becomes transitive.",
 			Invariant:   "Each hop MUST independently validate audience and the delegation purpose; a token bound to one hop MUST NOT be accepted at another.",
 			Sources:     []Source{rfc("8693", "OAuth 2.0 Token Exchange"), owasp("OWASP Agentic Top 10 (2025)", "https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/"), rfc("9700", "OAuth 2.0 Security BCP")},
+			Detections:  []Detection{harnessDet("sibling_resource")},
 		},
 		{
 			ID: "DEL-03", Title: "may_act not enforced on token exchange", Category: CatDelegation, Severity: model.SeverityHigh,

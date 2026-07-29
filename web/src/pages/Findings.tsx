@@ -104,10 +104,12 @@ export default function Findings() {
             <Card
               key={g.serviceId}
               title={
-                <span className="flex items-center gap-2">
+                <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                   <SeverityBadge severity={g.worst} />
                   <span>{g.service}</span>
-                  <span className="font-mono text-xs font-normal text-muted">{g.serviceId}</span>
+                  <span className="hidden max-w-full truncate font-mono text-xs font-normal text-muted sm:inline">
+                    {g.serviceId}
+                  </span>
                 </span>
               }
               action={

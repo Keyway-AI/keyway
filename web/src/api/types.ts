@@ -167,3 +167,60 @@ export interface BlastRadiusResult {
   grace_basis: string;
   generated_at: string;
 }
+
+/* ── Threat coverage (keyway threats coverage) ────────────────────────── */
+
+export interface CoverageDomain {
+  domain: string;
+  covered: number;
+  total: number;
+  percent: number;
+}
+
+export interface CoverageCategory {
+  category: string;
+  covered: number;
+  total: number;
+}
+
+export interface CoverageThreat {
+  id: string;
+  domain: string;
+  category: string;
+  severity: Severity;
+  title: string;
+  invariant: string;
+  sources: { ref: string; url: string }[];
+  detectors: string[]; // e.g. ["analyzer:aud_mismatch"]; empty = gap
+}
+
+export interface ThreatCoverage {
+  total: number;
+  covered: number;
+  gaps: number;
+  percent: number;
+  domains: CoverageDomain[];
+  categories: CoverageCategory[];
+  threats: CoverageThreat[];
+}
+
+/* ── Agent-token inspection (keyway agent inspect) ────────────────────── */
+
+export interface AgentInspectRequest {
+  token: string;
+  audience?: string;
+  require_delegation?: boolean;
+  max_lifetime_seconds?: number;
+  allowed_scopes?: string[];
+}
+
+export interface AgentFinding {
+  threat_id: string;
+  severity: Severity;
+  message: string;
+}
+
+export interface AgentInspectResult {
+  findings: AgentFinding[];
+  count: number;
+}

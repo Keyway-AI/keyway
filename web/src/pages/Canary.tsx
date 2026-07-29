@@ -85,7 +85,7 @@ export default function Canary() {
     >
       <Card title="Keys in JWKS">
         {keys.length > 0 ? (
-          <Table>
+          <Table minWidth="min-w-[36rem]">
             <thead>
               <tr>
                 <Th>Key ID</Th>

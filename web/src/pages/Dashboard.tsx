@@ -14,6 +14,7 @@ export default function Dashboard() {
   const coverage = useAsync(() => api.coverage());
   const snapshot = useAsync(() => api.latestSnapshot());
   const changes = useAsync(() => api.changes());
+  const threats = useAsync(() => api.threatCoverage());
 
   async function takeSnapshot() {
     setSnapshotting(true);
@@ -51,7 +52,7 @@ export default function Dashboard() {
         </Button>
       }
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatTile label="Consumers" value={cov?.total ?? "—"} hint="derived automatically" />
         <StatTile
           label="Resolved"
@@ -108,7 +109,7 @@ export default function Dashboard() {
           }
           className="lg:col-span-2"
           action={
-            <Link to="/findings" className="text-xs text-brand hover:underline">
+            <Link to="/app/findings" className="text-xs text-brand hover:underline">
               View all →
             </Link>
           }
@@ -118,7 +119,7 @@ export default function Dashboard() {
               {topFindings.map((f) => (
                 <li key={f.id}>
                   <Link
-                    to="/findings"
+                    to="/app/findings"
                     className="flex items-start gap-3 py-2.5 -mx-2 px-2 rounded-lg hover:bg-surface-2/50"
                   >
                     <SeverityBadge severity={f.severity} />
@@ -138,6 +139,55 @@ export default function Dashboard() {
             <Empty>
               {changes.loading ? "Loading…" : "No findings — token contracts unchanged since baseline. 🎉"}
             </Empty>
+          )}
+        </Card>
+      </div>
+
+      <div className="mt-6">
+        <Card
+          title="Verification coverage"
+          action={
+            <Link to="/app/coverage" className="text-xs text-brand hover:underline">
+              Full report →
+            </Link>
+          }
+        >
+          {threats.data ? (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="flex flex-col justify-center gap-1 lg:border-r lg:border-border/60 lg:pr-6">
+                <div className="text-3xl font-semibold tabular-nums tracking-tight">
+                  {threats.data.percent}%
+                </div>
+                <div className="text-caption text-muted">
+                  {threats.data.covered} of {threats.data.total} documented threats detected
+                </div>
+                <div className="mt-1 text-caption text-high">
+                  {threats.data.gaps} named gaps on the roadmap
+                </div>
+              </div>
+              <div className="space-y-4 lg:col-span-2">
+                {threats.data.domains.map((d) => (
+                  <div key={d.domain}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium capitalize">
+                        {d.domain === "jwt" ? "JWT / JWKS" : "Agent auth"}
+                      </span>
+                      <span className="tabular-nums text-muted">
+                        {d.covered} / {d.total} · {d.percent}%
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-2">
+                      <div
+                        className={`h-full rounded-full ${d.domain === "jwt" ? "bg-accent" : "bg-medium"}`}
+                        style={{ width: `${d.percent}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Empty>{threats.loading ? "Loading coverage…" : "Coverage unavailable."}</Empty>
           )}
         </Card>
       </div>

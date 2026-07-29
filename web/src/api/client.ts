@@ -1,4 +1,6 @@
 import type {
+  AgentInspectRequest,
+  AgentInspectResult,
   BlastRadiusResult,
   CanaryStatus,
   ChangeEvent,
@@ -9,6 +11,7 @@ import type {
   Key,
   ProbeResult,
   SnapshotResponse,
+  ThreatCoverage,
 } from "./types";
 import * as mock from "./mock";
 
@@ -171,5 +174,14 @@ export const api = {
           body: JSON.stringify({ consumer_ids: consumerIds ?? [] }),
         }),
       () => mock.runProbes(consumerIds),
+    ),
+
+  threatCoverage: () =>
+    withMock<ThreatCoverage>(() => request("/v1/threats/coverage"), mock.threatCoverage),
+
+  agentInspect: (req: AgentInspectRequest) =>
+    withMock<AgentInspectResult>(
+      () => request("/v1/agent/inspect", { method: "POST", body: JSON.stringify(req) }),
+      () => mock.agentInspect(req),
     ),
 };

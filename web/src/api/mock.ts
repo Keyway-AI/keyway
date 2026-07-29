@@ -3,6 +3,9 @@
 // `keyway.live=1` (see client.ts).
 import { computeBlast } from "../lib/blast";
 import type {
+  AgentFinding,
+  AgentInspectRequest,
+  AgentInspectResult,
   BlastRadiusResult,
   CanaryStatus,
   ChangeEvent,
@@ -12,6 +15,7 @@ import type {
   Key,
   ProbeResult,
   SnapshotResponse,
+  ThreatCoverage,
 } from "./types";
 
 export const coverage = (): CoverageResponse => ({
@@ -333,3 +337,116 @@ export const changes = (): ChangeEvent[] => [
     detected_at: new Date(Date.now() - 3600_000).toISOString(),
   },
 ];
+
+/* ── Threat coverage (mock mirrors `keyway threats coverage`) ─────────── */
+
+export const threatCoverage = (): ThreatCoverage => ({
+  total: 50,
+  covered: 27,
+  gaps: 23,
+  percent: 54,
+  domains: [
+    { domain: "jwt", covered: 21, total: 35, percent: 60 },
+    { domain: "agent", covered: 6, total: 15, percent: 40 },
+  ],
+  categories: [
+    { category: "signature", covered: 3, total: 3 },
+    { category: "algorithm", covered: 3, total: 4 },
+    { category: "header_key_injection", covered: 2, total: 6 },
+    { category: "claims_validation", covered: 7, total: 10 },
+    { category: "authorization", covered: 2, total: 3 },
+    { category: "key_management", covered: 2, total: 4 },
+    { category: "jwks", covered: 0, total: 2 },
+    { category: "encoding_parsing", covered: 2, total: 3 },
+    { category: "token_binding", covered: 2, total: 2 },
+    { category: "consent", covered: 0, total: 2 },
+    { category: "delegation", covered: 1, total: 4 },
+    { category: "scope", covered: 2, total: 3 },
+    { category: "agent_identity", covered: 0, total: 2 },
+    { category: "agency", covered: 0, total: 2 },
+  ],
+  threats: [
+    t("SIG-01", "jwt", "signature", "critical", "none algorithm accepted", "A token with alg=none MUST be rejected.", ["probe:alg_none", "harness:alg_none"]),
+    t("ALG-01", "jwt", "algorithm", "critical", "RS/HS key confusion", "An asymmetric-keyed verifier MUST reject symmetric algs.", ["probe:alg_confusion", "harness:alg_confusion_rs_hs"]),
+    t("ALG-04", "jwt", "algorithm", "critical", "psychic signature (ECDSA 0,0)", "Degenerate ECDSA values MUST be rejected.", ["harness:psychic_signature_es256"]),
+    t("HDR-03", "jwt", "header_key_injection", "critical", "embedded jwk self-signed token", "A key embedded in the header MUST NOT verify that token.", ["harness:embedded_jwk"]),
+    t("HDR-01", "jwt", "header_key_injection", "critical", "jku → attacker-controlled JWKS", "Key material MUST NOT come from a token-supplied URL.", []),
+    t("CLM-01", "jwt", "claims_validation", "high", "expired token accepted", "exp MUST be validated.", ["probe:expired", "harness:expired"]),
+    t("CLM-04", "jwt", "claims_validation", "high", "audience not validated", "aud MUST contain this service.", ["probe:wrong_audience", "harness:wrong_audience"]),
+    t("KEY-04", "jwt", "key_management", "high", "weak/guessable HMAC secret", "Symmetric secrets MUST have sufficient entropy.", []),
+    t("JWKS-01", "jwt", "jwks", "high", "JWKS fetched over plaintext HTTP", "JWKS/OIDC metadata MUST be fetched over TLS.", []),
+    t("MCP-01", "agent", "token_binding", "critical", "token passthrough (wrong-audience accepted)", "A resource server MUST reject a token whose audience isn't its own URI.", ["analyzer:aud_mismatch", "harness:resource_passthrough"]),
+    t("MCP-02", "agent", "token_binding", "high", "missing resource indicator / unbound audience", "Issued tokens MUST be audience-bound to the target resource.", ["analyzer:aud_unbound", "harness:unbound_audience"]),
+    t("CD-01", "agent", "consent", "critical", "confused deputy via static client ID", "An OAuth proxy MUST obtain per-client consent and exact redirect_uri match.", []),
+    t("DEL-01", "agent", "delegation", "high", "missing or forged act (delegation) claim", "A delegated token MUST carry a verifiable act chain.", ["analyzer:missing_act"]),
+    t("DEL-02", "agent", "delegation", "high", "delegation-chain / transitive-trust abuse", "Each hop MUST independently validate audience & purpose.", ["harness:sibling_resource"]),
+    t("DEL-03", "agent", "delegation", "high", "may_act not enforced on token exchange", "Token exchange MUST honor may_act.", []),
+    t("SCOPE-01", "agent", "scope", "high", "over-scoped agent credential", "Agent tokens MUST follow least privilege.", ["analyzer:over_scope"]),
+    t("SCOPE-02", "agent", "scope", "high", "non-expiring / long-lived agent token", "Agent credentials MUST be short-lived and rotatable.", ["analyzer:non_expiring"]),
+    t("AID-01", "agent", "agent_identity", "high", "session used as authentication", "Servers MUST NOT use sessions for authentication.", []),
+    t("AGT-01", "agent", "agency", "critical", "prompt-injection-driven privilege escalation", "High-impact actions MUST require per-action authz or human-in-the-loop.", []),
+    t("AGT-02", "agent", "agency", "high", "tool poisoning / rug-pull", "A tool's behavior change MUST invalidate prior approval.", []),
+  ],
+});
+
+function t(
+  id: string, domain: string, category: string, severity: ThreatCoverage["threats"][number]["severity"],
+  title: string, invariant: string, detectors: string[],
+): ThreatCoverage["threats"][number] {
+  return { id, domain, category, severity, title, invariant, detectors, sources: [] };
+}
+
+/* ── Agent-token inspection (mock mirrors internal/agentauth) ─────────── */
+
+function decodeClaims(token: string): Record<string, unknown> | null {
+  const parts = token.trim().split(".");
+  if (parts.length < 2) return null;
+  try {
+    let b = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (b.length % 4) b += "=";
+    return JSON.parse(decodeURIComponent(escape(atob(b))));
+  } catch {
+    return null;
+  }
+}
+
+const omnibus = new Set(["*", "admin", "root", "superuser", "full_access", "full-access", "all"]);
+
+export const agentInspect = (req: AgentInspectRequest): AgentInspectResult => {
+  const claims = decodeClaims(req.token);
+  if (!claims) return { findings: [{ threat_id: "—", severity: "info", message: "not a JWT (want at least header.payload)" }], count: 1 };
+  const f: AgentFinding[] = [];
+
+  if (req.audience) {
+    const aud = claims["aud"];
+    const list = Array.isArray(aud) ? aud : typeof aud === "string" ? [aud] : [];
+    if (!aud || list.length === 0)
+      f.push({ threat_id: "MCP-02", severity: "high", message: "token carries no audience — it is not bound to any resource (RFC 8707/9728)" });
+    else if (!list.includes(req.audience))
+      f.push({ threat_id: "MCP-01", severity: "critical", message: `audience does not include the resource "${req.audience}" — token could be replayed or passed through` });
+  }
+  if (req.require_delegation && claims["act"] == null)
+    f.push({ threat_id: "DEL-01", severity: "high", message: "on-behalf-of token is missing the act claim — the delegation chain is unverifiable (RFC 8693)" });
+
+  const scopes: string[] = [];
+  if (typeof claims["scope"] === "string") scopes.push(...(claims["scope"] as string).split(/\s+/).filter(Boolean));
+  const scp = claims["scp"];
+  if (Array.isArray(scp)) scopes.push(...scp.filter((x): x is string => typeof x === "string"));
+  const allow = new Set(req.allowed_scopes ?? []);
+  for (const s of scopes) {
+    const low = s.toLowerCase();
+    if (omnibus.has(low) || s.endsWith(":*") || s.endsWith(".*") || low.startsWith("admin:"))
+      f.push({ threat_id: "SCOPE-01", severity: "high", message: `over-broad scope "${s}" — grant least privilege, not omnibus access` });
+    else if (allow.size > 0 && !allow.has(s))
+      f.push({ threat_id: "SCOPE-01", severity: "medium", message: `scope "${s}" is beyond the declared allowlist` });
+  }
+
+  const exp = claims["exp"];
+  if (typeof exp !== "number") f.push({ threat_id: "SCOPE-02", severity: "high", message: "token has no exp — a non-expiring agent credential" });
+  else if (req.max_lifetime_seconds && typeof claims["iat"] === "number") {
+    const life = exp - (claims["iat"] as number);
+    if (life > req.max_lifetime_seconds)
+      f.push({ threat_id: "SCOPE-02", severity: "medium", message: `token lifetime ${Math.round(life / 60)}m exceeds the maximum ${Math.round(req.max_lifetime_seconds / 60)}m` });
+  }
+  return { findings: f, count: f.length };
+};

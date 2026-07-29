@@ -50,6 +50,7 @@ type DetectorKind string
 const (
 	DetProbe       DetectorKind = "probe"       // a dynamic attack-token probe (internal/probe)
 	DetHarness     DetectorKind = "harness"     // a generative attack-token check (internal/attack)
+	DetAnalyzer    DetectorKind = "analyzer"    // a static token-contract check (internal/agentauth)
 	DetDiff        DetectorKind = "diff"        // a contract-change classifier rule (internal/diff)
 	DetLibDefaults DetectorKind = "libdefaults" // a known library-default finding (internal/libdefaults)
 	DetBlast       DetectorKind = "blast"       // a blast-radius resolver (internal/blastradius)
@@ -123,6 +124,7 @@ func draft(ref, url string) Source { return Source{Kind: "Draft", Ref: ref, URL:
 
 func probeDet(id string) Detection      { return Detection{Kind: DetProbe, ID: id} }
 func harnessDet(id string) Detection    { return Detection{Kind: DetHarness, ID: id} }
+func analyzerDet(id string) Detection   { return Detection{Kind: DetAnalyzer, ID: id} }
 func libDefaultDet(id string) Detection { return Detection{Kind: DetLibDefaults, ID: id} }
 func blastDet(id string) Detection      { return Detection{Kind: DetBlast, ID: id} }
 

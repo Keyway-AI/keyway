@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { api, getToken, setToken } from "../api/client";
+import { useState } from "react";
+import { getToken, setToken } from "../api/client";
 import { Button, Field, Input, Modal } from "./ui";
 import { useToast } from "./toast";
-
-type Health = "checking" | "ok" | "down" | "mock";
+import { classifyHealth, HEALTH_POLL_MS, type Health } from "../lib/health";
+import { usePolling } from "../lib/usePolling";
 
 // Settings holds connection config the browser client needs: the API bearer
 // token and the live/mock toggle (localStorage `keyway.live`). It also probes
@@ -15,22 +15,21 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [health, setHealth] = useState<Health>("checking");
   const [version, setVersion] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/v1/health", { headers: { Authorization: `Bearer ${getToken()}` } })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((h: { version?: string }) => {
-        if (cancelled) return;
-        setHealth("ok");
+  // Re-probe while the modal is open so the indicator tracks the backend live.
+  usePolling(
+    async () => {
+      try {
+        const r = await fetch("/v1/health", { headers: { Authorization: `Bearer ${getToken()}` } });
+        if (!r.ok) throw new Error(String(r.status));
+        const h: { version?: string } = await r.json();
+        setHealth(classifyHealth(true, localStorage.getItem("keyway.live") === "1"));
         setVersion(h.version ?? "");
-      })
-      .catch(() => {
-        if (!cancelled) setHealth(localStorage.getItem("keyway.live") === "1" ? "down" : "mock");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      } catch {
+        setHealth(classifyHealth(false, localStorage.getItem("keyway.live") === "1"));
+      }
+    },
+    { intervalMs: HEALTH_POLL_MS },
+  );
 
   function save() {
     setToken(token.trim());
@@ -101,21 +100,4 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       </div>
     </Modal>
   );
-}
-
-// Probes /v1/health so the sidebar can show live connection state.
-// eslint-disable-next-line react-refresh/only-export-components
-export function useHealthProbe(): Health {
-  const [health, setHealth] = useState<Health>("checking");
-  useEffect(() => {
-    let cancelled = false;
-    api
-      .health()
-      .then(() => !cancelled && setHealth("ok"))
-      .catch(() => !cancelled && setHealth(localStorage.getItem("keyway.live") === "1" ? "down" : "mock"));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  return health;
 }

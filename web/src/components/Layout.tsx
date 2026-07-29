@@ -1,7 +1,8 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import type { ComponentType, ReactNode, SVGProps } from "react";
-import { SettingsModal, useHealthProbe } from "./Settings";
+import { SettingsModal } from "./Settings";
+import { useHealthProbe } from "../lib/health";
 import { ThemeToggle } from "./ThemeToggle";
 import { LogoBadge } from "./Logo";
 import {

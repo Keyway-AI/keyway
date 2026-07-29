@@ -62,7 +62,7 @@ export default function Coverage() {
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <StatTile label="Documented" value={d.total} hint="cited threats" />
             <StatTile label="Detected" value={d.covered} accent="text-low" hint={`${d.percent}% overall`} />
             <StatTile label="Gaps" value={d.gaps} accent="text-high" hint="named + on the roadmap" />
@@ -113,10 +113,10 @@ export default function Coverage() {
               </div>
             }
           >
-            <Table>
+            <Table minWidth="min-w-[44rem]">
               <thead>
                 <tr>
-                  <Th className="w-24">ID</Th>
+                  <Th className="w-20">ID</Th>
                   <Th className="w-24">Severity</Th>
                   <Th>Threat</Th>
                   <Th>Detection</Th>

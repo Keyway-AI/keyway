@@ -182,7 +182,7 @@ export default function BlastRadius() {
 
       {result ? (
         <>
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
             <StatTile label="Affected" value={result.affected.length} />
             <StatTile label="Will break" value={willBreak.length} accent="text-critical" />
             <StatTile label="Ready" value={ready.length} accent="text-low" />

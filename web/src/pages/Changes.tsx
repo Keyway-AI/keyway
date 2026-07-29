@@ -42,8 +42,8 @@ export default function Changes() {
     >
       <Card>
         {rows.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+          <div className="-mx-5 overflow-x-auto px-5">
+            <table className="w-full min-w-[52rem] border-collapse">
               <thead>
                 <tr>
                   <Th>Consumer</Th>

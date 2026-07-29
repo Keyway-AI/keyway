@@ -109,10 +109,15 @@ export function Empty({ children }: { children: ReactNode }) {
 
 /* ── Table ────────────────────────────────────────────────────────────── */
 
-export function Table({ children }: { children: ReactNode }) {
+/**
+ * Table wraps a native table in a horizontal-scroll container. `minWidth` keeps
+ * multi-column tables readable on narrow screens — the table scrolls inside the
+ * card instead of crushing its columns (the page body never scrolls sideways).
+ */
+export function Table({ children, minWidth = "" }: { children: ReactNode; minWidth?: string }) {
   return (
     <div className="-mx-5 overflow-x-auto px-5">
-      <table className="w-full border-collapse">{children}</table>
+      <table className={`w-full border-collapse ${minWidth}`}>{children}</table>
     </div>
   );
 }

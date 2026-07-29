@@ -132,7 +132,7 @@ export default function Probes() {
 
       {results && (
         <>
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-3 gap-3 sm:gap-4">
             <StatTile label="Probes run" value={results.length} hint={runId ? `run ${runId.slice(0, 8)}` : undefined} />
             <StatTile label="Passed" value={passed} accent="text-low" />
             <StatTile label="Failed" value={failed} accent={failed > 0 ? "text-critical" : "text-muted"} />
@@ -155,7 +155,7 @@ export default function Probes() {
                     </span>
                   }
                 >
-                  <Table>
+                  <Table minWidth="min-w-[40rem]">
                     <thead>
                       <tr>
                         <Th>Probe</Th>

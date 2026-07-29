@@ -133,7 +133,7 @@ export default function Layout() {
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface md:flex">
         <div className="px-5 py-5">
           <Brand />
         </div>
@@ -142,7 +142,7 @@ export default function Layout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile top bar */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-surface/85 px-4 py-3 backdrop-blur-md lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-surface/85 px-4 py-3 backdrop-blur-md md:hidden">
           <Brand />
           <button
             onClick={() => setDrawerOpen(true)}
@@ -160,7 +160,7 @@ export default function Layout() {
 
       {/* Mobile drawer */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
           <aside className="animate-sheet-in absolute inset-y-0 left-0 flex w-72 max-w-[82%] flex-col border-r border-border bg-surface">
             <div className="flex items-center justify-between px-5 py-4">

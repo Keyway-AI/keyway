@@ -4,12 +4,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Keyway design system — "quiet precision".
- * A restrained, Apple-grade system: near-white cool grounds, ink-black text, one
- * confident blue accent, the platform (SF) type stack, and a *fixed* set of
- * scales for type, space, radius, and elevation. Every surface composes from
- * these tokens — no ad-hoc values. Semantic (severity) color is separate from
- * the accent and never used decoratively.
+ * Keyway design system — "ink & emerald".
+ * A restrained, luxury-grade system: warm-paper grounds, ink-black text, and one
+ * deep, muted emerald accent — security-grade, never neon. The platform (SF) type
+ * stack and a *fixed* set of scales for type, space, radius, and elevation. Every
+ * surface composes from these tokens — no ad-hoc values. Semantic (severity) color
+ * is separate from the accent and never used decoratively.
  */
 @theme {
   /* ---- Type: the platform stack (SF on Apple, Segoe/Roboto elsewhere) ---- */
@@ -36,61 +36,61 @@
   --radius-2xl: 24px; /* hero / large panels */
   --radius-pill: 999px;
 
-  /* ---- Elevation: hairline-first, whisper-soft shadows. ---- */
-  --shadow-xs: 0 1px 2px rgba(17, 17, 26, 0.04);
-  --shadow-sm: 0 1px 3px rgba(17, 17, 26, 0.05), 0 1px 2px rgba(17, 17, 26, 0.04);
-  --shadow-md: 0 8px 24px -8px rgba(17, 17, 26, 0.12);
-  --shadow-lg: 0 24px 56px -16px rgba(17, 17, 26, 0.22);
-  --shadow-focus: 0 0 0 4px color-mix(in srgb, var(--color-accent) 22%, transparent);
+  /* ---- Elevation: hairline-first, whisper-soft shadows (warm ink). ---- */
+  --shadow-xs: 0 1px 2px rgba(24, 23, 18, 0.04);
+  --shadow-sm: 0 1px 3px rgba(24, 23, 18, 0.05), 0 1px 2px rgba(24, 23, 18, 0.04);
+  --shadow-md: 0 8px 24px -8px rgba(24, 23, 18, 0.12);
+  --shadow-lg: 0 24px 56px -16px rgba(24, 23, 18, 0.20);
+  --shadow-focus: 0 0 0 4px color-mix(in srgb, var(--color-accent) 20%, transparent);
 
-  /* ---- Color — light (default). Cool neutrals, one blue accent. ---- */
-  --color-bg: #fbfbfd;
+  /* ---- Color — light (default). Warm-paper neutrals, deep emerald accent. ---- */
+  --color-bg: #fbfbfa;
   --color-surface: #ffffff;
-  --color-surface-2: #f4f4f7;
+  --color-surface-2: #f3f3f0;
   --color-elevated: #ffffff;
 
-  --color-border: #e7e7ec;
-  --color-border-strong: #d6d6dd;
+  --color-border: #e7e6e1;
+  --color-border-strong: #d6d5ce;
 
-  --color-text: #17171a;
-  --color-muted: #62636b;
-  --color-faint: #8b8c95;
+  --color-text: #16161a;
+  --color-muted: #62625c;
+  --color-faint: #8c8b83;
 
-  --color-accent: #0a66ff;
-  --color-accent-strong: #0a5ae6;
+  --color-accent: #0a8f5f;
+  --color-accent-strong: #077a4f;
   --color-accent-fg: #ffffff;
-  --color-accent-soft: #ebf1ff;
+  --color-accent-soft: #e4f3ec;
   /* `brand` aliases the accent so existing components keep working. */
-  --color-brand: #0a66ff;
-  --color-brand-strong: #0a5ae6;
+  --color-brand: #0a8f5f;
+  --color-brand-strong: #077a4f;
 
   /* Severity — professional, slightly desaturated (never the accent). */
-  --color-critical: #e5484d;
-  --color-high: #f0701a;
-  --color-medium: #d99000;
+  --color-critical: #d93b41;
+  --color-high: #e5661a;
+  --color-medium: #c98a00;
   --color-low: #2ea36c;
-  --color-info: #8b8c95;
+  --color-info: #8c8b83;
 }
 
 .dark {
-  --color-bg: #0a0a0c;
-  --color-surface: #151517;
-  --color-surface-2: #1d1d21;
-  --color-elevated: #1f1f24;
+  --color-bg: #0a0b0a;
+  --color-surface: #131413;
+  --color-surface-2: #1b1c1a;
+  --color-elevated: #1e1f1c;
 
-  --color-border: #2a2a30;
-  --color-border-strong: #3a3a42;
+  --color-border: #292a26;
+  --color-border-strong: #3a3b36;
 
-  --color-text: #f5f5f7;
-  --color-muted: #a2a2ac;
-  --color-faint: #6f7079;
+  --color-text: #f4f4f2;
+  --color-muted: #a1a19a;
+  --color-faint: #6e6f68;
 
-  --color-accent: #2e8bff;
-  --color-accent-strong: #4a9bff;
-  --color-accent-fg: #ffffff;
-  --color-accent-soft: #16233a;
-  --color-brand: #2e8bff;
-  --color-brand-strong: #4a9bff;
+  --color-accent: #2bbd85;
+  --color-accent-strong: #3fd196;
+  --color-accent-fg: #04140d;
+  --color-accent-soft: #10231b;
+  --color-brand: #2bbd85;
+  --color-brand-strong: #3fd196;
 
   --color-critical: #ff5c61;
   --color-high: #ff8a3d;

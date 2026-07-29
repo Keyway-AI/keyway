@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { SettingsModal, useHealthProbe } from "./Settings";
 import { ThemeToggle } from "./ThemeToggle";
+import { LogoBadge } from "./Logo";
 import {
   IconAgent,
   IconBlast,
@@ -76,10 +77,10 @@ function NavItem({ to, label, end, icon: Icon, onNavigate }: NavEntry & { onNavi
 
 function Brand() {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-[0.95rem] text-accent-fg shadow-xs">🔑</span>
-      <span className="text-[1.05rem] font-semibold tracking-tight text-text">Keyway</span>
-    </div>
+    <NavLink to="/" className="flex items-center gap-2.5">
+      <LogoBadge size={28} />
+      <span className="text-[1.05rem] font-semibold tracking-[-0.02em] text-text">Keyway</span>
+    </NavLink>
   );
 }
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getToken, setToken as persistToken } from "../api/client";
 import { BrandMark } from "../components/MarketingChrome";
+import { LogoGlyph } from "../components/Logo";
 import { Button, Field, Input } from "../components/ui";
 
 /**
@@ -20,7 +21,9 @@ function AuthPanel({ title, subtitle, children }: { title: string; subtitle: str
           style={{ background: "radial-gradient(closest-side, #fff, transparent)" }}
         />
         <Link to="/" className="flex items-center gap-2.5">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/15 text-[0.95rem]">🔑</span>
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/15">
+            <LogoGlyph width="20" height="20" className="text-white" />
+          </span>
           <span className="text-[1.05rem] font-semibold tracking-tight">Keyway</span>
         </Link>
         <div className="relative">

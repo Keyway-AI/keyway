@@ -1,14 +1,15 @@
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 import { ThemeToggle } from "./ThemeToggle";
+import { LogoBadge } from "./Logo";
 
 export function BrandMark({ size = "md" }: { size?: "sm" | "md" }) {
-  const box = size === "sm" ? "h-6 w-6 text-[0.85rem]" : "h-7 w-7 text-[0.95rem]";
+  const badge = size === "sm" ? 24 : 28;
   const text = size === "sm" ? "text-[0.95rem]" : "text-[1.05rem]";
   return (
     <Link to="/" className="flex items-center gap-2.5">
-      <span className={`grid place-items-center rounded-lg bg-accent text-accent-fg shadow-xs ${box}`}>🔑</span>
-      <span className={`font-semibold tracking-tight ${text}`}>Keyway</span>
+      <LogoBadge size={badge} />
+      <span className={`font-semibold tracking-[-0.02em] ${text}`}>Keyway</span>
     </Link>
   );
 }
@@ -17,6 +18,7 @@ const navLinks = [
   { to: "/features", label: "Features" },
   { to: "/pricing", label: "Pricing" },
   { to: "/app/coverage", label: "Coverage" },
+  { to: "/contact", label: "Contact" },
 ];
 
 export function MarketingNav() {
@@ -83,8 +85,10 @@ const footerCols: { title: string; links: { label: string; to?: string; href?: s
   {
     title: "Company",
     links: [
+      { label: "Contact", to: "/contact" },
       { label: "Sign in", to: "/login" },
       { label: "Get started", to: "/signup" },
+      { label: "Report an issue", href: "https://github.com/nometria/keyway/issues" },
     ],
   },
 ];

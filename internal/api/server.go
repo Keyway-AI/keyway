@@ -94,6 +94,9 @@ func (s *Server) Routes() http.Handler {
 		r.Post("/v1/canary/promote", s.handleCanaryPromote)
 
 		r.Get("/v1/coverage", s.handleCoverage)
+
+		r.Get("/v1/threats/coverage", s.handleThreatCoverage)
+		r.Post("/v1/agent/inspect", s.handleAgentInspect)
 	})
 
 	// Everything else serves the embedded web dashboard.

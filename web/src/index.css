@@ -1,123 +1,113 @@
 @import "tailwindcss";
 
-/* Geist (Vercel) — self-hosted variable fonts, matching the dayotter look. */
-@import "@fontsource-variable/geist/index.css";
-@import "@fontsource-variable/geist-mono/index.css";
-
 /* Dark mode is class-based (.dark on <html>), driven by the theme toggle. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Keyway design language — ported from dayotter: "editorial calm."
- * Warm ivory neutrals, rich ink text, a premium otter-violet accent, and the
- * Geist sans/mono pairing. Light is default; the toggle flips `.dark`.
- *
- * The severity/verdict token names (brand/critical/high/medium/low/info) are
- * kept so existing components keep working — they're just repointed onto the
- * dayotter palette (violet accent + warm calendar hues).
+ * Keyway design system — "quiet precision".
+ * A restrained, Apple-grade system: near-white cool grounds, ink-black text, one
+ * confident blue accent, the platform (SF) type stack, and a *fixed* set of
+ * scales for type, space, radius, and elevation. Every surface composes from
+ * these tokens — no ad-hoc values. Semantic (severity) color is separate from
+ * the accent and never used decoratively.
  */
 @theme {
-  /* Surfaces — warm ground, clean panels. surface-2 is the recessed tone. */
-  --color-bg: #faf9f6;
+  /* ---- Type: the platform stack (SF on Apple, Segoe/Roboto elsewhere) ---- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", "Consolas", monospace;
+
+  /* Type scale (rem). Body is 15px; the ramp is ~1.2–1.25 modular. */
+  --text-micro: 0.6875rem; /* 11 — uppercase labels */
+  --text-caption: 0.8125rem; /* 13 — captions, meta */
+  --text-body: 0.9375rem; /* 15 — default body */
+  --text-body-lg: 1.0625rem; /* 17 — lead paragraph */
+  --text-h3: 1.25rem; /* 20 */
+  --text-h2: 1.625rem; /* 26 */
+  --text-h1: 2.25rem; /* 36 */
+  --text-display: 3.25rem; /* 52 — marketing hero */
+
+  /* ---- Radius: fixed roundness. Controls 10, cards 18. ---- */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px; /* buttons, inputs, list rows */
+  --radius-lg: 14px;
+  --radius-xl: 18px; /* cards */
+  --radius-2xl: 24px; /* hero / large panels */
+  --radius-pill: 999px;
+
+  /* ---- Elevation: hairline-first, whisper-soft shadows. ---- */
+  --shadow-xs: 0 1px 2px rgba(17, 17, 26, 0.04);
+  --shadow-sm: 0 1px 3px rgba(17, 17, 26, 0.05), 0 1px 2px rgba(17, 17, 26, 0.04);
+  --shadow-md: 0 8px 24px -8px rgba(17, 17, 26, 0.12);
+  --shadow-lg: 0 24px 56px -16px rgba(17, 17, 26, 0.22);
+  --shadow-focus: 0 0 0 4px color-mix(in srgb, var(--color-accent) 22%, transparent);
+
+  /* ---- Color — light (default). Cool neutrals, one blue accent. ---- */
+  --color-bg: #fbfbfd;
   --color-surface: #ffffff;
-  --color-surface-2: #f3f2f8;
+  --color-surface-2: #f4f4f7;
   --color-elevated: #ffffff;
 
-  /* Lines — clean, low-contrast neutrals that match the panels. */
-  --color-border: #e7e6ef;
-  --color-border-strong: #d7d5e1;
+  --color-border: #e7e7ec;
+  --color-border-strong: #d6d6dd;
 
-  /* Text — warm near-black. muted = secondary, faint = tertiary/labels. */
-  --color-text: #191720;
-  --color-muted: #55504a;
-  --color-faint: #837d72;
+  --color-text: #17171a;
+  --color-muted: #62636b;
+  --color-faint: #8b8c95;
 
-  /* Accent — otter violet. `brand` aliases it so existing classes work. */
-  --color-accent: #6743e6;
-  --color-accent-hover: #5734d6;
+  --color-accent: #0a66ff;
+  --color-accent-strong: #0a5ae6;
   --color-accent-fg: #ffffff;
-  --color-accent-soft: #efeafd;
-  --color-brand: #6743e6;
-  --color-brand-strong: #5734d6;
+  --color-accent-soft: #ebf1ff;
+  /* `brand` aliases the accent so existing components keep working. */
+  --color-brand: #0a66ff;
+  --color-brand-strong: #0a5ae6;
 
-  /* Calendar hues, reused as severity/verdict colors. */
-  --color-mint: #16a085;
-  --color-amber: #d98829;
-  --color-coral: #ef6a52;
-  --color-sky: #3b82f6;
-  --color-danger: #e11d48;
-  --color-danger-soft: #fdf1f3;
-  --color-success: #16a085;
-
-  /* Severity scale (critical > high > medium > low > info). */
-  --color-critical: #e11d48;
-  --color-high: #ef6a52;
-  --color-medium: #d98829;
-  --color-low: #16a085;
-  --color-info: #837d72;
-
-  /* Elevation — soft, layered, warm shadows. */
-  --shadow-card: 0 1px 2px rgba(40, 33, 20, 0.04), 0 2px 6px rgba(40, 33, 20, 0.05);
-  --shadow-raise: 0 8px 24px rgba(40, 33, 20, 0.08);
-  --shadow-pop: 0 24px 60px -12px rgba(40, 33, 20, 0.18);
-  --shadow-float: 0 40px 80px -24px rgba(30, 24, 60, 0.28);
-
-  /* Shape scale — sm: chips · md: inputs/buttons/rows · lg: cards · xl: hero. */
-  --radius-sm: 8px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 22px;
-
-  /* Type — one grotesque for display + body, Geist Mono for eyebrow labels. */
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
-  --font-display: "Geist Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Severity — professional, slightly desaturated (never the accent). */
+  --color-critical: #e5484d;
+  --color-high: #f0701a;
+  --color-medium: #d99000;
+  --color-low: #2ea36c;
+  --color-info: #8b8c95;
 }
 
 .dark {
-  --color-bg: #0b0a10;
-  --color-surface: #141219;
-  --color-surface-2: #1c1a23;
-  --color-elevated: #1c1a23;
+  --color-bg: #0a0a0c;
+  --color-surface: #151517;
+  --color-surface-2: #1d1d21;
+  --color-elevated: #1f1f24;
 
-  --color-border: #262330;
-  --color-border-strong: #332f3e;
+  --color-border: #2a2a30;
+  --color-border-strong: #3a3a42;
 
-  --color-text: #edeae3;
-  --color-muted: #9d988f;
-  --color-faint: #6b6678;
+  --color-text: #f5f5f7;
+  --color-muted: #a2a2ac;
+  --color-faint: #6f7079;
 
-  --color-accent: #9079f8;
-  --color-accent-hover: #a390fa;
+  --color-accent: #2e8bff;
+  --color-accent-strong: #4a9bff;
   --color-accent-fg: #ffffff;
-  --color-accent-soft: rgba(144, 121, 248, 0.16);
-  --color-brand: #9079f8;
-  --color-brand-strong: #a390fa;
+  --color-accent-soft: #16233a;
+  --color-brand: #2e8bff;
+  --color-brand-strong: #4a9bff;
 
-  --color-mint: #2dd4a7;
-  --color-amber: #f0ad4e;
-  --color-coral: #ff8266;
-  --color-sky: #60a5fa;
-  --color-danger: #fb7185;
-  --color-danger-soft: rgba(251, 113, 133, 0.12);
-  --color-success: #2dd4a7;
+  --color-critical: #ff5c61;
+  --color-high: #ff8a3d;
+  --color-medium: #f2c14e;
+  --color-low: #3dd68c;
+  --color-info: #8e8e97;
 
-  --color-critical: #fb7185;
-  --color-high: #ff8266;
-  --color-medium: #f0ad4e;
-  --color-low: #2dd4a7;
-  --color-info: #6b6678;
-
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-raise: 0 8px 28px rgba(0, 0, 0, 0.5);
-  --shadow-pop: 0 24px 60px -12px rgba(0, 0, 0, 0.6);
-  --shadow-float: 0 40px 90px -24px rgba(0, 0, 0, 0.75);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 28px 60px -18px rgba(0, 0, 0, 0.75);
 }
 
 @layer base {
   html {
     color-scheme: light;
+    -webkit-text-size-adjust: 100%;
   }
   html.dark {
     color-scheme: dark;
@@ -132,54 +122,59 @@
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.55;
+    letter-spacing: -0.011em; /* the subtle optical tightening of the SF look */
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    letter-spacing: -0.022em;
+    line-height: 1.1;
+    text-wrap: balance;
+    font-weight: 600;
   }
   a {
     color: inherit;
     text-decoration: none;
   }
   ::selection {
-    background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
   }
-  body,
-  body * {
-    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.12s ease;
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+    border-radius: var(--radius-sm);
   }
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--color-border-strong) transparent;
   }
+  @media (prefers-reduced-motion: no-preference) {
+    body,
+    body * {
+      transition: background-color 0.18s ease, border-color 0.18s ease,
+        color 0.14s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+  }
 }
 
-/* Editorial display + eyebrow type. */
-.font-display {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.font-mono {
-  font-family: var(--font-mono);
-}
+/* Utility: the small uppercase label ("eyebrow"). */
 .eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--color-faint);
 }
 
-/* Dialog entrance (used by the modal). */
-@keyframes dialog-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Modal entrance. */
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.animate-dialog-in {
-  animation: dialog-in 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+.animate-sheet-in { animation: sheet-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet-in { animation: none; }
 }

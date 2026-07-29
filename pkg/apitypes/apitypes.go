@@ -107,3 +107,64 @@ type ChangeList struct {
 	Changes []model.ChangeEvent `json:"changes"`
 	Total   int                 `json:"total"`
 }
+
+// --- threat coverage (GET /v1/threats/coverage) -----------------------------
+
+// CoverageDomain / CoverageCategory / CoverageThreat / ThreatCoverageResponse
+// mirror the web client's coverage view.
+type CoverageDomain struct {
+	Domain  string `json:"domain"`
+	Covered int    `json:"covered"`
+	Total   int    `json:"total"`
+	Percent int    `json:"percent"`
+}
+
+type CoverageCategory struct {
+	Category string `json:"category"`
+	Covered  int    `json:"covered"`
+	Total    int    `json:"total"`
+}
+
+type CoverageSource struct {
+	Ref string `json:"ref"`
+	URL string `json:"url"`
+}
+
+type CoverageThreat struct {
+	ID        string           `json:"id"`
+	Domain    string           `json:"domain"`
+	Category  string           `json:"category"`
+	Severity  model.Severity   `json:"severity"`
+	Title     string           `json:"title"`
+	Invariant string           `json:"invariant"`
+	Sources   []CoverageSource `json:"sources"`
+	Detectors []string         `json:"detectors"`
+}
+
+type ThreatCoverageResponse struct {
+	Total      int                `json:"total"`
+	Covered    int                `json:"covered"`
+	Gaps       int                `json:"gaps"`
+	Percent    int                `json:"percent"`
+	Domains    []CoverageDomain   `json:"domains"`
+	Categories []CoverageCategory `json:"categories"`
+	Threats    []CoverageThreat   `json:"threats"`
+}
+
+// --- agent token inspection (POST /v1/agent/inspect) ------------------------
+
+type AgentInspectRequest struct {
+	Token              string   `json:"token"`
+	Audience           string   `json:"audience,omitempty"`
+	RequireDelegation  bool     `json:"require_delegation,omitempty"`
+	MaxLifetimeSeconds int      `json:"max_lifetime_seconds,omitempty"`
+	AllowedScopes      []string `json:"allowed_scopes,omitempty"`
+}
+
+// AgentInspectResponse.Findings is []agentauth.Finding, which already carries the
+// snake_case JSON tags; the transport keeps it as `any` to avoid importing the
+// analyzer into this leaf package.
+type AgentInspectResponse struct {
+	Findings any `json:"findings"`
+	Count    int `json:"count"`
+}

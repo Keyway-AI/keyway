@@ -108,7 +108,7 @@ export default function Dashboard() {
           }
           className="lg:col-span-2"
           action={
-            <Link to="/findings" className="text-xs text-brand hover:underline">
+            <Link to="/app/findings" className="text-xs text-brand hover:underline">
               View all →
             </Link>
           }
@@ -118,7 +118,7 @@ export default function Dashboard() {
               {topFindings.map((f) => (
                 <li key={f.id}>
                   <Link
-                    to="/findings"
+                    to="/app/findings"
                     className="flex items-start gap-3 py-2.5 -mx-2 px-2 rounded-lg hover:bg-surface-2/50"
                   >
                     <SeverityBadge severity={f.severity} />

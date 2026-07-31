@@ -99,6 +99,11 @@ migrate-down: ## Roll back the last migration
 ## Run
 ## ----------------------------------------------------------------------------
 
+.PHONY: demo
+demo: build-cli ## Zero-config demo: run the app + UI on an in-memory store (no database)
+	@echo "Starting Keyway on an in-memory store — open http://localhost:8080"
+	KEYWAY_DB_URL=memory $(BIN_DIR)/keyway serve
+
 .PHONY: serve
 serve: build ## Run the API + scheduler on :8080
 	$(BIN_DIR)/keyway serve

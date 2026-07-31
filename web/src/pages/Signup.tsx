@@ -6,21 +6,21 @@ import { Button } from "../components/ui";
 const steps = [
   {
     n: "1",
-    title: "Run it",
-    body: "One container, or the single binary. It ships with the web app embedded.",
+    title: "Run it — zero config",
+    body: "One container with the web app embedded. Boots on an in-memory store, no database needed. From source, use “make demo”.",
     code: "docker run -p 8080:8080 ghcr.io/nometria/keyway",
   },
   {
     n: "2",
-    title: "Point it at your configs",
-    body: "Discover consumers from Istio / Envoy / Kubernetes, or a live cluster.",
-    code: "keyway snapshot --path ./manifests",
+    title: "Open the dashboard",
+    body: "The UI loads on sample data — explore findings, coverage, blast radius and the agent inspector.",
+    code: "open http://localhost:8080",
   },
   {
     n: "3",
-    title: "Verify",
-    body: "Take a snapshot, run the probes and the generative harness, check coverage.",
-    code: "open http://localhost:8080",
+    title: "Connect your own services",
+    body: "Point Keyway at your Istio / Envoy / Kubernetes configs and a Postgres store. See the README quickstart for the full flow.",
+    code: "keyway discover --path ./manifests   # set KEYWAY_DB_URL to persist",
   },
 ];
 

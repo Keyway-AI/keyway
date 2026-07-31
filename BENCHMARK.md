@@ -119,7 +119,7 @@ make bench-report     # also writes bench/out/report.html (this page, interactiv
   [`bench/corpus/scenarios/`](bench/corpus/scenarios).
 - The change generator is [`bench/mutations/`](bench/mutations).
 - **CI fails the build** if accuracy ever drops below the published thresholds
-  (see [PRD §13.4](rollover-prd-v0.2-implementation.md)), so these numbers stay
+  (see PRD §13.4), so these numbers stay
   honest as the code evolves.
 
 ## Sources

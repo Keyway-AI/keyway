@@ -268,4 +268,4 @@ Correctness is defended at several levels, all runnable from `make`:
 | Add a probe | `internal/probe/probes.go` |
 | Change the plain-English findings text | `web/src/lib/findings.ts` |
 | Add a persistence backend | implement `store.Store`, branch `store/open.Open` |
-| Understand a known limitation | [KNOWN_ISSUES.md](KNOWN_ISSUES.md) |
+| Understand a known limitation | [docs/known-issues.md](docs/known-issues.md) |

@@ -28,7 +28,7 @@ localStorage.setItem("keyway.token", "your-token");
 ### Mock mode
 
 Most endpoints return `501 Not Implemented` until their milestone lands
-(see [`../PROGRESS.md`](../PROGRESS.md)). The client transparently falls back to
+(see [`../docs/progress.md`](../docs/progress.md)). The client transparently falls back to
 sample data (`src/api/mock.ts`) so the whole UI is navigable. Force live-only:
 
 ```js

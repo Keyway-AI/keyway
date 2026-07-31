@@ -34,7 +34,7 @@ The validators consume a standard OIDC JWKS, and Keyway's `issuer/keycloak`
 adapter already does real OIDC discovery + JWKS fetch — so a real Keycloak would
 plug in at the same endpoints. The lightweight issuer is used here because it is
 deterministic and fast to boot; swapping in Keycloak is a compose change, not a
-code change. See [KNOWN_ISSUES.md](../../KNOWN_ISSUES.md) KI-15.
+code change. See [docs/known-issues.md](../../docs/known-issues.md) KI-15.
 
 **Safety note:** the issuer's `/mint` endpoint is a test rig convenience (it
 signs arbitrary claims on request). It exists only in this benchmark image and

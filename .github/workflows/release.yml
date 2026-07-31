@@ -41,6 +41,29 @@ jobs:
           name: keyway-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*.tar.gz
 
+  release:
+    name: Publish GitHub Release
+    needs: binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download built binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: cd dist && sha256sum *.tar.gz > checksums.txt
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/checksums.txt
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
   image:
     name: Build & push container image
     runs-on: ubuntu-latest

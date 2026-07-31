@@ -16,7 +16,7 @@ import (
 // dbURL resolves the store connection string in precedence: the --db flag, the
 // KEYWAY_DB_URL environment variable, then db_url in the config file. The
 // config-file fallback keeps the one-shot commands (snapshot, discover, diff, …)
-// consistent with `serve`, which also honours db_url from config. Use the DSN
+// consistent with `serve`, which also honors db_url from config. Use the DSN
 // "memory" for an ephemeral in-process store.
 func dbURL(cmd *cobra.Command) string {
 	if v, _ := cmd.Flags().GetString("db"); v != "" {

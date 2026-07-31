@@ -60,9 +60,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 /**
- * Many endpoints return 501 until their milestone lands (see PROGRESS.md).
- * `withMock` transparently falls back to sample data so the dashboard is fully
- * navigable during development. Set localStorage `keyway.live=1` to disable.
+ * `withMock` transparently falls back to built-in sample data whenever the live
+ * API is unavailable — no backend running, a missing/invalid API token, or an
+ * endpoint that errors — so the dashboard is fully explorable out of the box.
+ * Set localStorage `keyway.live=1` to force the live API and surface errors.
  */
 async function withMock<T>(live: () => Promise<T>, fallback: () => T): Promise<T> {
   const forceLive = localStorage.getItem("keyway.live") === "1";

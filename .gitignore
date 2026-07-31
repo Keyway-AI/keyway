@@ -45,3 +45,6 @@ npm-debug.log*
 /bench/out/
 scorecard.json
 roc.svg
+
+# stray root build artifact from `go build ./bench/l2`
+/l2

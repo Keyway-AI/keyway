@@ -52,7 +52,7 @@ func newBlastRadiusCmd() *cobra.Command {
 func runBlastRadius(cmd *cobra.Command, proposal blastradius.ChangeProposal) error {
 	dsn := dbURL(cmd)
 	if dsn == "" {
-		return fmt.Errorf("no database configured (set --db or KEYWAY_DB_URL)")
+		return fmt.Errorf("no database configured — set KEYWAY_DB_URL, pass --db, or add db_url to config (use --db memory for an ephemeral store)")
 	}
 	ctx := context.Background()
 	st, cleanup, err := open.Open(ctx, dsn)

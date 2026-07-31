@@ -49,14 +49,31 @@ consumer responds.
 
 ## Quickstart
 
+**Try it — zero config.** Runs the app and the embedded web UI on an in-memory
+store; no database, no cluster required.
+
 ```bash
-# 1. Bring up Postgres (+ a reference Keycloak) for local dev
+make demo                                  # build + run on http://localhost:8080
+# or, prebuilt (published on each release):
+docker run -p 8080:8080 ghcr.io/nometria/keyway
+```
+
+Open <http://localhost:8080>. The UI loads on built-in **sample data**, so you can
+explore findings, coverage, blast radius and the agent inspector right away. (To
+drive the live API instead of sample data, set `KEYWAY_API_TOKEN` and connect from
+the UI's **Settings**.)
+
+**Run it for real.** Point Keyway at your own configs and a Postgres store:
+
+```bash
+# 1. Bring up Postgres (+ a reference Keycloak) for local dev, and point Keyway at it
 make dev-up
+export KEYWAY_DB_URL=postgres://keyway:keyway@localhost:5432/keyway?sslmode=disable
 
 # 2. Build the binaries
 make build
 
-# 3. Point Keyway at your cluster / issuers
+# 3. Register your issuers
 ./bin/keyway init
 ./bin/keyway issuer add --type keycloak --url https://kc.example.com/realms/main \
     --admin-credential-env KC_ADMIN
@@ -65,9 +82,11 @@ make build
 ./bin/keyway discover --namespace default
 ./bin/keyway snapshot
 
-# 5. The demo
+# 5. Model a rotation
 ./bin/keyway blast-radius rotate-key --issuer keycloak-main --kid rsa-2026-01
 ```
+
+Example output (issuer/kid are placeholders):
 
 ```
 Rotating rsa-2026-01 on keycloak-main affects 47 consumers.
@@ -90,9 +109,13 @@ RECOMMENDED GRACE PERIOD: 9d 6h
 
 ## Web UI
 
+The single binary serves the UI at `/`. For frontend work, the Vite dev server
+runs standalone on sample data — no backend needed:
+
 ```bash
-make serve        # starts the API + scheduler on :8080
-make web-dev      # starts the Vite dev server on :5173 (proxies /v1 → :8080)
+make demo         # the app + embedded UI on :8080 (in-memory store)
+make serve        # the API + scheduler on :8080 (uses your KEYWAY_DB_URL)
+make web-dev      # Vite dev server on :5173, sample data + hot reload (proxies /v1 → :8080)
 ```
 
 ## Architecture
@@ -108,11 +131,9 @@ make web-dev      # starts the Vite dev server on :5173 (proxies /v1 → :8080)
 ```
 
 See [**ARCHITECTURE.md**](ARCHITECTURE.md) for the full guide — the layering, the
-data flow, the extension seams, and where to change things —
+data flow, the extension seams, and where to change things — and
 [`docs/architecture-review.md`](docs/architecture-review.md) for the independent
-design critique, and
-[`rollover-prd-v0.2-implementation.md`](rollover-prd-v0.2-implementation.md) for the
-complete buildable specification.
+design critique.
 
 ## How accurate is it?
 
@@ -153,8 +174,9 @@ Keyway stops detecting any documented real-world risk.
 
 ## Project status
 
-Keyway is under active construction. Track exactly what is built vs. pending in
-[**PROGRESS.md**](PROGRESS.md). Milestones follow §15 of the PRD (M1–M9).
+Keyway is actively developed. Milestones follow §15 of the PRD (M1–M9); the build
+tracker lives in [`docs/progress.md`](docs/progress.md) and the open-items register
+in [`docs/known-issues.md`](docs/known-issues.md).
 
 ## Contributing
 

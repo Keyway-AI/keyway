@@ -22,4 +22,4 @@ Two seed scenarios are included:
 - `0042-audience-widened/` — true positive, class `widened`.
 - `0201-dependency-bump-noop/` — no-op, expects zero events.
 
-See [PROGRESS.md](../../PROGRESS.md) M8 for the build-out plan.
+See [docs/progress.md](../../docs/progress.md) M8 for the build-out plan.

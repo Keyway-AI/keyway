@@ -6,20 +6,28 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/nometria/keyway/internal/config"
 	"github.com/nometria/keyway/internal/store/postgres"
 )
 
-// The command set mirrors PRD §11. Handlers are wired milestone by milestone
-// (see PROGRESS.md); until then they return a clear notImplemented error so the
-// full CLI surface is discoverable via --help from day one.
+// The command set mirrors PRD §11. Every subcommand is wired to a real handler;
+// the full surface is discoverable via `keyway --help`.
 
-// dbURL resolves the Postgres connection string from the --db flag, falling
-// back to the KEYWAY_DB_URL environment variable.
+// dbURL resolves the store connection string in precedence: the --db flag, the
+// KEYWAY_DB_URL environment variable, then db_url in the config file. The
+// config-file fallback keeps the one-shot commands (snapshot, discover, diff, …)
+// consistent with `serve`, which also honors db_url from config. Use the DSN
+// "memory" for an ephemeral in-process store.
 func dbURL(cmd *cobra.Command) string {
 	if v, _ := cmd.Flags().GetString("db"); v != "" {
 		return v
 	}
-	return os.Getenv("KEYWAY_DB_URL")
+	if v := os.Getenv("KEYWAY_DB_URL"); v != "" {
+		return v
+	}
+	cfgPath, _ := cmd.Flags().GetString("config")
+	cfg, _ := config.LoadFile(cfgPath)
+	return cfg.DBURL
 }
 
 func newInitCmd() *cobra.Command {
@@ -96,7 +104,7 @@ func newMigrateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dsn := dbURL(cmd)
 			if dsn == "" {
-				return fmt.Errorf("no database configured (set --db or KEYWAY_DB_URL)")
+				return fmt.Errorf("no database configured — set KEYWAY_DB_URL, pass --db, or add db_url to config (use --db memory for an ephemeral store)")
 			}
 			if err := postgres.MigrateUp(dsn); err != nil {
 				return err
@@ -111,7 +119,7 @@ func newMigrateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dsn := dbURL(cmd)
 			if dsn == "" {
-				return fmt.Errorf("no database configured (set --db or KEYWAY_DB_URL)")
+				return fmt.Errorf("no database configured — set KEYWAY_DB_URL, pass --db, or add db_url to config (use --db memory for an ephemeral store)")
 			}
 			if err := postgres.MigrateDown(dsn); err != nil {
 				return err

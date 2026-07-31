@@ -180,7 +180,7 @@ func printConsumerTable(cmd *cobra.Command, consumers []model.Consumer) {
 func runSnapshot(cmd *cobra.Command) error {
 	dsn := dbURL(cmd)
 	if dsn == "" {
-		return fmt.Errorf("no database configured (set --db or KEYWAY_DB_URL)")
+		return fmt.Errorf("no database configured — set KEYWAY_DB_URL, pass --db, or add db_url to config (use --db memory for an ephemeral store)")
 	}
 	scope := buildScope(cmd)
 	// File-based sources no-op without --path; config-driven sources (Keycloak

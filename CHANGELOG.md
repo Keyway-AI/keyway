@@ -12,7 +12,7 @@ All notable changes to Keyway are documented here. The format is based on
 - Core data model (`internal/model`): issuers, keys, consumers, contract versions, probes, change
   events (PRD §4).
 - Component interfaces: `issuer.Adapter`, `discovery.Discoverer`, `store.Store` (PRD §5).
-- `PROGRESS.md` implementation tracker mapped to milestones M1–M9.
+- `docs/progress.md` implementation tracker mapped to milestones M1–M9.
 - **M1** — PostgreSQL store (`internal/store/postgres`) on pgx with JSONB blobs and batched writes;
   `keyway migrate up/down` with migrations embedded in the binary (golang-migrate + iofs);
   `keyway snapshot` wired end-to-end with the mandatory baseline flow (PRD §8.2). Integration-tested

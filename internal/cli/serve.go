@@ -81,6 +81,14 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	if dsn := dbURL(cmd); dsn != "" {
 		cfg.DBURL = dsn
 	}
+	// Zero-config demo: with no database configured, fall back to an in-memory
+	// store so `keyway serve` (and the container image) run out of the box and
+	// serve the UI. Data is NOT persisted — production deployments set
+	// KEYWAY_DB_URL to a Postgres DSN.
+	if cfg.DBURL == "" {
+		cfg.DBURL = "memory"
+		fmt.Fprintln(cmd.OutOrStdout(), "warning: no database configured — using an in-memory store (data is not persisted; set KEYWAY_DB_URL to Postgres for production use)")
+	}
 	if err := cfg.Validate(); err != nil {
 		return err
 	}
@@ -152,6 +160,12 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	}
 
 	fmt.Fprintf(cmd.OutOrStdout(), "%s listening on %s (%d issuer(s), UI at /)\n", version.String(), addr, application.IssuerCount)
+	if token == "" {
+		// Without a token the API stays locked (deny-by-default); the bundled UI
+		// runs on built-in sample data so it's still fully explorable. Setting a
+		// token unlocks the live API — connect to it from the UI's Settings.
+		fmt.Fprintln(cmd.OutOrStdout(), "note: no API token set — the UI runs on sample data. Set KEYWAY_API_TOKEN to enable the live API, then connect from Settings.")
+	}
 	return srv.ListenAndServe(ctx)
 }
 

@@ -34,12 +34,12 @@ Go 1.25+ and Node 20+ are required.
 
 1. Open (or claim) an issue describing the change.
 2. Branch from `main`: `git checkout -b feat/<short-name>`.
-3. Keep the change scoped to one milestone / concern. See [PROGRESS.md](PROGRESS.md) for where
-   things stand and [the PRD](rollover-prd-v0.2-implementation.md) for the spec.
+3. Keep the change scoped to one milestone / concern. See [docs/progress.md](docs/progress.md) for where
+   things stand and [ARCHITECTURE.md](ARCHITECTURE.md) for the design.
 4. Add tests. New discovery adapters, probes and diff rules **must** ship benchmark scenarios in
    `bench/corpus/` and keep the scorecard above the PRD §13.4 thresholds.
 5. Run `make check` and `make bench`.
-6. Update `PROGRESS.md` if you completed or advanced a tracked item.
+6. Update `docs/progress.md` if you completed or advanced a tracked item.
 7. Open a PR using the template. CI must pass.
 
 ## Code style

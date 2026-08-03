@@ -1,0 +1,29 @@
+# gitleaks configuration for Keyway.
+# Extends the upstream default ruleset and allowlists material that is
+# intentionally in the repo: test fixtures (which contain throwaway PEM keys and
+# sample JWTs), benchmark rigs, and documented local-dev defaults. Nothing here
+# is a real credential.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures, benchmark rigs, and documented dev defaults."
+paths = [
+  '''(^|/)testdata/''',
+  '''(^|/)bench/''',
+  '''_test\.go$''',
+  '''(^|/)internal/api/webdist/''', # built, minified web bundle
+  '''\.env\.example$''',
+  '''(^|/)docker-compose\.yml$''',
+]
+regexes = [
+  # Local-dev Postgres DSN / credentials shown in README, Makefile, compose.
+  '''postgres://keyway:keyway@''',
+  '''change-me''',
+  '''admin:admin''',
+  # generic-api-key false positives on documentation prose (README/CHANGELOG):
+  # the rule captures the product name "Keycloak/OIDC" as if it were a key value.
+  '''^Keycloak/OIDC$''',
+  '''^OIDC/Keycloak$''',
+]

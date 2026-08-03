@@ -183,6 +183,40 @@ bench-l2: ## Score the live-probe layer (L2) against real containerized services
 		exit $$status
 
 ## ----------------------------------------------------------------------------
+## Security (SSDLC — see docs/security/ssdlc.md)
+## ----------------------------------------------------------------------------
+
+.PHONY: sast
+sast: ## Static analysis: govulncheck + gosec (Go) and npm audit (web)
+	@command -v govulncheck >/dev/null 2>&1 || $(GO) install golang.org/x/vuln/cmd/govulncheck@latest
+	govulncheck ./...
+	@command -v gosec >/dev/null 2>&1 || $(GO) install github.com/securego/gosec/v2/cmd/gosec@latest
+	gosec -no-fail -quiet ./...
+	cd web && npm audit --omit=dev --audit-level=critical || true
+
+.PHONY: secrets
+secrets: ## Secret scan with gitleaks (via docker)
+	docker run --rm -v "$(PWD):/repo" ghcr.io/gitleaks/gitleaks:latest \
+		detect --source=/repo --config=/repo/.gitleaks.toml --redact --no-banner -v
+
+.PHONY: sbom
+sbom: ## Generate a source SBOM (SPDX) with syft
+	@command -v syft >/dev/null 2>&1 || { echo "install syft: https://github.com/anchore/syft"; exit 1; }
+	syft dir:. -o spdx-json=keyway.spdx.json
+	@echo "wrote keyway.spdx.json"
+
+.PHONY: dast
+dast: build-cli ## DAST: run the in-memory demo + OWASP ZAP baseline (needs docker)
+	KEYWAY_DB_URL=memory $(BIN_DIR)/keyway serve --addr :8080 & echo $$! > /tmp/keyway-dast.pid
+	@for i in $$(seq 1 30); do curl -sf http://localhost:8080/v1/health >/dev/null && break; sleep 1; done
+	-docker run --rm --network host -v "$(PWD):/zap/wrk:rw" \
+		ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://localhost:8080 -I
+	@kill $$(cat /tmp/keyway-dast.pid) 2>/dev/null || true
+
+.PHONY: security
+security: sast secrets ## Run the local security gate (SAST + secret scan)
+
+## ----------------------------------------------------------------------------
 ## Meta
 ## ----------------------------------------------------------------------------
 

@@ -114,6 +114,10 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 		WriteTimeout:      90 * time.Second, // > the 60s request timeout, so slow probes can still respond
 		IdleTimeout:       120 * time.Second,
 	}
+	// The shutdown deadline (below) must NOT inherit the parent ctx — it is
+	// already canceled here (that's what wakes this goroutine), so a derived
+	// context would expire instantly and skip graceful drain. Using
+	// context.Background here is deliberate (a gosec G118 false positive).
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

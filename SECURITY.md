@@ -3,6 +3,9 @@
 Keyway mints synthetic JWTs and interacts directly with authentication infrastructure. Please
 treat it accordingly.
 
+Our secure-development process — SAST, DAST, dependency/secret scanning, SBOMs, and signed
+release images — is documented in [docs/security/ssdlc.md](docs/security/ssdlc.md).
+
 ## Operational safety
 
 - **Staging only by default.** The probe engine refuses to run against a host unless that host is

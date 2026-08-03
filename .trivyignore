@@ -1,0 +1,9 @@
+# Trivy suppressions — each with a documented risk assessment.
+# Reviewed as part of the SSDLC dependency-triage process (docs/security/ssdlc.md).
+
+# react-router "RSC Mode CSRF" advisory. Keyway's web app is a static SPA
+# (BrowserRouter + declarative routes, served as embedded static assets). It
+# does NOT use React Router's RSC / server / data-action modes, which is the
+# only configuration this advisory affects — so it is not exploitable here.
+# Tracked for a future react-router bump via Dependabot.
+GHSA-qwww-vcr4-c8h2

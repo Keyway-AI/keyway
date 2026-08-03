@@ -5,6 +5,8 @@
 **Know which consumers will break _before_ you rotate a signing key, change an issuer, or drop a claim.**
 
 [![CI](https://github.com/nometria/keyway/actions/workflows/ci.yml/badge.svg)](https://github.com/nometria/keyway/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/nometria/keyway/actions/workflows/codeql.yml/badge.svg)](https://github.com/nometria/keyway/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nometria/keyway/badge)](https://scorecard.dev/viewer/?uri=github.com/nometria/keyway)
 [![Detection: 100% TPR · 0% FPR](https://img.shields.io/badge/detection-100%25_TPR_%C2%B7_0%25_FPR-2f7fe0)](BENCHMARK.md)
 [![Real-world: 8/8 documented risks](https://img.shields.io/badge/real--world-8%2F8_CVEs_%26_incidents-16a34a)](docs/realworld-validation.md)
 [![Go Reference](https://pkg.go.dev/badge/github.com/nometria/keyway.svg)](https://pkg.go.dev/github.com/nometria/keyway)
@@ -194,6 +196,11 @@ logic is expected to keep the scorecard above the §13.4 thresholds.
 Keyway mints synthetic tokens and talks to auth infrastructure. Please read
 [SECURITY.md](SECURITY.md) before running it, and **never** point it at production without the
 explicit `--i-know-this-is-production` flag. Report vulnerabilities per SECURITY.md.
+
+We hold Keyway to a documented secure-development process — SAST (CodeQL, gosec),
+DAST (OWASP ZAP against the demo), dependency + secret scanning (govulncheck,
+gitleaks, Trivy, Dependabot), SBOMs and signed release images. See
+[docs/security/ssdlc.md](docs/security/ssdlc.md).
 
 ## License
 

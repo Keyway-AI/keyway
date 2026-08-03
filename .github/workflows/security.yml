@@ -1,0 +1,152 @@
+name: Security
+
+# The automated half of Keyway's SSDLC (see docs/security/ssdlc.md):
+# dependency vulnerabilities, secret scanning, SAST, container/filesystem
+# scanning, and a DAST pass against the zero-config demo. Gating jobs
+# (govulncheck, gitleaks) fail the run; scanners that surface triageable
+# findings (gosec, Trivy, npm audit, ZAP) are report-only and, when the repo is
+# public, upload SARIF to the Security tab.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "12 4 * * 1" # weekly
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ---- Dependency vulnerabilities (Go) — gating -----------------------------
+  govulncheck:
+    name: govulncheck (Go deps)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: Scan
+        run: govulncheck ./...
+
+  # ---- Dependency vulnerabilities (npm, production) — informational ---------
+  npm-audit:
+    name: npm audit (web prod deps)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci || npm install
+      # Shipped (production) dependencies must be clean at critical severity.
+      # Dev-only tooling advisories and non-applicable ones (e.g. the SPA-inert
+      # react-router RSC advisory) are triaged in docs/security/ssdlc.md and
+      # tracked by Dependabot; the full audit below is informational.
+      - name: Audit production dependencies (gate at critical)
+        run: npm audit --omit=dev --audit-level=critical
+      - name: Full audit (informational)
+        run: npm audit || true
+
+  # ---- Secret scanning — gating ---------------------------------------------
+  gitleaks:
+    name: gitleaks (secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan for secrets
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+            detect --source=/repo --config=/repo/.gitleaks.toml --redact --no-banner -v
+
+  # ---- SAST (Go) — report-only ----------------------------------------------
+  gosec:
+    name: gosec (Go SAST)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+      - name: Run gosec
+        run: gosec -no-fail -fmt sarif -out gosec.sarif ./...
+      - name: Upload SARIF
+        if: ${{ github.event.repository.visibility == 'public' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gosec.sarif
+          category: gosec
+
+  # ---- Filesystem + config scan (Trivy) — report-only -----------------------
+  trivy:
+    name: Trivy (deps, config, secrets)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scanners: vuln,misconfig,secret
+          format: sarif
+          output: trivy.sarif
+          ignore-unfixed: true
+          exit-code: "0"
+      - name: Upload SARIF
+        if: ${{ github.event.repository.visibility == 'public' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+
+  # ---- DAST — OWASP ZAP baseline against the zero-config demo ----------------
+  dast:
+    name: DAST (OWASP ZAP baseline)
+    # Heavy (builds the image); skip on PRs, run on main/schedule/manual.
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the container image
+        run: docker build -t keyway:scan .
+      - name: Run Keyway (in-memory demo)
+        run: |
+          docker run -d --name keyway -p 8080:8080 -e KEYWAY_DB_URL=memory keyway:scan serve --addr :8080
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8080/v1/health >/dev/null && break
+            sleep 2
+          done
+          curl -sf http://localhost:8080/v1/health
+      - name: ZAP baseline scan
+        run: |
+          mkdir -p zap-out && chmod 0777 zap-out
+          # --network host lets ZAP reach the host-published port; -I => don't
+          # fail the job on warnings (this is a report, triaged in the Security tab).
+          docker run --rm --network host -v "$PWD/zap-out:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:8080 -r zap-report.html -w zap-report.md -I || true
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-baseline-report
+          path: zap-out/

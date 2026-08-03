@@ -143,7 +143,7 @@ jobs:
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t http://localhost:8080 -r zap-report.html -w zap-report.md -I || true
       - name: Upload ZAP report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: zap-baseline-report
           path: zap-out/

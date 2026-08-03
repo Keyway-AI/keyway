@@ -115,10 +115,10 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 		IdleTimeout:       120 * time.Second,
 	}
 	// The shutdown deadline (below) must NOT inherit the parent ctx — it is
-	// already cancelled here (that's what wakes this goroutine), so a derived
-	// context would expire instantly and skip graceful drain. context.Background
-	// is deliberate.
-	go func() { //nosec G118 -- see comment above: detached shutdown context is intentional
+	// already canceled here (that's what wakes this goroutine), so a derived
+	// context would expire instantly and skip graceful drain. Using
+	// context.Background here is deliberate (a gosec G118 false positive).
+	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()

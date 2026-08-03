@@ -178,11 +178,16 @@ Keyway is actively developed. Milestones follow §15 of the PRD (M1–M9); the b
 tracker lives in [`docs/progress.md`](docs/progress.md) and the open-items register
 in [`docs/known-issues.md`](docs/known-issues.md).
 
-## Contributing
+## Contributing & community
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Keyway ships a 400-scenario benchmark harness
-(`bench/`) that gates accuracy in CI — new discovery/probe/diff logic is expected to keep the
-scorecard above the thresholds in the PRD §13.4.
+Contributions are welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md). Keyway ships a
+400-scenario benchmark harness (`bench/`) that gates accuracy in CI, so new discovery/probe/diff
+logic is expected to keep the scorecard above the §13.4 thresholds.
+
+- **Where we're headed:** [ROADMAP.md](ROADMAP.md) — closing named [threat-coverage](docs/threat-coverage.md) gaps is the top priority, and those make great first contributions.
+- **Get help / ask questions:** [SUPPORT.md](SUPPORT.md) and [Discussions](https://github.com/nometria/keyway/discussions).
+- **How the project runs:** [GOVERNANCE.md](GOVERNANCE.md) · [Code of Conduct](CODE_OF_CONDUCT.md).
+- **Good first issues:** the [`good first issue`](https://github.com/nometria/keyway/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) and [`help wanted`](https://github.com/nometria/keyway/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) labels.
 
 ## Security
 

@@ -1,0 +1,17 @@
+# Code owners for Keyway. These accounts are requested for review on matching
+# changes. See https://docs.github.com/articles/about-code-owners.
+
+# Default owner for everything.
+*                       @nometria
+
+# Security-sensitive surfaces — token minting, probing, key material, auth.
+/internal/issuer/        @nometria
+/internal/keystore/      @nometria
+/internal/probe/         @nometria
+/internal/api/           @nometria
+/SECURITY.md             @nometria
+
+# Release + CI plumbing.
+/.github/                @nometria
+/Dockerfile              @nometria
+/Makefile                @nometria

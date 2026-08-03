@@ -1,0 +1,14 @@
+# Issue-template chooser configuration.
+# Forces bugs/features through the templates and routes everything else to the
+# right place (questions → Discussions, vulnerabilities → the security policy).
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Question or usage help
+    url: https://github.com/nometria/keyway/discussions/categories/q-a
+    about: Ask in Discussions Q&A — please don't open an issue for questions.
+  - name: 💡 Idea or feature discussion
+    url: https://github.com/nometria/keyway/discussions/categories/ideas
+    about: Float an idea before it's a concrete, scoped feature request.
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/nometria/keyway/blob/main/SECURITY.md
+    about: Do NOT open a public issue. Follow the coordinated-disclosure policy.

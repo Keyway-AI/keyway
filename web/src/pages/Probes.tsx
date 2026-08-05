@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api } from "../api/client";
 import { Page } from "../components/Layout";
 import { Button, Card, Empty, Pill, StatTile, Table, Td, Th } from "../components/ui";
+import { IssuerNotice } from "../components/IssuerNotice";
 import { useToast } from "../components/toast";
 import { useAsync } from "../lib/useAsync";
 import { relativeTime } from "../lib/format";
@@ -29,6 +30,8 @@ function probeLabel(id: string): string {
 export default function Probes() {
   const toast = useToast();
   const consumers = useAsync(() => api.consumers());
+  const issuers = useAsync(() => api.issuers());
+  const hasIssuer = (issuers.data?.length ?? 0) > 0;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [results, setResults] = useState<ProbeResult[]>();
   const [runId, setRunId] = useState<string>();
@@ -83,11 +86,13 @@ export default function Probes() {
       title="Probes"
       subtitle="Safely test each consumer against forged tokens (alg=none, key confusion, expiry, wrong audience…). Only benign, expected-to-be-rejected tokens are sent."
       actions={
-        <Button variant="primary" onClick={run} loading={running} disabled={probeable.length === 0}>
+        <Button variant="primary" onClick={run} loading={running} disabled={probeable.length === 0 || !hasIssuer}>
           {selected.size > 0 ? `Run probes (${selected.size})` : "Run all probes"}
         </Button>
       }
     >
+      {!hasIssuer && !issuers.loading && <IssuerNotice action="Running probes" />}
+
       <Card
         title="Targets"
         action={

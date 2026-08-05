@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { Page } from "../components/Layout";
 import { Card, Empty, Pill, Td, Th } from "../components/ui";
@@ -97,7 +98,22 @@ export default function Consumers() {
             </table>
           </div>
         ) : (
-          <Empty>{loading ? "Loading…" : "No consumers discovered yet."}</Empty>
+          <Empty>
+            {loading ? (
+              "Loading…"
+            ) : q ? (
+              "No consumers match your filter."
+            ) : (
+              <>
+                No consumers discovered yet. Take a snapshot from the{" "}
+                <Link to="/app" className="font-medium text-accent hover:underline">
+                  Dashboard
+                </Link>{" "}
+                to run discovery (point Keyway at your Istio / Envoy / K8s configs with{" "}
+                <code className="font-mono text-xs">--path</code> or a live cluster).
+              </>
+            )}
+          </Empty>
         )}
       </Card>
       <ConsumerDrawer consumer={selected} onClose={() => setSelected(null)} />

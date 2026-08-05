@@ -67,7 +67,7 @@ func (s *Server) handleListConsumers(w http.ResponseWriter, r *http.Request) {
 	}
 	issuerFilter := r.URL.Query().Get("issuer_id")
 	probeableFilter := r.URL.Query().Get("probeable")
-	var out []model.Consumer
+	out := make([]model.Consumer, 0, len(v.Consumers))
 	for _, c := range v.Consumers {
 		if issuerFilter != "" && !contains(c.Expects.Issuers, issuerFilter) {
 			continue
@@ -78,9 +78,31 @@ func (s *Server) handleListConsumers(w http.ResponseWriter, r *http.Request) {
 		if probeableFilter == "false" && c.Probeable {
 			continue
 		}
-		out = append(out, c)
+		out = append(out, apiConsumer(c))
 	}
 	writeJSON(w, http.StatusOK, apitypes.ConsumerList{Consumers: out, Total: len(out)})
+}
+
+// apiConsumer normalizes nil slices to empty so the JSON API always returns
+// arrays (never null). Operates on a copy — the stored contract is untouched —
+// so clients can map/length the fields without guarding.
+func apiConsumer(c model.Consumer) model.Consumer {
+	if c.Expects.Issuers == nil {
+		c.Expects.Issuers = []string{}
+	}
+	if c.Expects.Audiences == nil {
+		c.Expects.Audiences = []string{}
+	}
+	if c.Expects.Algorithms == nil {
+		c.Expects.Algorithms = []string{}
+	}
+	if c.Expects.RequiredClaims == nil {
+		c.Expects.RequiredClaims = []string{}
+	}
+	if c.Endpoints == nil {
+		c.Endpoints = []model.Endpoint{}
+	}
+	return c
 }
 
 // handleConsumerProbes returns a consumer's recent probe results (newest first),
@@ -211,6 +233,13 @@ func (s *Server) handleBlastRadius(w http.ResponseWriter, r *http.Request) {
 	case err != nil:
 		writeError(w, http.StatusBadRequest, "bad_proposal", err.Error())
 		return
+	}
+	// Always return arrays, never null, for an empty ("nobody breaks") result.
+	if res.Affected == nil {
+		res.Affected = []blastradius.AffectedConsumer{}
+	}
+	if res.Unknown == nil {
+		res.Unknown = []model.Consumer{}
 	}
 	writeJSON(w, http.StatusOK, res)
 }

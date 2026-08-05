@@ -24,11 +24,12 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Chips({ items }: { items: string[] }) {
-  if (items.length === 0) return <span className="text-muted">—</span>;
+function Chips({ items }: { items: string[] | null | undefined }) {
+  const list = items ?? [];
+  if (list.length === 0) return <span className="text-muted">—</span>;
   return (
     <span className="flex flex-wrap justify-end gap-1">
-      {items.map((v) => (
+      {list.map((v) => (
         <Pill key={v} className="font-mono">
           {v}
         </Pill>

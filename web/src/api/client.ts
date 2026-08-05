@@ -101,7 +101,22 @@ export const api = {
 
   consumers: () =>
     withMock<Consumer[]>(
-      async () => (await request<{ consumers: Consumer[] }>("/v1/consumers")).consumers ?? [],
+      async () => {
+        const list = (await request<{ consumers: Consumer[] }>("/v1/consumers")).consumers ?? [];
+        // Real discovery emits null for empty slices; guarantee arrays so the
+        // table and detail drawer never crash on a sparse consumer.
+        return list.map((c) => ({
+          ...c,
+          endpoints: c.endpoints ?? [],
+          expects: {
+            ...c.expects,
+            issuers: c.expects?.issuers ?? [],
+            audiences: c.expects?.audiences ?? [],
+            algorithms: c.expects?.algorithms ?? [],
+            required_claims: c.expects?.required_claims ?? [],
+          },
+        }));
+      },
       mock.consumers,
     ),
 
@@ -127,11 +142,15 @@ export const api = {
   // resolver when the API is unavailable.
   blastRadius: (proposal: BlastRadiusResult["proposal"]) =>
     withMock<BlastRadiusResult>(
-      () =>
-        request<BlastRadiusResult>("/v1/blast-radius", {
+      async () => {
+        const r = await request<BlastRadiusResult>("/v1/blast-radius", {
           method: "POST",
           body: JSON.stringify({ proposal }),
-        }),
+        });
+        // The backend serializes empty slices as JSON null; guarantee arrays so
+        // the UI never crashes on a "nobody breaks" result.
+        return { ...r, affected: r.affected ?? [], unknown: r.unknown ?? [] };
+      },
       () => mock.blastRadius(proposal),
     ),
 
@@ -169,16 +188,31 @@ export const api = {
 
   runProbes: (consumerIds?: string[]) =>
     withMock<{ run_id: string; results: ProbeResult[] }>(
-      () =>
-        request<{ run_id: string; results: ProbeResult[] }>("/v1/probes/run", {
+      async () => {
+        const r = await request<{ run_id: string; results: ProbeResult[] }>("/v1/probes/run", {
           method: "POST",
           body: JSON.stringify({ consumer_ids: consumerIds ?? [] }),
-        }),
+        });
+        return { ...r, results: r.results ?? [] };
+      },
       () => mock.runProbes(consumerIds),
     ),
 
   threatCoverage: () =>
-    withMock<ThreatCoverage>(() => request("/v1/threats/coverage"), mock.threatCoverage),
+    withMock<ThreatCoverage>(async () => {
+      const r = await request<ThreatCoverage>("/v1/threats/coverage");
+      // Guard against null slices from the backend so the Coverage page renders.
+      return {
+        ...r,
+        domains: r.domains ?? [],
+        categories: r.categories ?? [],
+        threats: (r.threats ?? []).map((t) => ({
+          ...t,
+          detectors: t.detectors ?? [],
+          sources: t.sources ?? [],
+        })),
+      };
+    }, mock.threatCoverage),
 
   agentInspect: (req: AgentInspectRequest) =>
     withMock<AgentInspectResult>(

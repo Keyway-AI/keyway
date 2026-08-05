@@ -63,7 +63,16 @@ export default function Consumers() {
                   <tr
                     key={c.stable_id}
                     onClick={() => setSelected(c)}
-                    className="cursor-pointer hover:bg-surface-2/50"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelected(c);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open details for ${c.name}`}
+                    className="cursor-pointer hover:bg-surface-2/50 focus-visible:bg-surface-2/50"
                   >
                     <Td className="font-medium">{c.name}</Td>
                     <Td className="font-mono text-xs text-muted">{c.stable_id}</Td>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { Page } from "../components/Layout";
 import {
@@ -201,9 +202,11 @@ function IssuerPicker({
   );
 }
 
-// PickupPanel shows the announced key's adoption. Live data comes from the
-// backend's canary measurement; without it we show the probeable consumers that
-// a rotation would test.
+// PickupPanel lists the consumers a rotation would test for adoption of the
+// announced key. Per-consumer pickup is *measured by running canary probes over
+// time* — Keyway derives the grace window from the announce→pickup latency — so
+// we show these as "awaiting probe" and link to the probe cycle rather than
+// fabricating an adoption status.
 function PickupPanel({ issuer, announcedKid }: { issuer?: IssuerInfo; announcedKid: string }) {
   const consumers = useAsync(() => api.consumers());
   const probeable = (consumers.data ?? []).filter((c) => c.probeable);
@@ -217,8 +220,13 @@ function PickupPanel({ issuer, announcedKid }: { issuer?: IssuerInfo; announcedK
   return (
     <>
       <p className="mb-3 text-xs text-muted">
-        Measuring adoption of <span className="font-mono text-text">{announcedKid}</span>
-        {issuer ? ` on ${issuer.name}` : ""}. Run a probe cycle to refresh pickup status.
+        {probeable.length} consumer(s) will be tested for adoption of{" "}
+        <span className="font-mono text-text">{announcedKid}</span>
+        {issuer ? ` on ${issuer.name}` : ""}. Pickup is measured by running a{" "}
+        <Link to="/app/probes" className="font-medium text-accent hover:underline">
+          probe cycle
+        </Link>{" "}
+        over time — the grace window comes from the announce→pickup latency.
       </p>
       <ul className="space-y-2">
         {probeable.map((c) => (
@@ -230,7 +238,7 @@ function PickupPanel({ issuer, announcedKid }: { issuer?: IssuerInfo; announcedK
               <div className="font-medium">{c.name}</div>
               <div className="text-xs text-muted">{c.stable_id}</div>
             </div>
-            <KeyStatusPill status="announced" />
+            <span className="text-xs text-muted">awaiting probe</span>
           </li>
         ))}
       </ul>

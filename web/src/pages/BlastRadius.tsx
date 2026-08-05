@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api } from "../api/client";
 import { Page } from "../components/Layout";
 import { Button, Card, Empty, Field, Input, Pill, Select, StatTile } from "../components/ui";
+import { IssuerNotice } from "../components/IssuerNotice";
 import { useToast } from "../components/toast";
 import { useAsync } from "../lib/useAsync";
 import { humanizeDuration, verdictColor } from "../lib/format";
@@ -73,6 +74,10 @@ export default function BlastRadius() {
 
   const effectiveIssuer = issuerId || issuers.data?.[0]?.id || issuers.data?.[0]?.name || "";
   const kindMeta = KINDS.find((k) => k.value === kind)!;
+  // Key- and issuer-scoped changes resolve against a specific issuer; claim/alg
+  // changes resolve against the discovered contract regardless of issuer.
+  const needsIssuer = kind === "rotate_key" || kind === "retire_key" || kind === "change_issuer";
+  const hasIssuer = (issuers.data?.length ?? 0) > 0;
 
   async function run() {
     setComputing(true);
@@ -119,6 +124,8 @@ export default function BlastRadius() {
       title="Blast radius"
       subtitle="Model a proposed change and see who breaks, who's ready, and the safe grace period — before you ship it."
     >
+      {needsIssuer && !hasIssuer && !issuers.loading && <IssuerNotice action="Modeling a key rotation" />}
+
       <Card className="mb-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="Proposed change" hint={kindMeta.blurb}>
@@ -174,7 +181,7 @@ export default function BlastRadius() {
           )}
         </div>
         <div className="mt-4">
-          <Button variant="primary" onClick={run} loading={computing} disabled={!effectiveIssuer && (issuers.data?.length ?? 0) > 0}>
+          <Button variant="primary" onClick={run} loading={computing} disabled={needsIssuer && !effectiveIssuer}>
             Compute blast radius
           </Button>
         </div>

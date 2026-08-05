@@ -49,6 +49,16 @@ describe("usePolling", () => {
     expect(first).toHaveBeenCalledTimes(1); // old closure not called again
   });
 
+  it("fires once immediately even if the tab starts hidden, then holds the interval", () => {
+    Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
+    const fn = vi.fn();
+    renderHook(() => usePolling(fn, { intervalMs: 1000, pauseWhenHidden: true }));
+    expect(fn).toHaveBeenCalledTimes(1); // initial tick despite being hidden
+    vi.advanceTimersByTime(5000);
+    expect(fn).toHaveBeenCalledTimes(1); // no recurring ticks while hidden
+    Object.defineProperty(document, "hidden", { configurable: true, get: () => false });
+  });
+
   it("pauses while the tab is hidden and resumes on visibility", () => {
     const fn = vi.fn();
     renderHook(() => usePolling(fn, { intervalMs: 1000, pauseWhenHidden: true }));

@@ -46,7 +46,14 @@ export function usePolling(fn: () => void | Promise<void>, options: PollingOptio
     };
 
     const hidden = pauseWhenHidden && typeof document !== "undefined" && document.hidden;
-    if (!hidden) start();
+    if (hidden) {
+      // Fire once immediately even when hidden, so a tab that loads in the
+      // background doesn't get stuck on its initial state; defer the recurring
+      // interval until the tab becomes visible.
+      tick();
+    } else {
+      start();
+    }
 
     if (pauseWhenHidden && typeof document !== "undefined") {
       document.addEventListener("visibilitychange", onVisibility);

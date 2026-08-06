@@ -73,6 +73,7 @@ export function CloudAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCloudAuth(): CloudAuthState {
   const v = useContext(Ctx);
   if (!v) throw new Error("useCloudAuth must be used within CloudAuthProvider");

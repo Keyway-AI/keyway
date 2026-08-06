@@ -16,6 +16,10 @@ import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import { CloudAuthProvider } from "./cloud/CloudAuth";
+import CloudLayout from "./cloud/CloudLayout";
+import CloudProjects from "./cloud/CloudProjects";
+import CloudProject from "./cloud/CloudProject";
 
 export default function App() {
   return (
@@ -37,6 +41,17 @@ export default function App() {
           <Route path="canary" element={<Canary />} />
           <Route path="coverage" element={<Coverage />} />
           <Route path="agent" element={<Agent />} />
+        </Route>
+        <Route
+          path="/cloud"
+          element={
+            <CloudAuthProvider>
+              <CloudLayout />
+            </CloudAuthProvider>
+          }
+        >
+          <Route index element={<CloudProjects />} />
+          <Route path="projects/:id" element={<CloudProject />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

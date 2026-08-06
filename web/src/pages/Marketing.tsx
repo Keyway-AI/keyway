@@ -10,22 +10,17 @@ const GITHUB = "https://github.com/Keyway-AI/keyway";
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-border">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-40 mx-auto h-80 max-w-3xl rounded-full opacity-60 blur-3xl"
-        style={{ background: "radial-gradient(closest-side, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent)" }}
-      />
+    <section className="aurora relative overflow-hidden border-b border-border">
       <div className="mx-auto max-w-6xl px-5 pt-16 text-center sm:px-8 sm:pt-24">
         <a
           href={GITHUB}
-          className="inline-flex items-center gap-2 rounded-pill border border-border bg-surface px-3 py-1 text-caption font-medium text-muted shadow-xs transition hover:text-text"
+          className="glass inline-flex items-center gap-2 rounded-pill px-3.5 py-1.5 text-caption font-medium text-muted shadow-sm transition hover:text-text"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-low" />
           Open-source · JWT &amp; agent-auth verification
           <span className="text-faint">→</span>
         </a>
-        <h1 className="mx-auto mt-6 max-w-3xl text-[2.5rem] font-semibold leading-[1.05] tracking-tight sm:text-display">
+        <h1 className="display mx-auto mt-6 max-w-3xl text-[2.75rem] leading-[1.02] sm:text-[3.5rem]">
           Know your token contracts hold — <span className="text-accent">before</span> they break.
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-body-lg text-muted">
@@ -34,7 +29,7 @@ function Hero() {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             to="/signup"
-            className="inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-medium text-accent-fg shadow-sm transition hover:bg-accent-strong active:scale-[0.98]"
+            className="glow-accent inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
           >
             Get started — free
           </Link>
@@ -78,7 +73,7 @@ function StandardsStrip() {
 /* ── Stats band ───────────────────────────────────────────────────────── */
 function Stats() {
   const stats = [
-    { n: "50", l: "documented threats, all cited" },
+    { n: "50", l: "documented threats, all cited", ref: "1" },
     { n: "60%", l: "JWT coverage, gaps named" },
     { n: "40%", l: "agent-auth coverage, and rising" },
     { n: "0", l: "corpus we grade ourselves on" },
@@ -88,7 +83,10 @@ function Stats() {
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-5 py-12 sm:grid-cols-4 sm:px-8">
         {stats.map((s) => (
           <div key={s.l} className="text-center">
-            <div className="text-h1 font-semibold tracking-tight tabular-nums text-accent">{s.n}</div>
+            <div className="text-h1 font-semibold tracking-tight tabular-nums text-accent">
+              {s.n}
+              {s.ref && <sup className="footnote-ref">{s.ref}</sup>}
+            </div>
             <div className="mt-1 text-caption text-muted">{s.l}</div>
           </div>
         ))}
@@ -230,7 +228,7 @@ function CTA() {
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <Link
             to="/signup"
-            className="inline-flex h-11 items-center rounded-md bg-accent px-6 text-body font-medium text-accent-fg shadow-sm transition hover:bg-accent-strong active:scale-[0.98]"
+            className="glow-accent inline-flex h-11 items-center rounded-md bg-accent px-6 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
           >
             Get started
           </Link>

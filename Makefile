@@ -108,6 +108,10 @@ demo: build-cli ## Zero-config demo: run the app + UI on an in-memory store (no 
 serve: build ## Run the API + scheduler on :8080
 	$(BIN_DIR)/keyway serve
 
+.PHONY: cloud
+cloud: ## Run the multi-tenant Cloud API on :8090 (dev login, in-memory) — see docs/cloud.md
+	KEYWAY_CLOUD_DEV_LOGIN=1 $(GO) run ./cmd/keyway-cloud
+
 ## ----------------------------------------------------------------------------
 ## Web UI
 ## ----------------------------------------------------------------------------

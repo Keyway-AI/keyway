@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // severityRank orders severities most-severe first for reporting.

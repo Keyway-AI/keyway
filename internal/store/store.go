@@ -6,7 +6,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Store is the persistence boundary. All implementations must be safe for

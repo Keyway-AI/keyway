@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // GitAttributor binds a change event to the last git commit that touched the

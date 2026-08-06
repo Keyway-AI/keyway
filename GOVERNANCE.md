@@ -22,7 +22,7 @@ as the community does.
   before code. Lazy consensus: if no maintainer objects within a reasonable window,
   the proposal proceeds.
 - **Direction / roadmap** — maintainers decide, informed by
-  [Discussions](https://github.com/nometria/keyway/discussions) and issue demand.
+  [Discussions](https://github.com/Keyway-AI/keyway/discussions) and issue demand.
 - **Disagreement** — discuss in the open; if maintainers can't reach consensus, the
   change waits. Bias is toward *not* shipping something reversible-with-difficulty.
 

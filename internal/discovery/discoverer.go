@@ -5,7 +5,7 @@ package discovery
 import (
 	"context"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Scope bounds a discovery run.

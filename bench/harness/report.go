@@ -144,7 +144,7 @@ The other half were <b>noise</b> — an ordinary redeploy that reorders a list, 
 
 <h2>Reproduce it yourself</h2>
 <p>No trust required — run the exact benchmark on your own machine:</p>
-<p><code>git clone https://github.com/nometria/keyway &amp;&amp; cd keyway</code><br/>
+<p><code>git clone https://github.com/Keyway-AI/keyway &amp;&amp; cd keyway</code><br/>
 <code>make bench</code></p>
 <p>The corpus lives in <code>bench/corpus/</code> and the generator in <code>bench/mutations/</code>. Every scenario is plain YAML you can read. CI fails the build if accuracy ever drops below the published thresholds, so these numbers stay honest over time.</p>
 

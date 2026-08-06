@@ -8,7 +8,7 @@ const steps = [
     n: "1",
     title: "Run it — zero config",
     body: "One container with the web app embedded. Boots on an in-memory store, no database needed. From source, use “make demo”.",
-    code: "docker run -p 8080:8080 ghcr.io/nometria/keyway",
+    code: "docker run -p 8080:8080 ghcr.io/keyway-ai/keyway",
   },
   {
     n: "2",

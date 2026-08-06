@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nometria/keyway/internal/attack"
-	"github.com/nometria/keyway/internal/issuer/generic"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/attack"
+	"github.com/Keyway-AI/keyway/internal/issuer/generic"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // TestRunHarness_EndToEnd stands up a real issuer and fires the generative attack

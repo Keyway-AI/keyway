@@ -21,7 +21,7 @@ const tiers = [
     name: "Cloud",
     price: "Coming soon",
     unit: "hosted, with history & alerts",
-    cta: { label: "Join the waitlist", href: "https://github.com/nometria/keyway", primary: false },
+    cta: { label: "Join the waitlist", href: "https://github.com/Keyway-AI/keyway", primary: false },
     highlight: true,
     features: [
       "Everything in open source",

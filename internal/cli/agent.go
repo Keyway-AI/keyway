@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nometria/keyway/internal/agentauth"
+	"github.com/Keyway-AI/keyway/internal/agentauth"
 )
 
 // newAgentCmd groups agent-auth commands. Today it statically inspects an

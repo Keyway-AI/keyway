@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { MarketingShell } from "../components/MarketingChrome";
 import { LogoBadge } from "../components/Logo";
 
-const GITHUB = "https://github.com/nometria/keyway";
+const GITHUB = "https://github.com/Keyway-AI/keyway";
 
 type Channel = {
   title: string;

@@ -21,9 +21,9 @@ ARG COMMIT=none
 ARG DATE=unknown
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags "-s -w \
-      -X github.com/nometria/keyway/internal/version.Version=${VERSION} \
-      -X github.com/nometria/keyway/internal/version.Commit=${COMMIT} \
-      -X github.com/nometria/keyway/internal/version.Date=${DATE}" \
+      -X github.com/Keyway-AI/keyway/internal/version.Version=${VERSION} \
+      -X github.com/Keyway-AI/keyway/internal/version.Commit=${COMMIT} \
+      -X github.com/Keyway-AI/keyway/internal/version.Date=${DATE}" \
     -o /out/keyway ./cmd/keyway
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags "-s -w" -o /out/keyway-runner ./cmd/keyway-runner

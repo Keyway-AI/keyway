@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Run executes every discoverer over the scope and merges the results by

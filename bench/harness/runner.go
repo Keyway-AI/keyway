@@ -7,14 +7,14 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/nometria/keyway/bench/mutations"
-	"github.com/nometria/keyway/internal/contract"
-	"github.com/nometria/keyway/internal/diff"
-	"github.com/nometria/keyway/internal/discovery"
-	"github.com/nometria/keyway/internal/discovery/envoy"
-	"github.com/nometria/keyway/internal/discovery/istio"
-	"github.com/nometria/keyway/internal/discovery/k8s"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/bench/mutations"
+	"github.com/Keyway-AI/keyway/internal/contract"
+	"github.com/Keyway-AI/keyway/internal/diff"
+	"github.com/Keyway-AI/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/discovery/envoy"
+	"github.com/Keyway-AI/keyway/internal/discovery/istio"
+	"github.com/Keyway-AI/keyway/internal/discovery/k8s"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // fileScenario is a benchmark case backed by before/after manifest directories

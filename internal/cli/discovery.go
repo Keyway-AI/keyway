@@ -10,19 +10,19 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nometria/keyway/internal/app"
-	"github.com/nometria/keyway/internal/attribution"
-	"github.com/nometria/keyway/internal/config"
-	"github.com/nometria/keyway/internal/contract"
-	"github.com/nometria/keyway/internal/discovery"
-	"github.com/nometria/keyway/internal/discovery/envoy"
-	"github.com/nometria/keyway/internal/discovery/istio"
-	"github.com/nometria/keyway/internal/discovery/k8s"
-	"github.com/nometria/keyway/internal/discovery/kube"
-	"github.com/nometria/keyway/internal/discovery/oidcclient"
-	"github.com/nometria/keyway/internal/libdefaults"
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store/open"
+	"github.com/Keyway-AI/keyway/internal/app"
+	"github.com/Keyway-AI/keyway/internal/attribution"
+	"github.com/Keyway-AI/keyway/internal/config"
+	"github.com/Keyway-AI/keyway/internal/contract"
+	"github.com/Keyway-AI/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/discovery/envoy"
+	"github.com/Keyway-AI/keyway/internal/discovery/istio"
+	"github.com/Keyway-AI/keyway/internal/discovery/k8s"
+	"github.com/Keyway-AI/keyway/internal/discovery/kube"
+	"github.com/Keyway-AI/keyway/internal/discovery/oidcclient"
+	"github.com/Keyway-AI/keyway/internal/libdefaults"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/store/open"
 )
 
 // buildScope constructs a discovery scope from common flags.

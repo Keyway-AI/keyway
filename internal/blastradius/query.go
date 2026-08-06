@@ -7,8 +7,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/probe"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/probe"
 )
 
 // Proposal kinds.

@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/store"
 )
 
 // Store keeps all contract versions, change events, and probe results in memory.

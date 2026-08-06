@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nometria/keyway/internal/coordination"
+	"github.com/Keyway-AI/keyway/internal/coordination"
 )
 
 // The idempotency middleware replays the cached response when a POST repeats an

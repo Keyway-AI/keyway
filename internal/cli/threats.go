@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nometria/keyway/internal/threats"
+	"github.com/Keyway-AI/keyway/internal/threats"
 )
 
 // newThreatsCmd exposes the threat taxonomy (JWT/JWKS/OIDC and AI-agent auth) and

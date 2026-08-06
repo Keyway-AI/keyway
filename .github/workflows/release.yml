@@ -30,9 +30,9 @@ jobs:
           VERSION=${GITHUB_REF_NAME}
           out="keyway_${VERSION}_${GOOS}_${GOARCH}"
           mkdir -p "dist/$out"
-          go build -ldflags "-s -w -X github.com/nometria/keyway/internal/version.Version=${VERSION}" \
+          go build -ldflags "-s -w -X github.com/Keyway-AI/keyway/internal/version.Version=${VERSION}" \
             -o "dist/$out/keyway" ./cmd/keyway
-          go build -ldflags "-s -w -X github.com/nometria/keyway/internal/version.Version=${VERSION}" \
+          go build -ldflags "-s -w -X github.com/Keyway-AI/keyway/internal/version.Version=${VERSION}" \
             -o "dist/$out/keyway-runner" ./cmd/keyway-runner
           tar -czf "dist/${out}.tar.gz" -C "dist/$out" .
       - name: Upload artifacts
@@ -95,11 +95,11 @@ jobs:
           build-args: |
             VERSION=${{ github.ref_name }}
           tags: |
-            ghcr.io/nometria/keyway:${{ github.ref_name }}
-            ghcr.io/nometria/keyway:latest
+            ghcr.io/keyway-ai/keyway:${{ github.ref_name }}
+            ghcr.io/keyway-ai/keyway:latest
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
       - name: Sign the image (keyless)
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
-        run: cosign sign --yes "ghcr.io/nometria/keyway@${DIGEST}"
+        run: cosign sign --yes "ghcr.io/keyway-ai/keyway@${DIGEST}"

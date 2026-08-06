@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-jose/go-jose/v4"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // DiscoveryDoc is the subset of the OIDC discovery document Keyway needs.

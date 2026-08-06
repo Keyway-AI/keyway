@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/nometria/keyway/internal/agentauth"
-	"github.com/nometria/keyway/internal/threats"
-	"github.com/nometria/keyway/pkg/apitypes"
+	"github.com/Keyway-AI/keyway/internal/agentauth"
+	"github.com/Keyway-AI/keyway/internal/threats"
+	"github.com/Keyway-AI/keyway/pkg/apitypes"
 )
 
 // handleThreatCoverage returns the threat taxonomy and Keyway's measured coverage

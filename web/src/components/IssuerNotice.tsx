@@ -29,7 +29,7 @@ export function IssuerNotice({ action }: { action: string }) {
           config or with <code className="font-mono text-xs text-text">keyway issuer add</code>, then
           restart. See the{" "}
           <a
-            href="https://github.com/nometria/keyway#quickstart"
+            href="https://github.com/Keyway-AI/keyway#quickstart"
             className="font-medium text-accent hover:underline"
           >
             setup guide

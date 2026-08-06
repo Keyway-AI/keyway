@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store/open"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/store/open"
 )
 
 func newReportCmd() *cobra.Command {

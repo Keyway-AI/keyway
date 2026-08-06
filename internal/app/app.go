@@ -12,14 +12,14 @@ import (
 	"sort"
 	"time"
 
-	"github.com/nometria/keyway/internal/blastradius"
-	"github.com/nometria/keyway/internal/contract"
-	"github.com/nometria/keyway/internal/discovery"
-	"github.com/nometria/keyway/internal/issuerregistry"
-	"github.com/nometria/keyway/internal/libdefaults"
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/probe"
-	"github.com/nometria/keyway/internal/store"
+	"github.com/Keyway-AI/keyway/internal/blastradius"
+	"github.com/Keyway-AI/keyway/internal/contract"
+	"github.com/Keyway-AI/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/issuerregistry"
+	"github.com/Keyway-AI/keyway/internal/libdefaults"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/probe"
+	"github.com/Keyway-AI/keyway/internal/store"
 )
 
 // Sentinel errors the transports map to their own status codes / messages.

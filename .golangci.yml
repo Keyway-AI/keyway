@@ -43,7 +43,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/nometria/keyway
+        - github.com/Keyway-AI/keyway
   exclusions:
     generated: lax
     paths:

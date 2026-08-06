@@ -3,7 +3,7 @@ package agentauth
 import (
 	"testing"
 
-	"github.com/nometria/keyway/internal/threats"
+	"github.com/Keyway-AI/keyway/internal/threats"
 )
 
 // TestTaxonomyBridge keeps the analyzer and the threat taxonomy in lockstep: the

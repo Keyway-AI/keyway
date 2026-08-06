@@ -9,11 +9,11 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/nometria/keyway/internal/config"
-	"github.com/nometria/keyway/internal/diff"
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store"
-	"github.com/nometria/keyway/internal/store/open"
+	"github.com/Keyway-AI/keyway/internal/config"
+	"github.com/Keyway-AI/keyway/internal/diff"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/store"
+	"github.com/Keyway-AI/keyway/internal/store/open"
 )
 
 const defaultConfigPath = "keyway.yaml"

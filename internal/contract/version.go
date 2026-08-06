@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/nometria/keyway/internal/diff"
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/ports"
-	"github.com/nometria/keyway/internal/store"
+	"github.com/Keyway-AI/keyway/internal/diff"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/ports"
+	"github.com/Keyway-AI/keyway/internal/store"
 )
 
 // SnapshotResult reports the outcome of storing a contract version.

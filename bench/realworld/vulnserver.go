@@ -15,7 +15,7 @@ import (
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
 
-	"github.com/nometria/keyway/internal/issuer/generic"
+	"github.com/Keyway-AI/keyway/internal/issuer/generic"
 )
 
 // vuln describes which security checks a reproduced server gets WRONG. Each flag

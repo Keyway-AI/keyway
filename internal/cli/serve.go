@@ -11,16 +11,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nometria/keyway/internal/api"
-	"github.com/nometria/keyway/internal/app"
-	"github.com/nometria/keyway/internal/config"
-	"github.com/nometria/keyway/internal/coordination"
-	"github.com/nometria/keyway/internal/issuerregistry"
-	"github.com/nometria/keyway/internal/keystore"
-	"github.com/nometria/keyway/internal/libdefaults"
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/notify"
-	"github.com/nometria/keyway/internal/version"
+	"github.com/Keyway-AI/keyway/internal/api"
+	"github.com/Keyway-AI/keyway/internal/app"
+	"github.com/Keyway-AI/keyway/internal/config"
+	"github.com/Keyway-AI/keyway/internal/coordination"
+	"github.com/Keyway-AI/keyway/internal/issuerregistry"
+	"github.com/Keyway-AI/keyway/internal/keystore"
+	"github.com/Keyway-AI/keyway/internal/libdefaults"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/notify"
+	"github.com/Keyway-AI/keyway/internal/version"
 )
 
 func newServeCmd() *cobra.Command {

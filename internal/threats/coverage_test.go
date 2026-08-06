@@ -3,8 +3,8 @@ package threats
 import (
 	"testing"
 
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/probe"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/probe"
 )
 
 // TestCatalogIntegrity locks in the taxonomy's basic well-formedness so entries

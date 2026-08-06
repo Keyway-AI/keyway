@@ -21,7 +21,7 @@ Two more that keep the tool safe to run:
 ## Local setup
 
 ```bash
-git clone https://github.com/nometria/keyway
+git clone https://github.com/Keyway-AI/keyway
 cd keyway
 make dev-up          # Postgres + reference Keycloak
 make build

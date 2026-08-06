@@ -11,11 +11,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
-	"github.com/nometria/keyway/internal/app"
-	"github.com/nometria/keyway/internal/blastradius"
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/version"
-	"github.com/nometria/keyway/pkg/apitypes"
+	"github.com/Keyway-AI/keyway/internal/app"
+	"github.com/Keyway-AI/keyway/internal/blastradius"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/version"
+	"github.com/Keyway-AI/keyway/pkg/apitypes"
 )
 
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {

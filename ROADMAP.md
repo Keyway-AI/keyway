@@ -49,6 +49,6 @@ out of scope by definition.
 ---
 
 Want to move something up the list? Open or upvote an
-[issue](https://github.com/nometria/keyway/issues), or start a
-[discussion](https://github.com/nometria/keyway/discussions). Contributions toward
+[issue](https://github.com/Keyway-AI/keyway/issues), or start a
+[discussion](https://github.com/Keyway-AI/keyway/discussions). Contributions toward
 any "Next" item are especially welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).

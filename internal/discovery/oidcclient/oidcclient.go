@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nometria/keyway/internal/discovery"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Options configures the Keycloak client-registry discoverer.

@@ -34,7 +34,7 @@ export function MarketingNav() {
               </Link>
             ))}
             <a
-              href="https://github.com/nometria/keyway"
+              href="https://github.com/Keyway-AI/keyway"
               className="text-body font-medium text-muted transition hover:text-text"
             >
               GitHub
@@ -76,10 +76,10 @@ const footerCols: { title: string; links: { label: string; to?: string; href?: s
   {
     title: "Resources",
     links: [
-      { label: "GitHub", href: "https://github.com/nometria/keyway" },
-      { label: "Documentation", href: "https://github.com/nometria/keyway#readme" },
-      { label: "Security", href: "https://github.com/nometria/keyway/blob/main/SECURITY.md" },
-      { label: "Changelog", href: "https://github.com/nometria/keyway/releases" },
+      { label: "GitHub", href: "https://github.com/Keyway-AI/keyway" },
+      { label: "Documentation", href: "https://github.com/Keyway-AI/keyway#readme" },
+      { label: "Security", href: "https://github.com/Keyway-AI/keyway/blob/main/SECURITY.md" },
+      { label: "Changelog", href: "https://github.com/Keyway-AI/keyway/releases" },
     ],
   },
   {
@@ -88,7 +88,7 @@ const footerCols: { title: string; links: { label: string; to?: string; href?: s
       { label: "Contact", to: "/contact" },
       { label: "Sign in", to: "/login" },
       { label: "Get started", to: "/signup" },
-      { label: "Report an issue", href: "https://github.com/nometria/keyway/issues" },
+      { label: "Report an issue", href: "https://github.com/Keyway-AI/keyway/issues" },
     ],
   },
 ];

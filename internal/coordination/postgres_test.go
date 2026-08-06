@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/Keyway-AI/keyway/internal/store/postgres"
 )
 
 // testDSN returns the Postgres DSN from KEYWAY_TEST_DB, skipping the test when

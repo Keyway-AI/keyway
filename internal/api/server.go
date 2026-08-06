@@ -13,9 +13,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/nometria/keyway/internal/app"
-	"github.com/nometria/keyway/internal/coordination"
-	"github.com/nometria/keyway/pkg/apitypes"
+	"github.com/Keyway-AI/keyway/internal/app"
+	"github.com/Keyway-AI/keyway/internal/coordination"
+	"github.com/Keyway-AI/keyway/pkg/apitypes"
 )
 
 // Config configures the API server.

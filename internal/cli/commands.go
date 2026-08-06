@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nometria/keyway/internal/config"
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/Keyway-AI/keyway/internal/config"
+	"github.com/Keyway-AI/keyway/internal/store/postgres"
 )
 
 // The command set mirrors PRD §11. Every subcommand is wired to a real handler;

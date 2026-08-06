@@ -417,6 +417,9 @@ func (s *Server) cookie(name, value string, ttl time.Duration) *http.Cookie {
 	if s.cfg.SecureCookies {
 		sameSite = http.SameSiteNoneMode // cross-site frontend→backend needs None+Secure
 	}
+	// #nosec G124 -- HttpOnly is always set; Secure + SameSite=None are enabled in
+	// production (https BASE_URL). Secure is intentionally relaxed only for local
+	// http dev, where a Secure cookie would never be stored and login would break.
 	return &http.Cookie{
 		Name: name, Value: value, Path: "/",
 		HttpOnly: true, Secure: s.cfg.SecureCookies, SameSite: sameSite,

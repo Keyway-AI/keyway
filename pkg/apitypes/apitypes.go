@@ -6,7 +6,7 @@ package apitypes
 import (
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // SnapshotResponse is returned by POST /v1/snapshots.

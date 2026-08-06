@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nometria/keyway/internal/issuer/localkeys"
+	"github.com/Keyway-AI/keyway/internal/issuer/localkeys"
 )
 
 // Store loads and saves the persisted key set for a named issuer.

@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Threat IDs this analyzer checks — the bridge to internal/threats. A test asserts

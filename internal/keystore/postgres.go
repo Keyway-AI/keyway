@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/nometria/keyway/internal/issuer/localkeys"
+	"github.com/Keyway-AI/keyway/internal/issuer/localkeys"
 )
 
 // PostgresStore persists each issuer's key set as an AES-256-GCM ciphertext row

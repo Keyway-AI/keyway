@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/nometria/keyway/bench/mutations"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/bench/mutations"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // This file scales the *realistic* corpus (KI-18). Unlike mutations.Generate,

@@ -1,7 +1,7 @@
 // Package diff compares two contract versions and classifies each field change.
 package diff
 
-import "github.com/nometria/keyway/internal/model"
+import "github.com/Keyway-AI/keyway/internal/model"
 
 // FieldOp is the atomic operation the diff walker detected on a field.
 type FieldOp string

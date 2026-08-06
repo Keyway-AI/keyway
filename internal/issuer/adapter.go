@@ -5,7 +5,7 @@ package issuer
 import (
 	"context"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Adapter abstracts an issuer Keyway can describe, mint tokens against, and

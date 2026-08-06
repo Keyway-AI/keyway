@@ -8,11 +8,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nometria/keyway/internal/discovery"
-	"github.com/nometria/keyway/internal/issuer/generic"
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/probe"
-	"github.com/nometria/keyway/internal/store/open"
+	"github.com/Keyway-AI/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/issuer/generic"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/probe"
+	"github.com/Keyway-AI/keyway/internal/store/open"
 )
 
 func newProbeCmd() *cobra.Command {

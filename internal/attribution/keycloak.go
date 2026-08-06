@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // KeycloakAdminAttributor binds an IdP-side change (a key rotation, or an

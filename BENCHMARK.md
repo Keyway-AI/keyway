@@ -110,7 +110,7 @@ RFC, and confirms Keyway flags it. Highlights:
 ## Reproduce it yourself — no trust required
 
 ```bash
-git clone https://github.com/nometria/keyway && cd keyway
+git clone https://github.com/Keyway-AI/keyway && cd keyway
 make bench            # prints the scorecard
 make bench-report     # also writes bench/out/report.html (this page, interactive)
 ```

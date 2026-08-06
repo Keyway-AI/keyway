@@ -5,7 +5,7 @@ package notify
 import (
 	"context"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Notifier delivers a batch of change events.

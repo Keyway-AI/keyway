@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nometria/keyway/internal/contract"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/contract"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // testStore opens a store against KEYWAY_TEST_DB, skipping the test when unset

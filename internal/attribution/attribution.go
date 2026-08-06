@@ -3,8 +3,8 @@
 package attribution
 
 import (
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/ports"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/ports"
 )
 
 // Attributor resolves the cause of a change event. It is an alias of the shared

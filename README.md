@@ -4,13 +4,13 @@
 
 **Know which consumers will break _before_ you rotate a signing key, change an issuer, or drop a claim.**
 
-[![CI](https://github.com/nometria/keyway/actions/workflows/ci.yml/badge.svg)](https://github.com/nometria/keyway/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/nometria/keyway/actions/workflows/codeql.yml/badge.svg)](https://github.com/nometria/keyway/actions/workflows/codeql.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nometria/keyway/badge)](https://scorecard.dev/viewer/?uri=github.com/nometria/keyway)
+[![CI](https://github.com/Keyway-AI/keyway/actions/workflows/ci.yml/badge.svg)](https://github.com/Keyway-AI/keyway/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Keyway-AI/keyway/actions/workflows/codeql.yml/badge.svg)](https://github.com/Keyway-AI/keyway/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Keyway-AI/keyway/badge)](https://scorecard.dev/viewer/?uri=github.com/Keyway-AI/keyway)
 [![Detection: 100% TPR · 0% FPR](https://img.shields.io/badge/detection-100%25_TPR_%C2%B7_0%25_FPR-2f7fe0)](BENCHMARK.md)
 [![Real-world: 8/8 documented risks](https://img.shields.io/badge/real--world-8%2F8_CVEs_%26_incidents-16a34a)](docs/realworld-validation.md)
-[![Go Reference](https://pkg.go.dev/badge/github.com/nometria/keyway.svg)](https://pkg.go.dev/github.com/nometria/keyway)
-[![Go Report Card](https://goreportcard.com/badge/github.com/nometria/keyway)](https://goreportcard.com/report/github.com/nometria/keyway)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Keyway-AI/keyway.svg)](https://pkg.go.dev/github.com/Keyway-AI/keyway)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Keyway-AI/keyway)](https://goreportcard.com/report/github.com/Keyway-AI/keyway)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 </div>
@@ -57,7 +57,7 @@ store; no database, no cluster required.
 ```bash
 make demo                                  # build + run on http://localhost:8080
 # or, prebuilt (published on each release):
-docker run -p 8080:8080 ghcr.io/nometria/keyway
+docker run -p 8080:8080 ghcr.io/keyway-ai/keyway
 ```
 
 Open <http://localhost:8080>. The UI loads on built-in **sample data**, so you can
@@ -187,9 +187,9 @@ Contributions are welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md). Key
 logic is expected to keep the scorecard above the §13.4 thresholds.
 
 - **Where we're headed:** [ROADMAP.md](ROADMAP.md) — closing named [threat-coverage](docs/threat-coverage.md) gaps is the top priority, and those make great first contributions.
-- **Get help / ask questions:** [SUPPORT.md](SUPPORT.md) and [Discussions](https://github.com/nometria/keyway/discussions).
+- **Get help / ask questions:** [SUPPORT.md](SUPPORT.md) and [Discussions](https://github.com/Keyway-AI/keyway/discussions).
 - **How the project runs:** [GOVERNANCE.md](GOVERNANCE.md) · [Code of Conduct](CODE_OF_CONDUCT.md).
-- **Good first issues:** the [`good first issue`](https://github.com/nometria/keyway/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) and [`help wanted`](https://github.com/nometria/keyway/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) labels.
+- **Good first issues:** the [`good first issue`](https://github.com/Keyway-AI/keyway/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) and [`help wanted`](https://github.com/Keyway-AI/keyway/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) labels.
 
 ## Security
 

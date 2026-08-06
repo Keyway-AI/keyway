@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nometria/keyway/internal/blastradius"
-	"github.com/nometria/keyway/internal/libdefaults"
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store/open"
+	"github.com/Keyway-AI/keyway/internal/blastradius"
+	"github.com/Keyway-AI/keyway/internal/libdefaults"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/store/open"
 )
 
 func newBlastRadiusCmd() *cobra.Command {

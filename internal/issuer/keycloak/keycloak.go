@@ -13,10 +13,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/nometria/keyway/internal/issuer"
-	"github.com/nometria/keyway/internal/issuer/localkeys"
-	"github.com/nometria/keyway/internal/issuer/oidc"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/issuer"
+	"github.com/Keyway-AI/keyway/internal/issuer/localkeys"
+	"github.com/Keyway-AI/keyway/internal/issuer/oidc"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Adapter talks to a Keycloak realm.

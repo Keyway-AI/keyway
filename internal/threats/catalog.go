@@ -8,7 +8,7 @@
 // countable, not hidden by only-testing-what-we-already-check.
 package threats
 
-import "github.com/nometria/keyway/internal/model"
+import "github.com/Keyway-AI/keyway/internal/model"
 
 // Domain groups threats by the problem space they belong to. The taxonomy spans
 // two: the classic JWT/JWKS/OIDC verifier surface, and the newer auth surface of

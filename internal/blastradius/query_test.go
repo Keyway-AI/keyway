@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/probe"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/probe"
 )
 
 func intp(i int) *int    { return &i }

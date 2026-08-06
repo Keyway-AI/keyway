@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nometria/keyway/internal/discovery"
-	"github.com/nometria/keyway/internal/discovery/envoy"
-	"github.com/nometria/keyway/internal/discovery/istio"
-	"github.com/nometria/keyway/internal/discovery/k8s"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/discovery/envoy"
+	"github.com/Keyway-AI/keyway/internal/discovery/istio"
+	"github.com/Keyway-AI/keyway/internal/discovery/k8s"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 const refDir = "../../testdata/discovery/reference"

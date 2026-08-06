@@ -7,13 +7,13 @@ import (
 	"os"
 	"sync"
 
-	"github.com/nometria/keyway/internal/issuer"
-	"github.com/nometria/keyway/internal/issuer/generic"
-	"github.com/nometria/keyway/internal/issuer/k8ssa"
-	"github.com/nometria/keyway/internal/issuer/keycloak"
-	"github.com/nometria/keyway/internal/issuer/localkeys"
-	"github.com/nometria/keyway/internal/keystore"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/issuer"
+	"github.com/Keyway-AI/keyway/internal/issuer/generic"
+	"github.com/Keyway-AI/keyway/internal/issuer/k8ssa"
+	"github.com/Keyway-AI/keyway/internal/issuer/keycloak"
+	"github.com/Keyway-AI/keyway/internal/issuer/localkeys"
+	"github.com/Keyway-AI/keyway/internal/keystore"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // CanaryIssuer is an issuer.Adapter that also exposes its locally-operated key

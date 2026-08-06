@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nometria/keyway/internal/contract"
-	"github.com/nometria/keyway/internal/coordination"
-	"github.com/nometria/keyway/internal/discovery"
-	"github.com/nometria/keyway/internal/issuerregistry"
-	"github.com/nometria/keyway/internal/keystore"
-	"github.com/nometria/keyway/internal/libdefaults"
-	"github.com/nometria/keyway/internal/probe"
-	"github.com/nometria/keyway/internal/store/open"
+	"github.com/Keyway-AI/keyway/internal/contract"
+	"github.com/Keyway-AI/keyway/internal/coordination"
+	"github.com/Keyway-AI/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/issuerregistry"
+	"github.com/Keyway-AI/keyway/internal/keystore"
+	"github.com/Keyway-AI/keyway/internal/libdefaults"
+	"github.com/Keyway-AI/keyway/internal/probe"
+	"github.com/Keyway-AI/keyway/internal/store/open"
 )
 
 // idempotencyTTL is how long an idempotent write's result is replayable.

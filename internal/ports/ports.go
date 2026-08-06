@@ -7,7 +7,7 @@ package ports
 import (
 	"context"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Attributor binds a change event to its cause — a git commit/PR, a Kubernetes

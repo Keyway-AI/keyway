@@ -17,8 +17,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nometria/keyway/bench/mutations"
-	rw "github.com/nometria/keyway/bench/realworld"
+	"github.com/Keyway-AI/keyway/bench/mutations"
+	rw "github.com/Keyway-AI/keyway/bench/realworld"
 )
 
 func main() { os.Exit(run()) }

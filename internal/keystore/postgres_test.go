@@ -9,8 +9,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/nometria/keyway/internal/issuer/localkeys"
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/Keyway-AI/keyway/internal/issuer/localkeys"
+	"github.com/Keyway-AI/keyway/internal/store/postgres"
 )
 
 // testPool returns a pgx pool against KEYWAY_TEST_DB (skipping when unset) with

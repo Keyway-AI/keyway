@@ -6,7 +6,7 @@ A release is cut by **pushing a semver tag**. Everything else is automated by
 
 - builds cross-platform binaries (`linux`/`darwin` × `amd64`/`arm64`),
 - builds and pushes the container image to
-  `ghcr.io/nometria/keyway:vX.Y.Z` and `:latest`,
+  `ghcr.io/keyway-ai/keyway:vX.Y.Z` and `:latest`,
 - publishes a **GitHub Release** with the binary tarballs + `checksums.txt`
   attached and auto-generated notes.
 
@@ -37,7 +37,7 @@ A release is cut by **pushing a semver tag**. Everything else is automated by
 5. **Smoke-test the published image:**
 
    ```bash
-   docker run -p 8080:8080 ghcr.io/nometria/keyway:vX.Y.Z
+   docker run -p 8080:8080 ghcr.io/keyway-ai/keyway:vX.Y.Z
    # open http://localhost:8080 — the UI should load on sample data
    ```
 

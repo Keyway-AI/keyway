@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // Chain tries each attributor in order and returns the first that binds the

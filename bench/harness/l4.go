@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/nometria/keyway/internal/attribution"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/attribution"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // l4Score exercises the attribution layer (L4): it builds a small realistic

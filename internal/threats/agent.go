@@ -1,6 +1,6 @@
 package threats
 
-import "github.com/nometria/keyway/internal/model"
+import "github.com/Keyway-AI/keyway/internal/model"
 
 // agentThreats is the AI-agent auth threat surface (MCP, on-behalf-of delegation,
 // agent identity). Everything here is currently a coverage gap: it is the honest

@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/nometria/keyway/internal/attack"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/attack"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // mintSigner adapts the issuer's MintFunc + active public key to the harness's

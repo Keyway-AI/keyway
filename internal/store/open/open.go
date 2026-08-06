@@ -9,9 +9,9 @@ import (
 	"context"
 	"strings"
 
-	"github.com/nometria/keyway/internal/store"
-	"github.com/nometria/keyway/internal/store/memory"
-	"github.com/nometria/keyway/internal/store/postgres"
+	"github.com/Keyway-AI/keyway/internal/store"
+	"github.com/Keyway-AI/keyway/internal/store/memory"
+	"github.com/Keyway-AI/keyway/internal/store/postgres"
 )
 
 // Open returns a store for the DSN plus a cleanup func to call on shutdown.

@@ -3,7 +3,7 @@ package attack
 import (
 	"testing"
 
-	"github.com/nometria/keyway/internal/threats"
+	"github.com/Keyway-AI/keyway/internal/threats"
 )
 
 // TestTaxonomyBridge keeps the harness and the threat taxonomy in lockstep: every

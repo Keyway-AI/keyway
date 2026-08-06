@@ -1,4 +1,4 @@
-module github.com/nometria/keyway
+module github.com/Keyway-AI/keyway
 
 go 1.25.0
 

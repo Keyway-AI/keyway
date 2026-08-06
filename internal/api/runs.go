@@ -3,7 +3,7 @@ package api
 import (
 	"sync"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // runIndex keeps the results of recent probe runs by run_id so they can be

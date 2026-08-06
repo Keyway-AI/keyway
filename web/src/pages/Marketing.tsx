@@ -5,7 +5,7 @@ import { AppPreview } from "../components/AppPreview";
 import { AgentMock, BlastMock, CoverageMock, DiffMock, HarnessMock } from "../components/FeatureMocks";
 import { IconAgent, IconBlast, IconCoverage, IconFindings, IconProbes, IconChanges } from "../components/icons";
 
-const GITHUB = "https://github.com/nometria/keyway";
+const GITHUB = "https://github.com/Keyway-AI/keyway";
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 function Hero() {

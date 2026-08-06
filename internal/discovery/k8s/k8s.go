@@ -11,8 +11,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/nometria/keyway/internal/discovery"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // ownerLabelPriority is the label lookup order for OwnerTeam (PRD §7.3).

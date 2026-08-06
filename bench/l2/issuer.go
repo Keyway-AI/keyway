@@ -6,7 +6,7 @@ import (
 	"flag"
 	"net/http"
 
-	"github.com/nometria/keyway/internal/issuer/generic"
+	"github.com/Keyway-AI/keyway/internal/issuer/generic"
 )
 
 // runIssuer serves a minimal OIDC issuer plus a test-only /mint endpoint the

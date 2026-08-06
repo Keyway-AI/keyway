@@ -13,9 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nometria/keyway/internal/app"
-	"github.com/nometria/keyway/internal/issuerregistry"
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/app"
+	"github.com/Keyway-AI/keyway/internal/issuerregistry"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // memStore is a minimal in-memory store.Store for handler tests.

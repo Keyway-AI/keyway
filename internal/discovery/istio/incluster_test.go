@@ -11,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 
-	"github.com/nometria/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/discovery"
 )
 
 func gvr(resource string) schema.GroupVersionResource {

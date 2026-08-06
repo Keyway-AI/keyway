@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nometria/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/discovery"
 )
 
 // TestScalarAudiencesTolerated guards the robustness fix found by the 60-repo

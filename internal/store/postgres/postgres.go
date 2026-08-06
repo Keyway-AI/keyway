@@ -11,8 +11,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/store"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/store"
 )
 
 // Store is the PostgreSQL-backed implementation of store.Store.

@@ -6,11 +6,11 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/nometria/keyway/internal/blastradius"
-	"github.com/nometria/keyway/internal/issuer/generic"
-	"github.com/nometria/keyway/internal/libdefaults"
-	"github.com/nometria/keyway/internal/model"
-	"github.com/nometria/keyway/internal/probe"
+	"github.com/Keyway-AI/keyway/internal/blastradius"
+	"github.com/Keyway-AI/keyway/internal/issuer/generic"
+	"github.com/Keyway-AI/keyway/internal/libdefaults"
+	"github.com/Keyway-AI/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/probe"
 )
 
 // Result is the outcome of validating one real-world case against Keyway.

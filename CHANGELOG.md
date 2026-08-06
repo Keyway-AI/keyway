@@ -55,5 +55,5 @@ First public release.
 - The probe engine is deny-by-default with a staging allowlist and a hard production guard.
 - Security audit: [docs/security-audit.md](docs/security-audit.md).
 
-[Unreleased]: https://github.com/nometria/keyway/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/nometria/keyway/releases/tag/v0.1.0
+[Unreleased]: https://github.com/Keyway-AI/keyway/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Keyway-AI/keyway/releases/tag/v0.1.0

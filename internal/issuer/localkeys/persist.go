@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nometria/keyway/internal/model"
+	"github.com/Keyway-AI/keyway/internal/model"
 )
 
 // PersistedKey is the serializable form of a managed key, including its private

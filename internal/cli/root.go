@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/nometria/keyway/internal/version"
+	"github.com/Keyway-AI/keyway/internal/version"
 )
 
 // Options configures the root command tree.

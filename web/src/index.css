@@ -169,6 +169,64 @@
   color: var(--color-faint);
 }
 
+/*
+ * ── Luminous grounds (swishX-inspired) ──────────────────────────────────
+ * A warm, premium radial wash for hero / sign-in / onboarding grounds. Emerald
+ * stays the brand accent; these add depth and light without going neon. Kept
+ * behind content (pointer-events:none) and toned down in dark mode.
+ */
+.aurora {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-bg);
+}
+.aurora::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(52rem 34rem at 12% -8%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 60%),
+    radial-gradient(46rem 30rem at 108% 6%, color-mix(in srgb, #f6b24d 26%, transparent), transparent 58%),
+    radial-gradient(60rem 42rem at 78% 118%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 60%);
+}
+.dark .aurora::before {
+  opacity: 0.5;
+}
+
+/* Frosted floating panel — the swishX "card that hovers" look. */
+.glass {
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+/* Soft glow for the primary CTA — light-forward, subtle. */
+.glow-accent {
+  box-shadow:
+    0 10px 30px -8px color-mix(in srgb, var(--color-accent) 45%, transparent),
+    0 2px 6px -2px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* Heavier, rounder display headline (the bold swishX hero voice). */
+.display {
+  font-weight: 680;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+/* Superscript footnote marker, orange like swishX's citations. */
+.footnote-ref {
+  font-size: 0.62em;
+  font-weight: 600;
+  vertical-align: super;
+  color: var(--color-high);
+  margin-left: 0.12em;
+}
+
 /* Modal entrance. */
 @keyframes sheet-in {
   from { opacity: 0; transform: translateY(8px) scale(0.99); }

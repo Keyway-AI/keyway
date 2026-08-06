@@ -17,6 +17,7 @@ export function BrandMark({ size = "md" }: { size?: "sm" | "md" }) {
 const navLinks = [
   { to: "/features", label: "Features" },
   { to: "/pricing", label: "Pricing" },
+  { to: "/cloud", label: "Cloud" },
   { to: "/app/coverage", label: "Coverage" },
   { to: "/contact", label: "Contact" },
 ];
@@ -53,7 +54,7 @@ export function MarketingNav() {
           </Link>
           <Link
             to="/signup"
-            className="inline-flex h-9 items-center rounded-md bg-accent px-4 text-body font-medium text-accent-fg shadow-xs transition hover:bg-accent-strong active:scale-[0.98]"
+            className="glow-accent inline-flex h-9 items-center rounded-md bg-accent px-4 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
           >
             Get started
           </Link>

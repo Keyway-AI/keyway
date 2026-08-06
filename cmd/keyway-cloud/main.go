@@ -18,6 +18,12 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -49,6 +55,7 @@ func main() {
 		log.Printf("note: GitHub OAuth not configured; set GITHUB_CLIENT_ID/SECRET (or KEYWAY_CLOUD_DEV_LOGIN=1 for local dev)")
 	}
 	if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }

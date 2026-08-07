@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -68,6 +69,7 @@ func (s *Server) Routes() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireUser)
 		r.Get("/v1/me", s.handleMe)
+		r.Post("/v1/tokens", s.handleMintToken)
 		r.Get("/v1/projects", s.handleListProjects)
 		r.Post("/v1/projects", s.handleCreateProject)
 		r.Get("/v1/projects/{id}", s.handleGetProject)
@@ -149,18 +151,25 @@ func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, s.user(r))
 }
 
-// requireUser is auth middleware: it validates the session cookie and loads the
-// user, 401ing otherwise.
+// requireUser is auth middleware: it authenticates either the browser session
+// cookie or an `Authorization: Bearer <token>` credential (used by the CLI and
+// GitHub Action), loads the user, and 401s otherwise.
 func (s *Server) requireUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie("keyway_session")
-		if err != nil {
-			writeErr(w, http.StatusUnauthorized, "sign in required")
+		value, present := bearerToken(r)
+		if !present {
+			if c, err := r.Cookie("keyway_session"); err == nil {
+				value = c.Value
+				present = true
+			}
+		}
+		if !present {
+			writeErr(w, http.StatusUnauthorized, "sign in required (session cookie or Bearer token)")
 			return
 		}
-		uid, ok := verifySession(s.cfg.SessionSecret, c.Value)
+		uid, ok := verifyToken(s.cfg.SessionSecret, value)
 		if !ok {
-			writeErr(w, http.StatusUnauthorized, "session expired")
+			writeErr(w, http.StatusUnauthorized, "session expired or invalid token")
 			return
 		}
 		u, err := s.store.GetUser(r.Context(), uid)
@@ -169,6 +178,25 @@ func (s *Server) requireUser(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userCtxKey, u)))
+	})
+}
+
+// bearerToken extracts a bearer credential from the Authorization header.
+func bearerToken(r *http.Request) (string, bool) {
+	h := r.Header.Get("Authorization")
+	if len(h) > 7 && strings.EqualFold(h[:7], "bearer ") {
+		return strings.TrimSpace(h[7:]), true
+	}
+	return "", false
+}
+
+// handleMintToken issues a long-lived CI/CLI token for the current user. The token
+// is returned once and never stored server-side (it's a signed, stateless
+// credential), so the UI must surface it immediately.
+func (s *Server) handleMintToken(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"token":      mintCIToken(s.cfg.SessionSecret, s.user(r).ID),
+		"expires_at": time.Now().Add(ciTokenTTL).UTC(),
 	})
 }
 

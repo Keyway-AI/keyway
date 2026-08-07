@@ -169,6 +169,10 @@ export const cloud = {
   devLogin: () => req<CloudUser>("/v1/auth/dev-login", { method: "POST" }),
   logout: () => req<void>("/v1/auth/logout", { method: "POST" }),
 
+  /** Mint a long-lived CI/CLI token. Returned once — surface it immediately. */
+  mintToken: () =>
+    req<{ token: string; expires_at: string }>("/v1/tokens", { method: "POST" }),
+
   listProjects: () =>
     req<{ projects: Project[] }>("/v1/projects").then((r) => r.projects ?? []),
 

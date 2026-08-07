@@ -132,6 +132,46 @@ func TestTenantIsolation(t *testing.T) {
 	}
 }
 
+func TestCITokenAuth(t *testing.T) {
+	ts, c := testServer(t)
+	doJSON(t, c, http.MethodPost, ts.URL+"/v1/auth/dev-login", nil)
+
+	// Mint a CI token via the cookie session.
+	code, tok := doJSON(t, c, http.MethodPost, ts.URL+"/v1/tokens", nil)
+	if code != http.StatusCreated {
+		t.Fatalf("mint token: %d", code)
+	}
+	token, _ := tok["token"].(string)
+	if token == "" || token[:5] != "kwci_" {
+		t.Fatalf("expected a kwci_ token, got %q", token)
+	}
+
+	// A fresh client with NO cookie, authenticating by Bearer token only.
+	bare := &http.Client{}
+	req, _ := http.NewRequest(http.MethodGet, ts.URL+"/v1/projects", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res, err := bare.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("bearer token should authenticate, got %d", res.StatusCode)
+	}
+
+	// A bogus bearer token is rejected.
+	req2, _ := http.NewRequest(http.MethodGet, ts.URL+"/v1/projects", nil)
+	req2.Header.Set("Authorization", "Bearer kwci_not-a-real-token")
+	res2, err := bare.Do(req2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res2.Body.Close()
+	if res2.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("bogus token should be 401, got %d", res2.StatusCode)
+	}
+}
+
 func TestPublicAgentInspect(t *testing.T) {
 	ts, c := testServer(t)
 	// A well-formed JWT with no exp — public tool, no auth required, real analysis.

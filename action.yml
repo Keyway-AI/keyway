@@ -1,0 +1,92 @@
+# Keyway — verify your JWT / agent-auth token contracts in CI.
+#
+# Runs `keyway cloud analyze` on your config. With `server` set it uploads to a
+# Keyway Cloud API (the hosted service or your self-hosted keyway-cloud) for
+# history + a shared report; without it, the action runs fully offline, diffing
+# against a committed baseline file. Fails the job when drift meets `fail-on`.
+#
+#   - uses: Keyway-AI/keyway@v0
+#     with:
+#       server: https://cloud.example.com     # omit for offline/local mode
+#       token: ${{ secrets.KEYWAY_TOKEN }}
+#       project: prj_123
+#       path: deploy/
+#       fail-on: high
+name: Keyway
+description: Discover your JWT / agent-auth token contract and fail the build on breaking drift.
+branding:
+  icon: key
+  color: green
+
+inputs:
+  path:
+    description: Manifest files or directories to scan (space- or comma-separated).
+    required: false
+    default: "."
+  server:
+    description: Keyway Cloud API base URL. Leave empty to run offline against a baseline file.
+    required: false
+    default: ""
+  token:
+    description: API token for the server (create one in the project's "Connect CI" panel). Pass via a secret.
+    required: false
+    default: ""
+  project:
+    description: Project id on the server (required when `server` is set).
+    required: false
+    default: ""
+  baseline:
+    description: "Offline mode: baseline contract file to diff against (JSON)."
+    required: false
+    default: ""
+  write-baseline:
+    description: "Offline mode: write the derived contract to this file (to create/update the baseline)."
+    required: false
+    default: ""
+  fail-on:
+    description: "Fail the job if any change is at or above this severity: none|low|medium|high|critical."
+    required: false
+    default: high
+  version:
+    description: Keyway CLI version to install (a module version like v0.1.0, or "latest").
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: stable
+        cache: false
+
+    - name: Install Keyway CLI
+      shell: bash
+      run: go install github.com/Keyway-AI/keyway/cmd/keyway@${{ inputs.version }}
+
+    - name: Analyze token contracts
+      shell: bash
+      env:
+        KEYWAY_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        args=(cloud analyze --fail-on "${{ inputs.fail-on }}")
+        # --path accepts repeated values; split on whitespace/commas.
+        for p in $(printf '%s' "${{ inputs.path }}" | tr ',' ' '); do
+          args+=(--path "$p")
+        done
+        [ -n "${{ inputs.server }}" ]         && args+=(--server "${{ inputs.server }}")
+        [ -n "${{ inputs.project }}" ]        && args+=(--project "${{ inputs.project }}")
+        [ -n "${{ inputs.baseline }}" ]       && args+=(--baseline "${{ inputs.baseline }}")
+        [ -n "${{ inputs.write-baseline }}" ] && args+=(--write-baseline "${{ inputs.write-baseline }}")
+
+        echo "## 🔑 Keyway contract analysis" >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        # Tee output to the job summary; preserve keyway's exit code for the gate.
+        set +e
+        "$(go env GOPATH)/bin/keyway" "${args[@]}" 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+        code=${PIPESTATUS[0]}
+        set -e
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        exit "$code"

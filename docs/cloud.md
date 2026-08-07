@@ -49,13 +49,19 @@ Public:
 - `POST /v1/agent/inspect` — stateless agent/JWT token analysis (real)
 - `GET  /v1/threats/coverage` — the cited threat taxonomy
 
-Authenticated (session cookie):
+Authenticated (session cookie **or** `Authorization: Bearer <token>` for CLI/CI):
 - `GET  /v1/me`
+- `POST /v1/tokens` — mint a long-lived CI/CLI bearer token (returned once)
 - `GET/POST /v1/projects` · `GET/DELETE /v1/projects/{id}`
 - `POST /v1/projects/{id}/analyze` — body `{manifests:{path:content}}` (upload) or empty to sync a connected repo → runs the engine, diffs vs the last analysis, persists
 - `GET  /v1/projects/{id}/analyses` — history · `GET /v1/analyses/{id}`
 
 Every project/analysis read is scoped to the requesting user (tenant isolation).
+
+**Run it from CI.** The `keyway cloud analyze` CLI and the `Keyway-AI/keyway`
+GitHub Action push a repo's config to `/v1/projects/{id}/analyze` with a bearer
+token and fail the build on breaking drift — or run fully offline against a
+committed baseline. See **[ci.md](ci.md)**.
 
 ## Hosting notes
 

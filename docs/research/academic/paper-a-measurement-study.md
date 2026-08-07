@@ -1,5 +1,7 @@
 # Paper A — A Measurement Study of Token‑Auth Contracts and Drift in the Wild
 
+**Author team (planned):** Archit Sharma, Garima Mann.
+
 *Design document. Status: proposed. This is a plan — it contains **no results**,
 only the study we would run. Nothing here may be cited as a finding until the
 study is executed.*

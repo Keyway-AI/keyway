@@ -3,6 +3,10 @@
 **Goal (stated):** academic credibility and reputation first; developer adoption
 is expected to follow. This directory is the program to get there — honestly.
 
+**Author team:** Archit Sharma, Garima Mann (co‑founders). See the note on an
+*academic* collaborator under "Credibility multipliers" below — that is a distinct,
+additional lever, not a substitute for founding‑team authorship.
+
 > These are **plans, not papers.** They contain no results. Keyway's current
 > write‑ups (`../whitepaper.md`, `../01`–`04`) are strong *engineering*
 > documentation; they are **not** yet publishable research, for one reason below.
@@ -43,10 +47,15 @@ citation. Many teams do A→B.
 
 ## Credibility multipliers (use them)
 
-- **Bring in an academic co‑author.** A systems‑security professor or senior PhD
-  student changes both the odds and the perceived credibility, and shores up the
-  parts this work is weakest on (related‑work positioning, evaluation rigor). This
-  is the **single highest‑leverage move** for the stated goal.
+- **Add an academic collaborator (in addition to the founding team).** The author
+  team is Archit Sharma and Garima Mann; the multiplier here is specifically a
+  collaborator with a **peer‑review track record at these venues** — a
+  systems‑security professor or senior PhD student. They change both the odds and
+  the perceived credibility, and shore up the parts this work is weakest on
+  (related‑work positioning, evaluation rigor). This remains the **single
+  highest‑leverage move** for the stated goal, and is distinct from co‑founder
+  authorship. If either founder holds such a track record, that need is already
+  partly met.
 - **Chase Artifact Evaluation badges.** USENIX/CCS/S&P/NDSS award
   *Available / Functional / Reproduced* badges. Keyway's `make bench` /
   `make mutation` reproducibility is tailor‑made for this — honest, bankable

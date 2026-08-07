@@ -161,17 +161,27 @@ design critique.
 
 ## How accurate is it?
 
-On a corpus of **805 realistic before/after changes** (half real contract
+On a corpus of **1,226 realistic before/after changes** (half real contract
 changes, half ordinary redeploy noise), Keyway catches **100% of real changes**
-with **0% false alarms** — including a "noisy redeploy" that churns six unrelated
-things at once. See [**BENCHMARK.md**](BENCHMARK.md) for the plain-English study
-and market comparison, [docs/benchmark.md](docs/benchmark.md) for methodology, and
-reproduce it yourself:
+with **0% false alarms** on the gated corpus — including a "noisy redeploy" that
+churns six unrelated things at once. Because a perfect score on a self-authored
+corpus proves consistency, not generalisation, it also survives mutation testing
+(24 mutants, 100% killed) and scores a deliberately honest **0.75 Youden on a
+held-out adversarial corpus**. See [**BENCHMARK.md**](BENCHMARK.md) for the
+plain-English study, [docs/benchmark-integrity.md](docs/benchmark-integrity.md)
+for the overfit stress-tests, and reproduce it yourself:
 
 ```bash
 make bench            # scorecard
 make bench-report     # + an interactive report.html
 ```
+
+## Research & methods
+
+The approach, benchmark design, and honest results — with limitations — are
+written up as a [**whitepaper**](docs/whitepaper.md) and a series of arXiv-style
+[research notes](docs/research/) (contract discovery, drift classification,
+adversarial verification, agent-auth). The on-site hub is at `/research`.
 
 And it's validated against **real, documented incidents** — `alg=none`
 ([CVE-2022-23540](https://nvd.nist.gov/vuln/detail/CVE-2022-23540)), RS256→HS256

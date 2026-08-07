@@ -18,7 +18,7 @@ const navLinks = [
   { to: "/features", label: "Features" },
   { to: "/pricing", label: "Pricing" },
   { to: "/cloud", label: "Cloud" },
-  { to: "/app/coverage", label: "Coverage" },
+  { to: "/research", label: "Research" },
   { to: "/contact", label: "Contact" },
 ];
 
@@ -77,8 +77,9 @@ const footerCols: { title: string; links: { label: string; to?: string; href?: s
   {
     title: "Resources",
     links: [
+      { label: "Research & methods", to: "/research" },
+      { label: "Whitepaper", href: "https://github.com/Keyway-AI/keyway/blob/main/docs/whitepaper.md" },
       { label: "GitHub", href: "https://github.com/Keyway-AI/keyway" },
-      { label: "Documentation", href: "https://github.com/Keyway-AI/keyway#readme" },
       { label: "Security", href: "https://github.com/Keyway-AI/keyway/blob/main/SECURITY.md" },
       { label: "Changelog", href: "https://github.com/Keyway-AI/keyway/releases" },
     ],

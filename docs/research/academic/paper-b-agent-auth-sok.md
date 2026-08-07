@@ -1,5 +1,7 @@
 # Paper B — Authorization for Autonomous Agents: Systematization + Measurement
 
+**Author team (planned):** Archit Sharma, Garima Mann.
+
 *Design document. Status: proposed. A plan, not results. The threat taxonomy it
 builds on is real (`internal/threats`, 15 agent‑domain threats, all cited); every
 empirical claim below is to be measured, not assumed.*

@@ -120,6 +120,28 @@ make serve        # the API + scheduler on :8080 (uses your KEYWAY_DB_URL)
 make web-dev      # Vite dev server on :5173, sample data + hot reload (proxies /v1 → :8080)
 ```
 
+## In CI
+
+Gate pull requests on token-contract drift with the CLI or the GitHub Action —
+against **Keyway Cloud** (hosted or your own `keyway-cloud`) for shared history, or
+**fully offline** against a committed baseline (no account, no network):
+
+```yaml
+- uses: Keyway-AI/keyway@v0
+  with:
+    server: https://cloud.example.com   # omit for offline mode
+    token: ${{ secrets.KEYWAY_TOKEN }}
+    project: ${{ vars.KEYWAY_PROJECT }}
+    path: deploy/
+    fail-on: high
+```
+
+```bash
+keyway cloud analyze --path deploy/ --baseline .keyway/baseline.json --fail-on high
+```
+
+See [**docs/ci.md**](docs/ci.md) for both modes, all flags, and token setup.
+
 ## Architecture
 
 ```

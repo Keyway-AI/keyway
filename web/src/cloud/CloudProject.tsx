@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { cloud, isUnauthorized } from "./api";
+import { cloud, CLOUD_BASE, isUnauthorized } from "./api";
 import type { Analysis, AnalysisSummary, Project } from "./api";
 import { useCloudAuth } from "./CloudAuth";
 import { Button, Card, Empty, Pill, StatTile, Table, Td, Th } from "../components/ui";
@@ -177,9 +177,130 @@ export default function CloudProject() {
           <div className="space-y-6">
             <AnalysisView analysis={current} />
           </div>
-          <HistoryPanel history={history} currentId={current.id} onSelect={viewAnalysis} />
+          <div className="space-y-6">
+            <HistoryPanel history={history} currentId={current.id} onSelect={viewAnalysis} />
+            <ConnectCIPanel projectId={project.id} />
+          </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ── Connect CI / CLI ───────────────────────────────────────────────────── */
+
+function ConnectCIPanel({ projectId }: { projectId: string }) {
+  const [token, setToken] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const server = CLOUD_BASE || window.location.origin;
+
+  async function generate() {
+    setBusy(true);
+    setErr("");
+    try {
+      const r = await cloud.mintToken();
+      setToken(r.token);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not create token");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const tokenRef = token ?? "$KEYWAY_TOKEN";
+  const cli = `keyway cloud analyze \\
+  --server ${server} \\
+  --token ${tokenRef} \\
+  --project ${projectId} \\
+  --path deploy/ --fail-on high`;
+  const action = `- uses: Keyway-AI/keyway@v0
+  with:
+    server: ${server}
+    token: \${{ secrets.KEYWAY_TOKEN }}
+    project: ${projectId}
+    path: deploy/
+    fail-on: high`;
+
+  return (
+    <Card title="Connect CI / CLI" bodyClassName="p-4">
+      <p className="text-caption text-muted">
+        Run Keyway from your pipeline and report drift here. Works with the CLI or the GitHub Action.
+      </p>
+
+      <div className="mt-3">
+        <div className="eyebrow mb-1">Project id</div>
+        <CopyRow value={projectId} />
+      </div>
+
+      <div className="mt-4">
+        <div className="eyebrow mb-1">API token</div>
+        {token ? (
+          <>
+            <CopyRow value={token} mono />
+            <p className="mt-1.5 text-micro text-high">
+              Copy it now — it won't be shown again. Store it as a CI secret (KEYWAY_TOKEN).
+            </p>
+          </>
+        ) : (
+          <Button variant="secondary" size="sm" onClick={generate} loading={busy}>
+            Generate token
+          </Button>
+        )}
+        {err && <p className="mt-1 text-micro text-critical">{err}</p>}
+      </div>
+
+      <Snippet label="CLI" code={cli} />
+      <Snippet label="GitHub Action" code={action} />
+    </Card>
+  );
+}
+
+function CopyRow({ value, mono = false }: { value: string; mono?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="flex items-stretch gap-1.5">
+      <code
+        className={`min-w-0 flex-1 truncate rounded-md border border-border bg-surface-2 px-2.5 py-1.5 text-caption ${
+          mono ? "font-mono" : ""
+        }`}
+      >
+        {value}
+      </code>
+      <button
+        onClick={() => {
+          void navigator.clipboard?.writeText(value);
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 1200);
+        }}
+        className="shrink-0 rounded-md border border-border bg-surface px-2.5 text-caption text-muted transition hover:bg-surface-2 hover:text-text"
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
+  );
+}
+
+function Snippet({ label, code }: { label: string; code: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="mt-4">
+      <div className="mb-1 flex items-center justify-between">
+        <div className="eyebrow">{label}</div>
+        <button
+          onClick={() => {
+            void navigator.clipboard?.writeText(code);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1200);
+          }}
+          className="text-micro font-medium text-muted transition hover:text-text"
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <pre className="overflow-x-auto rounded-md border border-border bg-surface-2 p-2.5 text-[0.72rem] leading-relaxed">
+        <code className="font-mono">{code}</code>
+      </pre>
     </div>
   );
 }

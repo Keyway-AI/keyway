@@ -44,6 +44,7 @@ func NewRootCmd(opts Options) *cobra.Command {
 		newCanaryCmd(),
 		newThreatsCmd(),
 		newAgentCmd(),
+		newCloudCmd(),
 		newReportCmd(),
 		newServeCmd(),
 		newMigrateCmd(),

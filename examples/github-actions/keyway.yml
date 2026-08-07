@@ -1,0 +1,40 @@
+# Example: gate pull requests on JWT / agent-auth contract drift with Keyway.
+# Copy this to .github/workflows/keyway.yml in your repo.
+#
+# Two ways to run — pick one:
+#   A. Hosted / self-hosted  — reports to a Keyway Cloud API (history + shared UI)
+#   B. Offline               — diffs against a baseline file committed to your repo
+name: Keyway
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  contract-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── A. Report to Keyway Cloud (hosted or your own keyway-cloud) ──────────
+      # Create a token in the project's "Connect CI" panel and store it as the
+      # KEYWAY_TOKEN repository secret. Set KEYWAY_PROJECT to the project id.
+      - uses: Keyway-AI/keyway@v0
+        with:
+          server: https://cloud.example.com     # your Keyway Cloud API
+          token: ${{ secrets.KEYWAY_TOKEN }}
+          project: ${{ vars.KEYWAY_PROJECT }}
+          path: deploy/                          # where your Istio/Envoy/OIDC YAML lives
+          fail-on: high                          # fail the PR on a high+ breaking change
+
+      # ── B. Offline, no account (alternative to A) ───────────────────────────
+      # Commit .keyway/baseline.json (run `keyway cloud analyze --path deploy/
+      # --write-baseline .keyway/baseline.json` once and commit it). CI then
+      # diffs each change against it — no server, no token.
+      #
+      # - uses: Keyway-AI/keyway@v0
+      #   with:
+      #     path: deploy/
+      #     baseline: .keyway/baseline.json
+      #     fail-on: high

@@ -24,37 +24,37 @@ const navLinks = [
 
 export function MarketingNav() {
   return (
-    <header className="sticky top-0 z-30 border-b border-border/70 bg-bg/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5 sm:px-8">
-        <div className="flex items-center gap-8">
+    <header className="sticky top-0 z-30 px-3 pt-3 sm:px-5 sm:pt-4">
+      <div className="glass mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-pill py-2 pl-4 pr-2 shadow-md">
+        <div className="flex items-center gap-7">
           <BrandMark />
           <nav className="hidden items-center gap-6 md:flex">
             {navLinks.map((l) => (
-              <Link key={l.to} to={l.to} className="text-body font-medium text-muted transition hover:text-text">
+              <Link key={l.to} to={l.to} className="text-caption font-medium text-muted transition hover:text-text">
                 {l.label}
               </Link>
             ))}
             <a
               href="https://github.com/Keyway-AI/keyway"
-              className="text-body font-medium text-muted transition hover:text-text"
+              className="text-caption font-medium text-muted transition hover:text-text"
             >
               GitHub
             </a>
           </nav>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <div className="hidden sm:block">
             <ThemeToggle />
           </div>
           <Link
             to="/login"
-            className="hidden h-9 items-center rounded-md px-3 text-body font-medium text-muted transition hover:text-text sm:inline-flex"
+            className="hidden h-9 items-center rounded-pill px-3 text-caption font-medium text-muted transition hover:text-text sm:inline-flex"
           >
             Sign in
           </Link>
           <Link
             to="/signup"
-            className="glow-accent inline-flex h-9 items-center rounded-md bg-accent px-4 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
+            className="glow-accent inline-flex h-9 items-center rounded-pill bg-accent px-4 text-caption font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
           >
             Get started
           </Link>

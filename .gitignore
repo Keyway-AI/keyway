@@ -4,8 +4,11 @@
 *.dll
 *.so
 *.dylib
-keyway
-keyway-runner
+# Root-level built binaries only — anchored so they don't swallow the
+# cmd/keyway and cmd/keyway-runner *source* directories (which they did).
+/keyway
+/keyway-runner
+/keyway-cloud
 
 # Test & coverage
 *.test

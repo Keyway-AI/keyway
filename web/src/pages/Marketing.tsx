@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { ComponentType } from "react";
 import { MarketingShell } from "../components/MarketingChrome";
 import { AppPreview } from "../components/AppPreview";
+import { TokenInspector } from "../components/TokenInspector";
 import { AgentMock, BlastMock, CoverageMock, DiffMock, HarnessMock } from "../components/FeatureMocks";
 import { IconAgent, IconBlast, IconCoverage, IconFindings, IconProbes, IconChanges } from "../components/icons";
 
@@ -11,38 +12,51 @@ const GITHUB = "https://github.com/Keyway-AI/keyway";
 function Hero() {
   return (
     <section className="aurora relative overflow-hidden border-b border-border">
-      <div className="mx-auto max-w-6xl px-5 pt-16 text-center sm:px-8 sm:pt-24">
-        <a
-          href={GITHUB}
-          className="glass inline-flex items-center gap-2 rounded-pill px-3.5 py-1.5 text-caption font-medium text-muted shadow-sm transition hover:text-text"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-low" />
-          Open-source · JWT &amp; agent-auth verification
-          <span className="text-faint">→</span>
-        </a>
-        <h1 className="display mx-auto mt-6 max-w-3xl text-[2.75rem] leading-[1.02] sm:text-[3.5rem]">
-          Know your token contracts hold — <span className="text-accent">before</span> they break.
-        </h1>
-        <p className="mx-auto mt-5 max-w-xl text-body-lg text-muted">
-          Keyway discovers what your services expect from JWTs, versions it as a contract, and adversarially tests that a correct verifier is enforced — for classic services and AI agents alike.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            to="/signup"
-            className="glow-accent inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
-          >
-            Get started — free
-          </Link>
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-14 sm:px-8 sm:pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-24">
+        {/* left: positioning */}
+        <div className="text-center lg:text-left">
           <a
             href={GITHUB}
-            className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-surface px-5 text-body font-medium text-text shadow-xs transition hover:bg-surface-2 active:scale-[0.98]"
+            className="glass inline-flex items-center gap-2 rounded-pill px-3.5 py-1.5 text-caption font-medium text-muted shadow-sm transition hover:text-text"
           >
-            <GitHubIcon />
-            Star on GitHub
+            <span className="h-1.5 w-1.5 rounded-full bg-low" />
+            Open source · MIT · JWT &amp; agent-auth
+            <span className="text-faint">→</span>
           </a>
+          <h1 className="display mt-6 text-[2.6rem] leading-[1.02] sm:text-[3.25rem]">
+            Verify the auth<br className="hidden sm:block" /> everyone else <span className="text-accent">assumes.</span>
+          </h1>
+          <p className="mx-auto mt-5 max-w-lg text-body-lg text-muted lg:mx-0">
+            Keyway learns what your services expect from a token, versions it as a contract, and
+            attacks your own verifier to prove it holds — before a key rotation, a new issuer, or a
+            forged agent token takes you down.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+            <Link
+              to="/signup"
+              className="glow-accent inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
+            >
+              Get started — free
+            </Link>
+            <a
+              href={GITHUB}
+              className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-surface px-5 text-body font-medium text-text shadow-xs transition hover:bg-surface-2 active:scale-[0.98]"
+            >
+              <GitHubIcon />
+              Star on GitHub
+            </a>
+          </div>
+          <p className="mt-4 text-caption text-faint">
+            Runs on sample data out of the box — no backend, no signup to look around.
+          </p>
         </div>
-        <div className="mx-auto mt-14 max-w-4xl pb-16 sm:mt-16">
-          <AppPreview />
+
+        {/* right: try it now */}
+        <div className="relative">
+          <div className="mb-2.5 text-center text-caption font-medium text-muted lg:text-left">
+            Try it now — paste an agent token:
+          </div>
+          <TokenInspector />
         </div>
       </div>
     </section>
@@ -70,26 +84,143 @@ function StandardsStrip() {
   );
 }
 
-/* ── Stats band ───────────────────────────────────────────────────────── */
-function Stats() {
+/* ── Proof band ───────────────────────────────────────────────────────────
+ * Every number here is measured and links to its source. No fabricated traction
+ * — the honesty (including the overfit caveat) is the point. */
+const DOCS = {
+  benchmark: `${GITHUB}/blob/main/BENCHMARK.md`,
+  integrity: `${GITHUB}/blob/main/docs/benchmark-integrity.md`,
+  coverage: `${GITHUB}/blob/main/docs/threat-coverage.md`,
+  realworld: `${GITHUB}/blob/main/docs/realworld-validation.md`,
+};
+
+function Proof() {
   const stats = [
-    { n: "50", l: "documented threats, all cited", ref: "1" },
-    { n: "60%", l: "JWT coverage, gaps named" },
-    { n: "40%", l: "agent-auth coverage, and rising" },
-    { n: "0", l: "corpus we grade ourselves on" },
+    { n: "1,226", l: "config changes in the benchmark", href: DOCS.benchmark },
+    { n: "100%", l: "real changes caught (recall)", href: DOCS.benchmark },
+    { n: "0%", l: "false alarms on redeploy noise", href: DOCS.benchmark },
+    { n: "54%", l: "of 50 cited threats — gaps named", href: DOCS.coverage },
   ];
   return (
+    <section className="border-b border-border bg-surface-2/30">
+      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+          {stats.map((s) => (
+            <a key={s.l} href={s.href} className="group text-center">
+              <div className="text-h1 font-semibold tracking-tight tabular-nums text-accent">{s.n}</div>
+              <div className="mt-1 text-caption text-muted transition group-hover:text-text">{s.l}</div>
+            </a>
+          ))}
+        </div>
+        <p className="mx-auto mt-8 max-w-2xl text-center text-caption text-muted">
+          <span className="font-medium text-text">“100% sounds too good.”</span> It is — on a corpus
+          we wrote. So we stress-test it: mutation testing kills every behaviour-changing detector
+          bug, and a held-out adversarial corpus scores <span className="font-medium text-text">0.75,
+          not 1.0</span>, with its misses named.{" "}
+          <a href={DOCS.integrity} className="font-medium text-accent hover:underline">
+            Read the integrity write-up →
+          </a>
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/* ── Product showcase: real output, not a description ─────────────────────── */
+function ProductShowcase() {
+  return (
     <section className="border-b border-border">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-5 py-12 sm:grid-cols-4 sm:px-8">
-        {stats.map((s) => (
-          <div key={s.l} className="text-center">
-            <div className="text-h1 font-semibold tracking-tight tabular-nums text-accent">
-              {s.n}
-              {s.ref && <sup className="footnote-ref">{s.ref}</sup>}
-            </div>
-            <div className="mt-1 text-caption text-muted">{s.l}</div>
-          </div>
-        ))}
+      <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="eyebrow">The dashboard</div>
+          <h2 className="mt-2 text-h1 font-semibold tracking-tight display">Every token contract, on one screen.</h2>
+          <p className="mt-3 text-body-lg text-muted">
+            Discovered consumers, versioned contracts, drift since the last snapshot, and
+            coverage — the whole auth surface, not a pile of raw diffs.
+          </p>
+        </div>
+        <div className="mx-auto mt-12 max-w-4xl">
+          <AppPreview />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Honest comparison ────────────────────────────────────────────────────── */
+function Comparison() {
+  const rows: { q: string; scanner: string; nothing: string; keyway: string }[] = [
+    {
+      q: "Which running services break if I rotate this key?",
+      scanner: "Guesses from source; can't see runtime",
+      nothing: "Lives in one senior engineer's head",
+      keyway: "Exact per-consumer break list + safe grace window",
+    },
+    {
+      q: "Is a widened audience a real change or just a redeploy?",
+      scanner: "Text-diffs — noisy on every redeploy",
+      nothing: "You find out in the incident channel",
+      keyway: "0% false alarms on 600+ noise pairs",
+    },
+    {
+      q: "Does my verifier actually reject alg=none / key confusion?",
+      scanner: "Flags patterns, never fires a real token",
+      nothing: "Untested until someone exploits it",
+      keyway: "Mints real attack tokens at staging",
+    },
+    {
+      q: "Is this AI agent's token over-scoped or non-expiring?",
+      scanner: "No model of agent / MCP auth",
+      nothing: "Nobody is checking",
+      keyway: "Cited findings vs MCP + OAuth RFCs",
+    },
+  ];
+  return (
+    <section className="border-b border-border bg-surface-2/30">
+      <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="eyebrow">Why Keyway</div>
+          <h2 className="mt-2 text-h1 font-semibold tracking-tight display">
+            A scanner guesses. Keyway proves.
+          </h2>
+          <p className="mt-3 text-body-lg text-muted">
+            Static code scanners are great at finding bugs in source — but auth correctness is a
+            property of what’s <span className="italic">running</span>, and that’s what they can’t see.
+          </p>
+        </div>
+        <div className="mt-12 overflow-x-auto">
+          <table className="w-full min-w-[46rem] border-collapse text-left">
+            <thead>
+              <tr>
+                <th className="w-[30%] px-4 py-3 text-caption font-semibold text-faint">The question</th>
+                <th className="px-4 py-3 text-caption font-semibold text-faint">Static scanner</th>
+                <th className="px-4 py-3 text-caption font-semibold text-faint">No tool (today)</th>
+                <th className="rounded-t-xl bg-accent-soft px-4 py-3 text-caption font-semibold text-accent">Keyway</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={r.q}>
+                  <td className="border-t border-border px-4 py-4 align-top text-body font-medium text-text">{r.q}</td>
+                  <td className="border-t border-border px-4 py-4 align-top text-caption text-muted">{r.scanner}</td>
+                  <td className="border-t border-border px-4 py-4 align-top text-caption text-muted">{r.nothing}</td>
+                  <td
+                    className={`border-t border-accent/20 bg-accent-soft/60 px-4 py-4 align-top text-caption font-medium text-text ${
+                      i === rows.length - 1 ? "rounded-b-xl" : ""
+                    }`}
+                  >
+                    {r.keyway}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-4 text-center text-caption text-faint">
+          Comparison reflects tool categories, not a head-to-head benchmark — the accuracy numbers
+          above are ours, measured; the scanner figures are their{" "}
+          <a href={DOCS.benchmark} className="text-accent hover:underline">published</a> ranges.
+        </p>
       </div>
     </section>
   );
@@ -264,7 +395,9 @@ export default function Marketing() {
     <MarketingShell>
       <Hero />
       <StandardsStrip />
-      <Stats />
+      <Proof />
+      <ProductShowcase />
+      <Comparison />
       <FeatureSections />
       <CTA />
     </MarketingShell>

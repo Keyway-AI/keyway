@@ -45,14 +45,15 @@ function Check() {
 export default function Pricing() {
   return (
     <MarketingShell>
-      <section className="mx-auto max-w-5xl px-5 py-16 text-center sm:px-8 sm:py-24">
-        <span className="eyebrow">Pricing</span>
-        <h1 className="mt-2 text-h1 font-semibold tracking-tight sm:text-[2.75rem]">
-          Free and open source. Cloud when you want it.
-        </h1>
-        <p className="mx-auto mt-3 max-w-lg text-body-lg text-muted">
-          The whole tool is open source and self-hosted at no cost. A managed cloud with history and alerting is on the way.
-        </p>
+      <section className="aurora px-5 py-16 text-center sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-5xl">
+          <span className="eyebrow">Pricing</span>
+          <h1 className="display mx-auto mt-2 max-w-2xl text-[2.4rem] sm:text-[3rem]">
+            Free and open source. Cloud when you want it.
+          </h1>
+          <p className="mx-auto mt-4 max-w-lg text-body-lg text-muted">
+            The whole tool is open source and self-hosted at no cost. A managed cloud with history and alerting is on the way.
+          </p>
 
         <div className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-4 text-left md:grid-cols-2">
           {tiers.map((t) => (
@@ -101,6 +102,7 @@ export default function Pricing() {
               </ul>
             </div>
           ))}
+          </div>
         </div>
       </section>
     </MarketingShell>

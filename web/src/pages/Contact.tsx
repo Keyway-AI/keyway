@@ -78,13 +78,14 @@ const channels: Channel[] = [
 export default function Contact() {
   return (
     <MarketingShell>
-      <section className="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-24">
+      <section className="aurora px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-5xl">
         <div className="mx-auto max-w-2xl text-center">
           <span className="mx-auto grid h-12 w-12 place-items-center">
             <LogoBadge size={44} />
           </span>
           <span className="eyebrow mt-4 block">Contact</span>
-          <h1 className="mt-2 text-h1 font-semibold tracking-tight sm:text-[2.5rem]">Get in touch.</h1>
+          <h1 className="display mt-2 text-[2.2rem] sm:text-[2.75rem]">Get in touch.</h1>
           <p className="mx-auto mt-3 max-w-lg text-body-lg text-muted">
             Keyway is built in the open. The fastest way to reach us — and to shape where it goes — is on GitHub. For anything private, email works too.
           </p>
@@ -113,6 +114,7 @@ export default function Contact() {
         <p className="mx-auto mt-10 max-w-lg text-center text-caption text-faint">
           Keyway is open source under the MIT license. There is no sales team and no contact form to nowhere — every channel above reaches a real maintainer.
         </p>
+        </div>
       </section>
     </MarketingShell>
   );

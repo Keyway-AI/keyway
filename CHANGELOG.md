@@ -7,7 +7,7 @@ All notable changes to Keyway are documented here. The format is based on
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-07-31
+## [0.1.0] - 2026-08-07
 
 First public release.
 
@@ -42,6 +42,23 @@ First public release.
 - **Zero-config demo** — `keyway serve` and the container image fall back to an in-memory store
   (with a warning) when no database is configured, so the app and UI run out of the box;
   `make demo` and the "Try it" quickstart.
+- **Keyway Cloud** (`cloud/`, `keyway-cloud`) — a multi-tenant hosted layer that runs the static
+  half of Keyway (discovery → contract → drift → threat coverage) on connected or uploaded repos.
+  Reuses the exact engine; cookie-session auth, GitHub OAuth, tenant isolation. The live half
+  (probing, canary, blast radius) stays self-hosted by design — the cloud never handles signing
+  keys. In-memory store by default with a Postgres drop-in via the `cloud.Store` interface.
+  Frontend: sign-in, projects dashboard, and per-project contract/drift/history. See
+  [docs/cloud.md](docs/cloud.md).
+- **CI: CLI + GitHub Action** — `keyway cloud analyze` derives the contract from repo manifests and
+  either reports to a Keyway Cloud API (hosted or self-hosted) or runs fully offline against a
+  committed baseline, failing the build on drift at/above `--fail-on`. Composite GitHub Action
+  (`uses: Keyway-AI/keyway@v0`). Long-lived CI bearer tokens via `POST /v1/tokens`. See
+  [docs/ci.md](docs/ci.md).
+
+### Design
+- A luminous, swishX-inspired treatment (warm "aurora" grounds, frosted glass panels, glowing
+  accent CTAs, heavier display type) layered onto the ink-&-emerald identity across the marketing
+  hero and the Cloud surfaces.
 
 ### Changed
 - Migrations embed into the binary (`internal/store/postgres/migrations`) for in-VPC deployment.

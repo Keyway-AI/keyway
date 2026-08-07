@@ -2,7 +2,10 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    # Full semver tags only (vX.Y.Z, incl. -rc.N). This is a glob, not a regex:
+    # "v*.*.*" needs two dots, so the moving major pointer the GitHub Action uses
+    # (`v0`, no dots) never fires a duplicate release.
+    tags: ["v*.*.*"]
 
 permissions:
   contents: write

@@ -12,6 +12,15 @@ Start with the **[whitepaper](../whitepaper.md)** for the whole picture, then:
 3. [Adversarially verifying JWT verifiers](03-adversarial-verification.md)
 4. [Verifying AI-agent authorization](04-agent-auth.md)
 
+## Toward peer‑reviewed publication
+
+A concrete plan to take this work to academic venues — two paper designs
+(a measurement study and an agent‑auth SoK), the credibility multipliers, and a
+researched, dated list of venues & CFP deadlines — lives in
+**[academic/](academic/)**. It is candid about the gap: the current notes are
+strong engineering documentation, not yet publishable research, and the fix is a
+real (non‑self‑authored) evaluation.
+
 ## Reproduce the numbers
 
 ```bash

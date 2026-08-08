@@ -53,14 +53,29 @@ not all discovered services.
   measure discovery precision/recall on *real* data — that replaces the
   self-authored benchmark as the accuracy claim.
 
-## Running the full corpus
+## Building the corpus (`crawl.sh`)
 
-The 60-repo pinned-commit corpus lives in
-[`../oss/study/sources.tsv`](../oss/study/sources.tsv); fetch it with
-[`../oss/study/fetch.sh`](../oss/study/fetch.sh) (needs an authenticated `gh`),
-then point `--path` at the fetched manifests. Scaling toward the paper's target N
-(broadening the GitHub/Helm/MCP corpus, per-repo runs, and the labelled validation
-set) is the remaining research work.
+[`crawl.sh`](crawl.sh) crawls **public** GitHub for real auth config (Istio
+`RequestAuthentication`, Envoy `jwt_authn`, Istio claim-based authz), fetches each
+file, and records repo + blob SHA + license in [`sources.tsv`](sources.tsv). It is
+read-only and reads the token from `GH_TOKEN` — **never hardcode or commit a
+token.**
+
+```bash
+GH_TOKEN=<your-token> MAX_PAGES=1 MAX_PER_REPO=5 bash bench/measurement/crawl.sh
+go run ./bench/measurement --path bench/measurement/corpus --per-file
+```
+
+`--per-file` runs discovery on each file independently so same-named services
+across unrelated repos aren't merged by a colliding StableID — correct for a
+multi-repo population measurement. The fetched `corpus/` and `out/` are gitignored;
+only `sources.tsv` (the reproducible, attributable manifest) is committed.
+
+A first preliminary run (192 files / 127 repos → 50 JWT consumers) is recorded in
+**[FINDINGS.md](FINDINGS.md)** — explicitly **not** a publishable result; it
+documents the gaps the real study must close (scale, dedup of copied examples, a
+labeled validation set). Scaling toward the paper's target N is the remaining
+research work.
 
 ## Ethics
 

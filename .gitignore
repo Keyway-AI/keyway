@@ -55,3 +55,4 @@ roc.svg
 
 # Measurement-study pilot outputs (regenerate with `make measure`)
 /bench/measurement/out/
+/bench/measurement/corpus/

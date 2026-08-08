@@ -112,6 +112,18 @@ are weakest.
 - **Do not** submit to a top track until the labelled validation (accuracy on real
   data) and CIs are in hand — that is the whole point of the paper.
 
+## 8a. Status — the instrument exists
+
+The measurement harness is built: **[`bench/measurement`](../../../bench/measurement/)**
+(`make measure`). It runs discovery + contract read-only over a config corpus and
+emits a labelled `dataset.jsonl` plus `summary.json` with per-check prevalence and
+**Wilson 95% CIs**, for the checks P1–P5 in §3/§4 (each cited). It has been
+**pilot-run** on the bundled real manifests only (n≈5) to prove the pipeline — those
+numbers are **not** a study result and are not cited anywhere. Remaining research
+work: scale the corpus toward the §4.1 target N (broaden GitHub/Helm/MCP sources,
+per-repo runs), build the §4.2 hand-labelled validation set, and run the §4.3
+analysis.
+
 ## 9. Effort & timeline (honest)
 Corpus + pipeline hardening ~4–6 weeks; labelling + analysis ~4–6 weeks; writing +
 related work ~3–4 weeks. **~3 months of focused work** to a credible submission,

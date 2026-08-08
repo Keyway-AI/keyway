@@ -71,29 +71,33 @@ across unrelated repos aren't merged by a colliding StableID — correct for a
 multi-repo population measurement. The fetched `corpus/` and `out/` are gitignored;
 only `sources.tsv` (the reproducible, attributable manifest) is committed.
 
-### Study-grade flags
+### Analysis unit & study-grade flags
 
+- `--per-repo` (**preferred**) groups a repo's files and runs discovery once, so a
+  `RequestAuthentication` and its `AuthorizationPolicy` (usually separate files)
+  are analysed together — while different repos stay isolated. `--per-file` is the
+  stricter-isolation fallback but splits RA from AP.
 - `--exclude-examples` drops tutorial/sample/vendored copies (by source path).
-- `--dedup` collapses identical configs (issuers+audiences+algorithms+required_claims)
-  so a RequestAuthentication pasted across many repos counts once.
+- `--dedup` collapses identical configs (issuers+audiences+algorithms+required_claims).
 
 ```bash
-make measure           # per-file + exclude-examples + dedup
+make measure           # per-repo + exclude-examples + dedup
 make measure-validate  # discovery precision/recall vs an independent parse
 ```
 
 ### Validation (`validate.py`)
 
 `validate.py` measures Keyway's discovery **precision/recall** against an
-independent YAML parse of the same files, and emits `out/labeling-worksheet.jsonl`
-to bootstrap the hand-labelled gold-standard sample the paper needs. The
-independent parse is a proxy, not human ground truth.
+independent YAML parse (per repo), and emits `out/labeling-worksheet.jsonl` to
+bootstrap the hand-labelled gold-standard sample the paper needs. The independent
+parse is a proxy, not human ground truth.
 
-A scaled preliminary run (603 files / 428 repos → 103 distinct configs; discovery
-precision 100%, but claims recall only ~15% — a real gap to adjudicate) is
-recorded in **[FINDINGS.md](FINDINGS.md)** — explicitly **not** a publishable
-result. Scaling to the target N and hand-labelling the validation sample is the
-remaining research work.
+On the preliminary corpus (603 files / 428 repos), discovery is **100% precise**
+with recall **issuers 86.5% / audiences 97.0% / claims ~82%** (scoped to repos
+where a JWT consumer exists). An early low claims figure (15%) was traced to a
+measurement artifact + corpus completeness, **not** a discovery bug — see the
+investigation in **[FINDINGS.md](FINDINGS.md)**. All of this is preliminary and
+not for citation; scaling to the target N and hand-labelling remain.
 
 ## Ethics
 

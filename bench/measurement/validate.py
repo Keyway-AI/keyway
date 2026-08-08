@@ -27,6 +27,17 @@ OUT = sys.argv[2] if len(sys.argv) > 2 else "bench/measurement/out"
 CLAIM_RE = re.compile(r"request\.auth\.claims\[([^\]]+)\]")
 
 
+def norm_claim(x):
+    """Normalize a claim name so '\"email\"' and 'email' compare equal."""
+    return x.strip().strip('"').strip("'").strip()
+
+
+def repo_key(name):
+    """Group by source repo via the crawler's 'owner_repo__path' filename."""
+    b = os.path.basename(name)
+    return b.split("__", 1)[0] if "__" in b else b
+
+
 def walk(node, issuers, auds, claims):
     """Independently collect declared issuers, audiences, and claim names."""
     if isinstance(node, dict):
@@ -41,7 +52,7 @@ def walk(node, issuers, auds, claims):
         for v in node:
             walk(v, issuers, auds, claims)
     elif isinstance(node, str):
-        claims.update(CLAIM_RE.findall(node))
+        claims.update(norm_claim(c) for c in CLAIM_RE.findall(node))
 
 
 def independent_parse(path):
@@ -56,7 +67,8 @@ def independent_parse(path):
 
 
 def load_captured(out_dir):
-    """Group Keyway's discovered fields by source filename."""
+    """Group Keyway's discovered fields by source REPO (RA + AP live in
+    different files of the same repo, so the repo is the right unit)."""
     cap = {}
     ds = os.path.join(out_dir, "dataset.jsonl")
     if not os.path.exists(ds):
@@ -64,49 +76,49 @@ def load_captured(out_dir):
     with open(ds) as fh:
         for line in fh:
             r = json.loads(line)
-            src = r.get("source", "")
-            e = cap.setdefault(src, {"issuers": set(), "audiences": set(), "claims": set()})
+            k = repo_key(r.get("source", ""))
+            e = cap.setdefault(k, {"issuers": set(), "audiences": set(), "claims": set()})
             e["issuers"].update(r.get("issuers") or [])
             e["audiences"].update(r.get("audiences") or [])
-            e["claims"].update(r.get("required_claims") or [])
+            e["claims"].update(norm_claim(c) for c in (r.get("required_claims") or []))
     return cap
-
-
-def basename_key(path):
-    # The harness records source = filepath.Base(corpus file); match on that.
-    return os.path.basename(path)
 
 
 def main():
     files = sorted(glob.glob(os.path.join(CORPUS, "*.yaml")) + glob.glob(os.path.join(CORPUS, "*.yml")))
     captured = load_captured(OUT)
 
-    agg = {f: {"tp": 0, "fp": 0, "fn": 0} for f in ("issuers", "audiences", "claims")}
-    worksheet = []
-    files_with_truth = 0
-
+    # Independent parse, unioned per repo — the same unit as per-repo discovery.
+    declared = {}
     for path in files:
         di, da, dc = independent_parse(path)
         if not (di or da or dc):
-            continue  # nothing JWT-ish declared → not a validation unit
-        files_with_truth += 1
-        cap = captured.get(basename_key(path), {"issuers": set(), "audiences": set(), "claims": set()})
-        declared = {"issuers": di, "audiences": da, "claims": dc}
+            continue
+        e = declared.setdefault(repo_key(path), {"issuers": set(), "audiences": set(), "claims": set()})
+        e["issuers"].update(di)
+        e["audiences"].update(da)
+        e["claims"].update(dc)
+
+    agg = {f: {"tp": 0, "fp": 0, "fn": 0} for f in ("issuers", "audiences", "claims")}
+    worksheet = []
+    for repo, dset in sorted(declared.items()):
+        cap = captured.get(repo, {"issuers": set(), "audiences": set(), "claims": set()})
         for field in agg:
-            d, c = declared[field], cap.get(field, set())
+            d, c = dset[field], cap.get(field, set())
             agg[field]["tp"] += len(d & c)
             agg[field]["fn"] += len(d - c)
             agg[field]["fp"] += len(c - d)
         worksheet.append({
-            "file": basename_key(path),
-            "declared_issuers": sorted(di), "captured_issuers": sorted(cap.get("issuers", [])),
-            "declared_audiences": sorted(da), "captured_audiences": sorted(cap.get("audiences", [])),
-            "declared_claims": sorted(dc), "captured_claims": sorted(cap.get("claims", [])),
+            "repo": repo,
+            "declared_issuers": sorted(dset["issuers"]), "captured_issuers": sorted(cap.get("issuers", [])),
+            "declared_audiences": sorted(dset["audiences"]), "captured_audiences": sorted(cap.get("audiences", [])),
+            "declared_claims": sorted(dset["claims"]), "captured_claims": sorted(cap.get("claims", [])),
             "human_label": "",  # to be filled: correct | discovery-miss | parse-miss | mismatch
         })
 
-    report = {"files_with_declared_truth": files_with_truth, "fields": {}}
-    print(f"\nValidation vs independent parse — {files_with_truth} files with declared auth config\n")
+    files_with_truth = len(declared)
+    report = {"repos_with_declared_truth": files_with_truth, "fields": {}}
+    print(f"\nValidation vs independent parse (per repo) — {files_with_truth} repos with declared auth config\n")
     print(f"{'FIELD':<12}{'RECALL':>10}{'PRECISION':>12}{'TP':>7}{'FP':>6}{'FN':>6}")
     for field, m in agg.items():
         tp, fp, fn = m["tp"], m["fp"], m["fn"]
@@ -114,6 +126,29 @@ def main():
         precision = tp / (tp + fp) if (tp + fp) else 1.0
         report["fields"][field] = {"tp": tp, "fp": fp, "fn": fn, "recall": recall, "precision": precision}
         print(f"{field:<12}{recall:>9.1%}{precision:>12.1%}{tp:>7}{fp:>6}{fn:>6}")
+
+    # Scoped claims recall: claims can only attach to a JWT consumer, so a repo
+    # whose RequestAuthentication isn't in the corpus has nothing to attach to.
+    # Restricting to repos where discovery found an issuer isolates true
+    # discovery recall from corpus-completeness noise.
+    stp = sfn = 0
+    for row in worksheet:
+        if not row["captured_issuers"]:
+            continue
+        d, c = set(row["declared_claims"]), set(row["captured_claims"])
+        stp += len(d & c)
+        sfn += len(d - c)
+    scoped = stp / (stp + sfn) if (stp + sfn) else 1.0
+    report["claims_recall_scoped_to_repos_with_a_consumer"] = {
+        "recall": scoped, "tp": stp, "fn": sfn,
+        "note": "claims recall counting only repos where a JWT consumer exists; the "
+                "unscoped figure is dominated by repos whose RequestAuthentication "
+                "was not in the corpus (nothing to attach to).",
+    }
+    print(f"\nclaims recall, scoped to repos WITH a JWT consumer: {scoped:.1%} "
+          f"(tp={stp}, fn={sfn}) — vs unscoped {agg['claims']['tp']}/"
+          f"{agg['claims']['tp'] + agg['claims']['fn']}. The gap is corpus completeness, "
+          f"not discovery.")
 
     os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(OUT, "validation.json"), "w") as fh:

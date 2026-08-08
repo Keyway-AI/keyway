@@ -135,8 +135,11 @@ func main() {
 	path := flag.String("path", "", "directory of real manifests to scan (read-only)")
 	out := flag.String("out", "bench/measurement/out", "output directory")
 	perFile := flag.Bool("per-file", false, "run discovery on each YAML file independently "+
-		"(correct for a multi-repo corpus: prevents StableID collisions merging same-named "+
-		"services across unrelated repos)")
+		"(prevents cross-repo StableID collisions, but also splits a RequestAuthentication "+
+		"from its AuthorizationPolicy — prefer --per-repo)")
+	perRepo := flag.Bool("per-repo", false, "run discovery per repo (files grouped by the "+
+		"corpus 'owner_repo__...' prefix): joins RequestAuthentication + AuthorizationPolicy "+
+		"within a repo while keeping repos isolated. The correct unit for this corpus")
 	excludeExamples := flag.Bool("exclude-examples", false, "drop tutorial/sample/vendored "+
 		"copies (by source path) from the denominator")
 	dedup := flag.Bool("dedup", false, "collapse identical configs (issuers+audiences+"+
@@ -149,9 +152,12 @@ func main() {
 
 	var consumers []model.Consumer
 	var err error
-	if *perFile {
+	switch {
+	case *perRepo:
+		consumers, err = discoverPerRepo(*path)
+	case *perFile:
 		consumers, err = discoverPerFile(*path)
-	} else {
+	default:
 		consumers, err = discovery.Run(context.Background(),
 			discovery.Scope{ConfigPaths: []string{*path}},
 			istio.New(), k8s.New(), envoy.New(),
@@ -284,6 +290,55 @@ func discoverPerFile(root string) ([]model.Consumer, error) {
 		return nil
 	})
 	return all, err
+}
+
+// repoKey groups corpus files by their source repo, using the crawler's
+// "owner_repo__path" filename convention (everything before the first "__").
+func repoKey(p string) string {
+	b := filepath.Base(p)
+	if i := strings.Index(b, "__"); i >= 0 {
+		return b[:i]
+	}
+	return b
+}
+
+// discoverPerRepo groups the corpus files by repo and runs discovery once per
+// repo, so a RequestAuthentication and its AuthorizationPolicy (often separate
+// files) are analysed together and claims attach — while different repos stay
+// isolated, avoiding cross-repo StableID collisions. This is the correct unit
+// for a multi-repo population.
+func discoverPerRepo(root string) ([]model.Consumer, error) {
+	groups := map[string][]string{}
+	err := filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		low := strings.ToLower(p)
+		if !strings.HasSuffix(low, ".yaml") && !strings.HasSuffix(low, ".yml") {
+			return nil
+		}
+		k := repoKey(p)
+		groups[k] = append(groups[k], p)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	var all []model.Consumer
+	for _, files := range groups {
+		cs, derr := discovery.Run(context.Background(),
+			discovery.Scope{ConfigPaths: files},
+			istio.New(), k8s.New(), envoy.New(),
+		)
+		if derr != nil {
+			continue // a malformed repo must not abort the whole run
+		}
+		all = append(all, cs...)
+	}
+	return all, nil
 }
 
 // wilson returns the Wilson score 95% confidence interval for k successes in n

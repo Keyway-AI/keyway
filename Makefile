@@ -173,12 +173,12 @@ bench-oss: ## Independent benchmark: run discovery + a real diff on external OSS
 
 .PHONY: measure
 measure: ## Paper A: prevalence of cited auth weaknesses over the crawled corpus (study-grade flags)
-	$(GO) run ./bench/measurement --path bench/measurement/corpus --per-file --exclude-examples --dedup --out bench/measurement/out
+	$(GO) run ./bench/measurement --path bench/measurement/corpus --per-repo --exclude-examples --dedup --out bench/measurement/out
 	@echo "wrote bench/measurement/out/{dataset.jsonl,summary.json} — PRELIMINARY, see bench/measurement/FINDINGS.md"
 
 .PHONY: measure-validate
 measure-validate: ## Paper A: discovery precision/recall vs an independent parse of the corpus
-	$(GO) run ./bench/measurement --path bench/measurement/corpus --per-file --out bench/measurement/out
+	$(GO) run ./bench/measurement --path bench/measurement/corpus --per-repo --out bench/measurement/out
 	python3 bench/measurement/validate.py bench/measurement/corpus bench/measurement/out
 
 .PHONY: measure-crawl

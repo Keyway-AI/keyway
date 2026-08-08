@@ -304,7 +304,7 @@ func repoKey(p string) string {
 
 // discoverPerRepo groups the corpus files by repo and runs discovery once per
 // repo, so a RequestAuthentication and its AuthorizationPolicy (often separate
-// files) are analysed together and claims attach — while different repos stay
+// files) are analyzed together and claims attach — while different repos stay
 // isolated, avoiding cross-repo StableID collisions. This is the correct unit
 // for a multi-repo population.
 func discoverPerRepo(root string) ([]model.Consumer, error) {

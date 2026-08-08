@@ -72,6 +72,16 @@ label a **stratified validation sample** (~300–500 services) to measure discov
 precision/recall against ground truth — this replaces the self‑authored benchmark
 as the accuracy claim, because the labels are on *real* data.
 
+**Precision needs a non-circular test.** An independent-parse oracle validates
+*recall* well but not *precision*: it reads the same fields as Keyway, so captures
+are ~always a subset and precision ≈ 100% *by construction* (an artifact, not a
+result — do not report it as one). Precision must come from (a) hand-labelling (is
+each captured value real and correctly *attributed* to the right consumer?) and
+(b) a **negative control** — configs with planted distractors a correct discoverer
+must ignore (commented-out issuers, values in non-auth resources, a claim behind a
+non-matching selector). The negative control is implemented
+(`bench/measurement/negcontrol_test.go`): 4 planted distractors, 0 leaked.
+
 ### 4.3 Analysis
 Prevalence with Wilson CIs; drift as a longitudinal analysis over commit history;
 co‑occurrence via association rules; detectability as the static‑vs‑runtime split

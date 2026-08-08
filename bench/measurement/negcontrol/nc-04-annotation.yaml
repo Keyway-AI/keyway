@@ -1,0 +1,23 @@
+# Negative control: issuer/claim-like strings buried in annotations of an
+# unrelated Deployment. A correct discoverer must not scrape these.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nc4
+  namespace: nc
+  annotations:
+    docs: "issuer: https://DISTRACTOR-annotation.example"
+    example: "request.auth.claims[DISTRACTOR_claim_annotation]"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nc4
+  template:
+    metadata:
+      labels:
+        app: nc4
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.27

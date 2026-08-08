@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/Keyway-AI/keyway/internal/contract"
@@ -112,16 +113,25 @@ type summary struct {
 func main() {
 	path := flag.String("path", "", "directory of real manifests to scan (read-only)")
 	out := flag.String("out", "bench/measurement/out", "output directory")
+	perFile := flag.Bool("per-file", false, "run discovery on each YAML file independently "+
+		"(correct for a multi-repo corpus: prevents StableID collisions merging same-named "+
+		"services across unrelated repos)")
 	flag.Parse()
 	if *path == "" {
 		fmt.Fprintln(os.Stderr, "error: --path is required")
 		os.Exit(2)
 	}
 
-	consumers, err := discovery.Run(context.Background(),
-		discovery.Scope{ConfigPaths: []string{*path}},
-		istio.New(), k8s.New(), envoy.New(),
-	)
+	var consumers []model.Consumer
+	var err error
+	if *perFile {
+		consumers, err = discoverPerFile(*path)
+	} else {
+		consumers, err = discovery.Run(context.Background(),
+			discovery.Scope{ConfigPaths: []string{*path}},
+			istio.New(), k8s.New(), envoy.New(),
+		)
+	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "discovery:", err)
 		os.Exit(1)
@@ -183,6 +193,37 @@ func main() {
 		os.Exit(1)
 	}
 	printTable(sum)
+}
+
+// discoverPerFile runs discovery on each YAML file under root independently and
+// concatenates the results. Each file is one observation site, so a service named
+// "httpbin" in repo A and another in repo B are never merged by a colliding
+// StableID — essential for an honest population measurement over many repos.
+func discoverPerFile(root string) ([]model.Consumer, error) {
+	var all []model.Consumer
+	err := filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		low := strings.ToLower(p)
+		if !strings.HasSuffix(low, ".yaml") && !strings.HasSuffix(low, ".yml") {
+			return nil
+		}
+		cs, derr := discovery.Run(context.Background(),
+			discovery.Scope{ConfigPaths: []string{p}},
+			istio.New(), k8s.New(), envoy.New(),
+		)
+		if derr != nil {
+			// One malformed file must not abort the whole crawl-measure run.
+			return nil
+		}
+		all = append(all, cs...)
+		return nil
+	})
+	return all, err
 }
 
 // wilson returns the Wilson score 95% confidence interval for k successes in n

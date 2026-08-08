@@ -106,8 +106,12 @@ jobs:
       - name: Install Trivy
         run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       - name: Trivy filesystem scan (respects .trivyignore)
+        # Skip bench/: it is benchmark/test corpora and negative-control fixtures
+        # (deliberately minimal, varied, or intentionally-flawed manifests), not
+        # deployable config — misconfig/secret scanning them is all false positives.
         run: |
           trivy fs --scanners vuln,misconfig,secret --ignore-unfixed \
+            --skip-dirs bench \
             --format sarif --output trivy.sarif --exit-code 0 --no-progress .
       - name: Upload SARIF
         if: ${{ github.event.repository.visibility == 'public' }}

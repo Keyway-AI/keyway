@@ -24,6 +24,8 @@ queries=(
   '"kind: RequestAuthentication" language:YAML'   # Istio JWT validation
   '"jwt_authn" extension:yaml'                      # Envoy JWT filter
   '"request.auth.claims" language:YAML'            # Istio claim-based authz
+  '"remote_jwks" extension:yaml'                    # Envoy remote JWKS provider
+  '"kind: AuthorizationPolicy" "when" language:YAML' # Istio authz conditions
 )
 
 b64d() { python3 -c 'import sys,base64; sys.stdout.buffer.write(base64.b64decode(sys.stdin.read()))'; }

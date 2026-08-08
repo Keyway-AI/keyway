@@ -51,6 +51,7 @@ roc.svg
 
 # stray root build artifact from `go build ./bench/l2`
 /l2
+/measurement
 
 # Measurement-study pilot outputs (regenerate with `make measure`)
 /bench/measurement/out/

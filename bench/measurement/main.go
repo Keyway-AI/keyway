@@ -21,6 +21,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -104,10 +105,30 @@ type finding struct {
 }
 
 type summary struct {
-	Consumers    int       `json:"consumers_total"`
-	JWTConsumers int       `json:"jwt_consumers"` // denominator: validate >=1 issuer
-	Findings     []finding `json:"findings"`
-	Note         string    `json:"note"`
+	Consumers        int       `json:"consumers_total"`
+	JWTConsumers     int       `json:"jwt_consumers"`     // validate >=1 issuer
+	ExcludedExamples int       `json:"excluded_examples"` // dropped as tutorial/vendor copies
+	Denominator      int       `json:"denominator"`       // n used for prevalence (after excl/dedup)
+	Deduped          bool      `json:"deduped"`
+	Findings         []finding `json:"findings"`
+	Note             string    `json:"note"`
+}
+
+// exampleRe matches source paths that are tutorial/sample/vendored copies rather
+// than a project's own deployment config — copying the docs is not a finding about
+// production, so the study excludes them from the denominator.
+var exampleRe = regexp.MustCompile(`(?i)example|sample|tutorial|demo|quickstart|getting.?started|/test|testdata|vendor|/docs?/`)
+
+// signature is the config fingerprint used to collapse near-duplicate copies (the
+// same RequestAuthentication pasted across many repos) into one observation.
+func signature(c model.Consumer) string {
+	norm := func(s []string) string {
+		d := append([]string(nil), s...)
+		sort.Strings(d)
+		return strings.Join(d, ",")
+	}
+	return norm(c.Expects.Issuers) + "|" + norm(c.Expects.Audiences) + "|" +
+		norm(c.Expects.Algorithms) + "|" + norm(c.Expects.RequiredClaims)
 }
 
 func main() {
@@ -116,6 +137,10 @@ func main() {
 	perFile := flag.Bool("per-file", false, "run discovery on each YAML file independently "+
 		"(correct for a multi-repo corpus: prevents StableID collisions merging same-named "+
 		"services across unrelated repos)")
+	excludeExamples := flag.Bool("exclude-examples", false, "drop tutorial/sample/vendored "+
+		"copies (by source path) from the denominator")
+	dedup := flag.Bool("dedup", false, "collapse identical configs (issuers+audiences+"+
+		"algorithms+required_claims) to one observation, removing copied-example inflation")
 	flag.Parse()
 	if *path == "" {
 		fmt.Fprintln(os.Stderr, "error: --path is required")
@@ -141,11 +166,42 @@ func main() {
 	_ = contract.Build(contract.BuildInput{Consumers: consumers})
 
 	// Denominator = consumers that actually validate JWTs (>=1 issuer expected).
-	var jwt []model.Consumer
+	var jwtAll []model.Consumer
 	for _, c := range consumers {
 		if len(c.Expects.Issuers) > 0 {
+			jwtAll = append(jwtAll, c)
+		}
+	}
+	jwtCount := len(jwtAll)
+
+	// Optionally drop tutorial/vendored copies from the denominator.
+	excluded := 0
+	var jwt []model.Consumer
+	if *excludeExamples {
+		for _, c := range jwtAll {
+			if exampleRe.MatchString(provenanceSource(c)) {
+				excluded++
+				continue
+			}
 			jwt = append(jwt, c)
 		}
+	} else {
+		jwt = jwtAll
+	}
+
+	// Optionally collapse identical configs (copied-example de-inflation).
+	if *dedup {
+		seen := map[string]bool{}
+		var uniq []model.Consumer
+		for _, c := range jwt {
+			s := signature(c)
+			if seen[s] {
+				continue
+			}
+			seen[s] = true
+			uniq = append(uniq, c)
+		}
+		jwt = uniq
 	}
 
 	records := make([]record, 0, len(jwt))
@@ -169,11 +225,15 @@ func main() {
 
 	n := len(jwt)
 	sum := summary{
-		Consumers:    len(consumers),
-		JWTConsumers: n,
-		Note: "Prevalence is over JWT-validating consumers (denominator). 'Absent " +
-			"in config' can mean 'set by a library default' — see README (RQ4). " +
-			"This is measurement, not a judgement of any single project.",
+		Consumers:        len(consumers),
+		JWTConsumers:     jwtCount,
+		ExcludedExamples: excluded,
+		Denominator:      n,
+		Deduped:          *dedup,
+		Note: "Prevalence is over the denominator (JWT-validating consumers, after " +
+			"any --exclude-examples / --dedup). 'Absent in config' can mean 'set by a " +
+			"library default' — see README (RQ4). This is measurement, not a judgement " +
+			"of any single project.",
 	}
 	for _, ck := range checks {
 		k := counts[ck.ID]
@@ -293,9 +353,11 @@ func writeOutputs(dir string, records []record, sum summary) error {
 }
 
 func printTable(sum summary) {
-	fmt.Printf("\nKeyway measurement — %d consumers discovered, %d validate JWTs (denominator)\n\n",
-		sum.Consumers, sum.JWTConsumers)
-	if sum.JWTConsumers == 0 {
+	fmt.Printf("\nKeyway measurement — %d consumers discovered, %d validate JWTs; "+
+		"%d excluded (examples), denominator = %d%s\n\n",
+		sum.Consumers, sum.JWTConsumers, sum.ExcludedExamples, sum.Denominator,
+		map[bool]string{true: " (deduped)", false: ""}[sum.Deduped])
+	if sum.Denominator == 0 {
 		fmt.Println("No JWT-validating consumers found in this corpus.")
 		return
 	}

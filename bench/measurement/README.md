@@ -71,11 +71,29 @@ across unrelated repos aren't merged by a colliding StableID — correct for a
 multi-repo population measurement. The fetched `corpus/` and `out/` are gitignored;
 only `sources.tsv` (the reproducible, attributable manifest) is committed.
 
-A first preliminary run (192 files / 127 repos → 50 JWT consumers) is recorded in
-**[FINDINGS.md](FINDINGS.md)** — explicitly **not** a publishable result; it
-documents the gaps the real study must close (scale, dedup of copied examples, a
-labeled validation set). Scaling toward the paper's target N is the remaining
-research work.
+### Study-grade flags
+
+- `--exclude-examples` drops tutorial/sample/vendored copies (by source path).
+- `--dedup` collapses identical configs (issuers+audiences+algorithms+required_claims)
+  so a RequestAuthentication pasted across many repos counts once.
+
+```bash
+make measure           # per-file + exclude-examples + dedup
+make measure-validate  # discovery precision/recall vs an independent parse
+```
+
+### Validation (`validate.py`)
+
+`validate.py` measures Keyway's discovery **precision/recall** against an
+independent YAML parse of the same files, and emits `out/labeling-worksheet.jsonl`
+to bootstrap the hand-labelled gold-standard sample the paper needs. The
+independent parse is a proxy, not human ground truth.
+
+A scaled preliminary run (603 files / 428 repos → 103 distinct configs; discovery
+precision 100%, but claims recall only ~15% — a real gap to adjudicate) is
+recorded in **[FINDINGS.md](FINDINGS.md)** — explicitly **not** a publishable
+result. Scaling to the target N and hand-labelling the validation sample is the
+remaining research work.
 
 ## Ethics
 

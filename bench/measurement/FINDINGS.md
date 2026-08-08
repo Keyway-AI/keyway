@@ -61,10 +61,38 @@ a diagnosis:
    config-composition limitations, documented — not a defect that should be
    "fixed" by loosening attachment (which would cost the 100% precision).
 
-**Takeaway:** discovery is precise (100%) and its true recall is issuers 86.5% /
-audiences 97.0% / claims ~82%. The remaining misses are corpus and un-rendered-templating
-limitations, both named. A hand-labelled sample (worksheet emitted) remains the
-gold standard to confirm this.
+**Takeaway:** true recall is issuers 86.5% / audiences 97.0% / claims ~82%. The
+remaining misses are corpus and templating limitations, both named below.
+
+## Precision, honestly — why "100%" from the proxy is NOT a real result
+
+The independent-parse "100% precision" is **near-vacuous and should not be cited.**
+The parser and Keyway read the *same* `issuer:` / `audiences:` /
+`request.auth.claims[...]` syntax from the *same* files, so Keyway's captures are
+almost always a **subset** of what the parser declares → false positives are
+structurally near-impossible → precision ≈ 100% by construction. That measures
+only "does Keyway invent values not in the file," a low bar — not the real
+precision risk: capturing a value from the wrong context, or attaching it to the
+wrong consumer.
+
+To test precision **non-circularly** we use a negative control
+(`negcontrol_test.go`, `go test ./bench/measurement/`): configs with planted
+`DISTRACTOR` values a correct discoverer must ignore — a commented-out issuer, an
+`issuer:`/claim in a non-auth ConfigMap, a claim behind a **non-matching
+AuthorizationPolicy selector** (the real attribution risk), and issuer/claim
+strings in annotations. Result: **4 planted distractors, 0 leaked**, and the real
+values were still captured. This is genuine (could-have-failed) evidence that
+discovery does not scrape stray values and respects selector scoping — much
+stronger than the proxy number. The gold-standard confirmation is still a
+hand-labelled sample.
+
+## Templating limitation, quantified
+
+Static single-file discovery reads raw manifests, not rendered output. In this
+corpus: **17% of files are Helm-templated (`{{ }}`)** and ~2% carry
+kustomize/variable markers — ~1 in 5 configs is under-resolved without rendering.
+This is a named threat to validity and explains part of the recall gap; rendering
+Helm/kustomize before discovery is future work.
 
 ## Why none of this is a result yet
 

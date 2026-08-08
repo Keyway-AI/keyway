@@ -1,0 +1,11 @@
+# Negative control: an `issuer:` field living in a NON-auth resource (a ConfigMap).
+# A correct discoverer must not treat this as a JWT issuer/audience.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nc2
+  namespace: nc
+data:
+  issuer: "https://DISTRACTOR-configmap.example"
+  audiences: "DISTRACTOR-aud-configmap"
+  note: "request.auth.claims[DISTRACTOR_claim_in_configmap]"

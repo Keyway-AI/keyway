@@ -1,0 +1,31 @@
+# Negative control (attribution): a RequestAuthentication for app=nc3, and an
+# AuthorizationPolicy whose selector targets a DIFFERENT workload (app=other-nc3).
+# A correct discoverer must NOT attach DISTRACTOR_claim to the nc3 consumer — the
+# selector doesn't match. This is the real precision risk the independent parser
+# can't test.
+apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata:
+  name: nc3
+  namespace: nc
+spec:
+  selector:
+    matchLabels:
+      app: nc3
+  jwtRules:
+    - issuer: "https://real-3.example"
+      audiences: ["real-aud-3"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: nc3-other
+  namespace: nc
+spec:
+  selector:
+    matchLabels:
+      app: other-nc3
+  rules:
+    - when:
+        - key: request.auth.claims[DISTRACTOR_claim_wrong_selector]
+          values: ["x"]

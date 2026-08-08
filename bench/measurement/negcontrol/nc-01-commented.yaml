@@ -1,0 +1,16 @@
+# Negative control: a real issuer plus a commented-out one. A correct discoverer
+# captures REAL-issuer and must NOT capture the DISTRACTOR in the comment.
+apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata:
+  name: nc1
+  namespace: nc
+spec:
+  selector:
+    matchLabels:
+      app: nc1
+  jwtRules:
+    - issuer: "https://real-1.example"
+      audiences: ["real-aud-1"]
+    # - issuer: "https://DISTRACTOR-commented.example"
+    #   audiences: ["DISTRACTOR-aud"]

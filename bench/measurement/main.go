@@ -228,7 +228,7 @@ func writeOutputs(dir string, records []record, sum summary) error {
 	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return err
 	}
-	// dataset.jsonl — one labelled observation per line.
+	// dataset.jsonl — one labeled observation per line.
 	f, err := os.Create(filepath.Join(dir, "dataset.jsonl")) // #nosec G304 -- fixed out dir
 	if err != nil {
 		return err

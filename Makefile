@@ -171,6 +171,11 @@ bench-oss: ## Independent benchmark: run discovery + a real diff on external OSS
 	@echo "== Diff (L3) on a real config with a plausible change =="
 	$(GO) run ./bench/harness --corpus ./bench/oss/diff --realistic 0 --out ./bench/out/oss
 
+.PHONY: measure
+measure: ## Paper A instrument: prevalence of cited auth weaknesses across real config (pilot corpus)
+	$(GO) run ./bench/measurement --path bench/oss/manifests --out bench/measurement/out
+	@echo "wrote bench/measurement/out/{dataset.jsonl,summary.json} — see bench/measurement/README.md (PILOT: not a study result)"
+
 .PHONY: bench-oss-study
 bench-oss-study: ## 60-repo independent discovery study (fetches real manifests; needs gh)
 	bash bench/oss/study/fetch.sh

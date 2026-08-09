@@ -29,15 +29,21 @@
 ## Discovery validation vs an independent parser (`validate.py`)
 
 Ground truth = an independent YAML parse (declared issuers / audiences / claim
-names), unioned **per repo**; captured = what Keyway discovered per repo. Over
-**183 repos with declared auth config**:
+names), unioned **per repo**; captured = what Keyway discovered per repo. Recall is
+measured against values in **genuine auth resources** (RequestAuthentication /
+AuthorizationPolicy / Envoy jwt) — the kind-aware parser separates those from
+values it scraped out of non-auth kinds (a ConfigMap with an `issuer:` key), which
+are parser over-declarations, not discovery misses. Over **183 repos**:
 
-| Field | Recall | Precision | TP | FP | FN |
-|---|---|---|---|---|---|
-| issuers | 86.5% | 100.0% | 147 | 0 | 23 |
-| audiences | 97.0% | 100.0% | 97 | 0 | 3 |
-| claims (unscoped) | 27.1% | 100.0% | 23 | 0 | 62 |
-| **claims (scoped to repos with a JWT consumer)** | **82.1%** | 100.0% | 23 | 0 | 5 |
+| Field | Recall (adjudicated) | raw | parser-noise removed |
+|---|---|---|---|
+| issuers | **89.6%** | 86% | 7 |
+| audiences | **99.0%** | 97% | 2 |
+| claims (unscoped) | 29.9% | 27% | 8 |
+| **claims (scoped to repos with a JWT consumer)** | **82.1%** | — | — |
+
+*Precision is deliberately omitted here — see the next section on why the proxy's
+"100%" is not a real precision measurement.*
 
 ### The claims-recall investigation (resolved)
 
@@ -61,8 +67,12 @@ a diagnosis:
    config-composition limitations, documented — not a defect that should be
    "fixed" by loosening attachment (which would cost the 100% precision).
 
-**Takeaway:** true recall is issuers 86.5% / audiences 97.0% / claims ~82%. The
-remaining misses are corpus and templating limitations, both named below.
+**Takeaway:** adjudicated recall is issuers 89.6% / audiences 99.0% / claims ~82%
+(scoped). The remaining misses are corpus and templating limitations, both named
+below. The kind-aware filter also quantifies the independent parser's own
+over-declaration (17 values it scraped from non-auth resources) — a reminder that
+the proxy oracle is imperfect and a hand-labelled sample is still the gold
+standard.
 
 ## Precision, honestly — why "100%" from the proxy is NOT a real result
 

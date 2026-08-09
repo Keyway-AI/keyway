@@ -55,15 +55,39 @@ def walk(node, issuers, auds, claims):
         claims.update(norm_claim(c) for c in CLAIM_RE.findall(node))
 
 
+def is_auth_doc(doc):
+    """A doc is a genuine JWT-auth resource (vs a ConfigMap/Deployment that merely
+    happens to contain an 'issuer:' key or a claim-looking string)."""
+    if not isinstance(doc, dict):
+        return False
+    if doc.get("kind") in ("RequestAuthentication", "AuthorizationPolicy"):
+        return True
+    blob = json.dumps(doc)
+    return "jwtRules" in blob or "jwt_authn" in blob
+
+
 def independent_parse(path):
-    issuers, auds, claims = set(), set(), set()
+    """Return (legit, full): `legit` = values declared in genuine auth resources;
+    `full` = values found anywhere (incl. non-auth kinds — parser over-declaration).
+    Comparing recall against `legit` separates true discovery misses from cases
+    where the independent parser scraped an issuer/claim out of a ConfigMap."""
+    legit = {"issuers": set(), "audiences": set(), "claims": set()}
+    full = {"issuers": set(), "audiences": set(), "claims": set()}
     try:
         with open(path) as fh:
             for doc in yaml.safe_load_all(fh):
-                walk(doc, issuers, auds, claims)
+                i, a, c = set(), set(), set()
+                walk(doc, i, a, c)
+                full["issuers"] |= i
+                full["audiences"] |= a
+                full["claims"] |= c
+                if is_auth_doc(doc):
+                    legit["issuers"] |= i
+                    legit["audiences"] |= a
+                    legit["claims"] |= c
     except Exception:
         pass
-    return issuers, auds, claims
+    return legit, full
 
 
 def load_captured(out_dir):
@@ -89,43 +113,57 @@ def main():
     captured = load_captured(OUT)
 
     # Independent parse, unioned per repo — the same unit as per-repo discovery.
-    declared = {}
+    # `declared` = values from genuine auth resources (the honest recall denominator);
+    # `declared_full` = values from anywhere (to quantify parser over-declaration).
+    declared, declared_full = {}, {}
     for path in files:
-        di, da, dc = independent_parse(path)
-        if not (di or da or dc):
+        legit, full = independent_parse(path)
+        if not any(full.values()):
             continue
-        e = declared.setdefault(repo_key(path), {"issuers": set(), "audiences": set(), "claims": set()})
-        e["issuers"].update(di)
-        e["audiences"].update(da)
-        e["claims"].update(dc)
+        for store, src in ((declared, legit), (declared_full, full)):
+            e = store.setdefault(repo_key(path), {"issuers": set(), "audiences": set(), "claims": set()})
+            for f in e:
+                e[f].update(src[f])
 
-    agg = {f: {"tp": 0, "fp": 0, "fn": 0} for f in ("issuers", "audiences", "claims")}
+    fields = ("issuers", "audiences", "claims")
+    agg = {f: {"tp": 0, "fn": 0} for f in fields}      # recall vs legit (auth-resource) values
+    raw = {f: {"tp": 0, "fn": 0} for f in fields}      # recall vs ALL declared (parser over-declares)
+    noise = {f: 0 for f in fields}                     # values the parser scraped from non-auth resources
     worksheet = []
-    for repo, dset in sorted(declared.items()):
-        cap = captured.get(repo, {"issuers": set(), "audiences": set(), "claims": set()})
-        for field in agg:
-            d, c = dset[field], cap.get(field, set())
+    repos = sorted(set(declared) | set(declared_full))
+    for repo in repos:
+        dset = declared.get(repo, {f: set() for f in fields})
+        dfull = declared_full.get(repo, {f: set() for f in fields})
+        cap = captured.get(repo, {f: set() for f in fields})
+        for field in fields:
+            d, c, dallf = dset[field], cap.get(field, set()), dfull[field]
             agg[field]["tp"] += len(d & c)
             agg[field]["fn"] += len(d - c)
-            agg[field]["fp"] += len(c - d)
+            raw[field]["tp"] += len(dallf & c)
+            raw[field]["fn"] += len(dallf - c)
+            noise[field] += len(dallf - d)
         worksheet.append({
             "repo": repo,
             "declared_issuers": sorted(dset["issuers"]), "captured_issuers": sorted(cap.get("issuers", [])),
             "declared_audiences": sorted(dset["audiences"]), "captured_audiences": sorted(cap.get("audiences", [])),
             "declared_claims": sorted(dset["claims"]), "captured_claims": sorted(cap.get("claims", [])),
+            "nonauth_declared": {f: sorted(dfull[f] - dset[f]) for f in fields},  # parser over-declaration
             "human_label": "",  # to be filled: correct | discovery-miss | parse-miss | mismatch
         })
 
-    files_with_truth = len(declared)
-    report = {"repos_with_declared_truth": files_with_truth, "fields": {}}
-    print(f"\nValidation vs independent parse (per repo) — {files_with_truth} repos with declared auth config\n")
-    print(f"{'FIELD':<12}{'RECALL':>10}{'PRECISION':>12}{'TP':>7}{'FP':>6}{'FN':>6}")
-    for field, m in agg.items():
-        tp, fp, fn = m["tp"], m["fp"], m["fn"]
+    report = {"repos_with_declared_truth": len(declared), "fields": {}}
+    print(f"\nValidation vs independent parse (per repo) — {len(declared)} repos with declared auth config")
+    print("Recall is vs values in GENUINE auth resources (RequestAuthentication / "
+          "AuthorizationPolicy / Envoy jwt); 'raw' is vs everything the parser scraped.\n")
+    print(f"{'FIELD':<12}{'RECALL':>9}{'raw':>7}{'TP':>6}{'FN':>5}{'  parser-noise removed':>22}")
+    for field in fields:
+        tp, fn = agg[field]["tp"], agg[field]["fn"]
+        rtp, rfn = raw[field]["tp"], raw[field]["fn"]
         recall = tp / (tp + fn) if (tp + fn) else 1.0
-        precision = tp / (tp + fp) if (tp + fp) else 1.0
-        report["fields"][field] = {"tp": tp, "fp": fp, "fn": fn, "recall": recall, "precision": precision}
-        print(f"{field:<12}{recall:>9.1%}{precision:>12.1%}{tp:>7}{fp:>6}{fn:>6}")
+        rrecall = rtp / (rtp + rfn) if (rtp + rfn) else 1.0
+        report["fields"][field] = {"tp": tp, "fn": fn, "recall": recall, "raw_recall": rrecall,
+                                   "parser_noise_removed": noise[field]}
+        print(f"{field:<12}{recall:>8.1%}{rrecall:>7.0%}{tp:>6}{fn:>5}{noise[field]:>18}")
 
     # Scoped claims recall: claims can only attach to a JWT consumer, so a repo
     # whose RequestAuthentication isn't in the corpus has nothing to attach to.

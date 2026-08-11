@@ -107,7 +107,19 @@ submission; the full-paper rows do.
   analysis + related work + SSR/SaTML/AIDC wrappers.
 - ☑ Paper A related work (JWT attacks / IaC scanners / Pact / measurement) +
   a Vision research-agenda section.
-- ☐ Ethics / Open Science / Artifact-availability sections (both papers).
-- ☐ Figures: prevalence bar with CIs; reuse `docs/benchmark-roc.svg`.
-- ☐ Prep the human-labelling packet for G1 (spreadsheet + snippets).
+- ☑ Ethics + Open Science + Artifact-availability sections (both papers).
+- ☑ Prevalence figure — pgfplots bar chart with Wilson CIs
+  (`paper-a/common/fig-prevalence.tex`, `\input` in Results; pgfplots added to the
+  6 Paper A wrappers).
+- ☑ G1 human-labelling packet: `bench/measurement/make_labeling_packet.py`
+  (worksheet → focused CSV, 85 rows on the current corpus) +
+  `grade_labels.py` (labels → gold-standard precision/recall) + `LABELING.md`
+  (taxonomy + workflow). **Ready for a human (co-author) to run.**
 - ☐ Deeper Vision reframing of Paper A's intro for SSR (lead with agenda).
+- ☐ Reuse `docs/benchmark-roc.svg` as a second figure if going the drift angle.
+
+## G1 is now unblockable by a human
+`make_labeling_packet.py` turns the validation disagreements into an ~1-hour
+spreadsheet task; `grade_labels.py` computes the final numbers. Running it (ideally
+with a co-author as a second annotator for inter-rater agreement) closes G1 and
+unblocks every `⧗` full-paper venue.

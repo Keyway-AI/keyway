@@ -129,6 +129,8 @@ work remaining.}
 gap, not a 100\% vulnerability rate; we report it as ``not pinned in config.''
 \gate{re-run over the scaled, labelled corpus; add co-occurrence analysis.}
 
+\input{../common/fig-prevalence}
+
 \noindent\textbf{Drift (RQ: how contracts change over time).}
 \gate{longitudinal analysis over commit history; today we validate the drift
 \emph{classifier} on a 1{,}226-pair synthetic corpus at 100\% recall / 0\% FPR,
@@ -185,8 +187,26 @@ validated with a methodology candid about its own limits. The preliminary
 measurement and the released instrument are a step toward an empirical
 understanding of auth-verification hygiene at scale.
 
+\section*{Ethics considerations}\label{sec:ethics}
+This study measures only \emph{public} configuration, fetched read-only at pinned
+commits, and never probes third-party live endpoints or handles real tokens---the
+attack surface it characterises is exercised only against local, self-owned
+negative-control fixtures. We report \emph{population} prevalence, never a verdict
+on any single project, and we name no project as insecure. For any identifiable,
+high-severity finding tied to a specific owner we follow coordinated responsible
+disclosure before publication, allowing reasonable remediation time. The corpus
+respects source licences (recorded per artifact) and robots/rate-limit norms of the
+hosting platform. We see no human-subjects concerns; no personal data is collected.
+
+\section*{Open science}\label{sec:openscience}
+In keeping with open-science expectations, we release the discovery instrument, the
+measurement harness (prevalence with Wilson CIs), the kind-aware validator, the
+non-circular negative-control precision test, the analysis scripts, and the corpus
+\emph{manifest} (repository + commit SHA + licence per artifact) so the measurement
+is reproducible from public sources. \gate{camera-ready: a DOI-pinned archival
+snapshot and, where the venue offers it, Artifact-Evaluation ``Available'' and
+``Reproduced'' badges.}
+
 \section*{Artifact availability}\label{sec:artifact}
-The discovery instrument, the measurement harness (prevalence with Wilson CIs), the
-kind-aware validator, the negative-control precision test, and the corpus manifest
-(repository + commit SHA + licence) are open source under MIT. \gate{camera-ready:
-DOI-pinned artifact + Artifact Evaluation ``Available/Reproduced'' badges.}
+The instrument, harness, validator, negative-control test, and corpus manifest are
+open source under the MIT licence. \gate{insert the archival DOI at camera-ready.}

@@ -129,11 +129,27 @@ maps each threat to a checkable invariant and to what is statically decidable---
 an accompanying open analyzer---is, to our knowledge, novel; establishing that gap
 precisely is part of this SoK.
 
-\section{Threats to validity and ethics}
+\section{Threats to validity}
 The MCP specification is fast-moving; the systematization is date-stamped and its
-coverage is a snapshot. Any measurement will skew toward early-adopter public MCP
-servers. We probe no third-party live agents and use no real user tokens;
-identifiable high-severity findings follow responsible disclosure.
+coverage is a snapshot that will need revision as the standard evolves. The
+static/runtime decidability line depends on token/manifest availability; a
+deployment that hides relevant state reduces what any static tool can conclude. Any
+future measurement will skew toward early-adopter public MCP servers, which we will
+report rather than hide.
+
+\section*{Ethics considerations}
+The systematization uses only public specifications, advisories, and CVEs. The
+accompanying analyzer runs on tokens the operator already holds and sends nothing
+anywhere. We probe no third-party live agents or MCP servers and use no real user
+tokens. Any future measurement will characterise population prevalence, not single
+deployments, and will follow coordinated responsible disclosure for identifiable
+high-severity findings. No personal data or human subjects are involved.
+
+\section*{Open science}
+We release the static analyzer and the machine-readable threat taxonomy (each
+threat with its invariant and normative sources) under an open licence so the
+systematization is inspectable and the checkable subset is reproducible.
+\gate{camera-ready: DOI-pinned artifact.}
 
 \section{Conclusion}
 Agent authorization is an under-studied, high-stakes surface. We contribute a

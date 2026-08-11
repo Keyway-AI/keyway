@@ -149,12 +149,34 @@ only; we do not probe third-party live endpoints and handle no real tokens;
 identifiable high-severity findings follow responsible disclosure.
 
 \section{Related work}\label{sec:related}
-\gate{position against: JWT/OIDC attack literature (alg=none, key confusion, jku)
----individual attacks are known, our contribution is the population-scale contract
-and drift view; IaC/config scanners (Checkov, KICS, Semgrep)---pattern matching vs
-contract derivation with provenance; consumer-driven contract testing (Pact)---API
-shape vs auth verification; misconfiguration measurement studies---our
-methodological template; and the emerging MCP/agent-authorization literature.}
+\textbf{JWT/OIDC attacks.} Individual verification flaws---\texttt{alg=none}, RS/HS
+key confusion, \texttt{jku}/\texttt{kid} injection---are well
+documented~\cite{mclean2015jwt,portswigger-jwt}, and OAuth itself has been formally
+analysed~\cite{fett2016oauth}. These establish \emph{which} misconfigurations
+matter; our contribution is orthogonal: a \emph{population-scale} view of the
+derived contract and its drift, grounded in the same normative
+sources~\cite{rfc8725,rfc8707,rfc9728,rfc8693}.
+\textbf{IaC/config scanners} (Checkov, KICS, Semgrep~\cite{checkov,kics,semgrep})
+pattern-match rules over configuration; we instead \emph{derive} an
+attributable auth contract and measure its properties, and our negative control
+targets exactly the precision failure pattern-matching is prone to.
+\textbf{Contract testing} (Pact~\cite{pact}) borrows the ``contract'' framing but
+targets API shape, not auth verification.
+\textbf{Measurement studies} of misconfiguration are our methodological template
+(pre-registered inclusion, confidence intervals, released artifacts).
+\textbf{Agent authorization}~\cite{owaspllm} is the subject of our companion
+systematization.
+
+\section{A research agenda (vision)}\label{sec:vision}
+Beyond the present preliminary measurement, we see a program: (i) scale to a
+representative corpus and report prevalence with tight intervals and a
+hand-validated extractor; (ii) characterise \emph{drift} longitudinally---do auth
+contracts widen more than they narrow, and are widenings tied to reviewable
+events?; (iii) quantify the static-vs-runtime frontier---what fraction of
+weaknesses are decidable from configuration versus require probing; and
+(iv) extend the same instrument to the agent/MCP frontier. This paper contributes
+the method, the validated instrument, and the honest baseline that make the
+program tractable.
 
 \section{Conclusion}
 Authorization correctness is a property of what is running, not of what is written,

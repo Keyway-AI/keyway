@@ -1,0 +1,170 @@
+% Shared body for the Paper A measurement study. Class-agnostic: the per-venue
+% main.tex sets \documentclass, title, authors, and \begin{document}, then
+% \input{../common/body}. Every unfinished number is wrapped in \gate{...}.
+\providecommand{\gate}[1]{\textbf{[PENDING: #1]}}
+
+\begin{abstract}
+Whether a bearer token is accepted is decided by a \emph{verifier}'s configuration:
+the issuers it trusts, the audiences it binds to, the algorithms it allows, and the
+claims it requires. This configuration is an implicit \emph{authorization contract}
+that is rarely written down and, when it drifts, causes outages or silent
+over-acceptance. We present a method to derive these contracts automatically from
+deployment configuration and a measurement of their prevalence in the wild across
+public repositories. On a preliminary corpus of \gate{final N} public repositories
+(currently 428), we quantify concrete, RFC-defined weaknesses --- unbound
+audiences, absent algorithm pinning, missing required claims --- with Wilson
+confidence intervals, and we validate the extraction with a kind-aware
+independent-parse oracle (recall: issuers 89.6\%, audiences 99.0\%, claims 82.1\%)
+and a non-circular negative-control test for precision. We release the instrument,
+the corpus manifest, and the analysis. \gate{hand-labelled validation and
+scaled-corpus results before submission.}
+\end{abstract}
+
+\section{Introduction}
+Distributed systems authenticate requests with bearer tokens: JWTs between
+services, and increasingly OAuth/MCP tokens carried by autonomous agents. A
+token is accepted or rejected by a verifier whose behaviour is an emergent
+property of configuration spread across service meshes (Istio), proxies (Envoy),
+identity providers, and the \emph{defaults} of the verifying library. We call this
+implicit specification the \emph{authorization contract}. It is almost never
+centralised, and when it changes---a rotated key, a widened audience, a dropped
+claim---some verifiers begin rejecting valid users (an outage) or accepting tokens
+they should not (a silent security regression).
+
+Two classes of tooling exist and neither answers ``is the deployed auth contract
+correct, and what does it look like at scale?'' Static code scanners reason about
+source, not about which \emph{running} verifier trusts which issuer; gateways and
+IdPs \emph{are} the artifact under test. We take the empirical view: derive the
+contract from real configuration and \emph{measure} it.
+
+\noindent\textbf{Contributions.}
+(i) A method to derive JWT/agent authorization contracts from heterogeneous
+deployment configuration, with per-field provenance
+(\S\ref{sec:method}).
+(ii) A measurement of the prevalence of concrete, cited verification weaknesses
+across public configuration, with confidence intervals
+(\S\ref{sec:results}).
+(iii) A validation methodology that is candid about its own limits---a kind-aware
+independent-parse oracle for recall and a non-circular negative control for
+precision (\S\ref{sec:validation}).
+(iv) A released artifact: the discovery instrument, the corpus manifest (repo +
+commit SHA + licence), and the analysis (\S\ref{sec:artifact}).
+
+\section{Background}\label{sec:background}
+A JWT verifier is defined by: the \emph{issuers} it trusts, the \emph{audiences}
+it binds tokens to (RFC~8707, RFC~9728), the signing \emph{algorithms} it permits
+(RFC~8725~\S3.1), the \emph{claims} it requires (RFC~8725~\S3.9), and its
+JWKS-fetch/cache behaviour. Agent authorization adds delegation (RFC~8693 \texttt{act}),
+resource binding for MCP servers, scope minimisation, and token lifetime. These
+are the fields whose prevalence we measure, each grounded in a normative source.
+
+\section{Deriving authorization contracts}\label{sec:method}
+A \emph{consumer} is any entity that validates tokens. We derive consumers from
+configuration rather than declarations. Discoverers map each source to consumers:
+Istio \texttt{RequestAuthentication} (issuer, audiences, JWKS) and
+\texttt{AuthorizationPolicy} (required claims in \texttt{when} conditions); Envoy
+JWT filters; Kubernetes workload metadata for stable identity; OIDC/Keycloak
+registries. Each extracted field records \emph{provenance}
+(\{source, locator, confidence\}), so every measurement is attributable to a line
+of configuration. A library-defaults database fills verifier behaviour the config
+omits, because the contract includes what the verifier does \emph{by default}.
+Consumers are assembled into a content-addressed \texttt{ContractVersion}, enabling
+exact-equality change detection and diffing across versions.
+
+\section{Corpus construction}\label{sec:corpus}
+We crawl public GitHub read-only for real auth configuration (Istio
+\texttt{RequestAuthentication}, Envoy \texttt{jwt\_authn}, Istio claim conditions),
+recording repository, blob SHA, and licence for every artifact for reproducibility
+and attribution. We fetch public repositories only, cap files per repository to
+limit monorepo dominance, and analyse \emph{per repository} so a
+\texttt{RequestAuthentication} and its \texttt{AuthorizationPolicy} (usually in
+separate files) are resolved together while distinct repositories remain isolated.
+Two cleaning steps address representativeness: we exclude tutorial/vendored copies
+by path, and we deduplicate identical configurations (a canonical sample pasted
+across repositories counts once). The preliminary corpus is 603 files across 428
+public repositories, yielding 102 distinct JWT-validating configurations after
+cleaning. \gate{scale to $10^3$--$10^4$ services; report exact N with CIs and the
+selection-bias analysis.}
+
+\section{Validation methodology}\label{sec:validation}
+Measurement is only as good as the extractor. We validate discovery two ways and
+are explicit about what each can and cannot establish.
+
+\noindent\textbf{Recall (kind-aware independent parse).} An independent YAML parse
+of each repository yields the declared issuers/audiences/claims; we compare to what
+discovery captured, per repository. Crucially, the independent parser
+\emph{over-declares}: it scrapes \texttt{issuer:} keys and claim-like strings from
+non-auth resources (a ConfigMap, an annotation). We therefore measure recall only
+against values in \emph{genuine} auth resources (RequestAuthentication /
+AuthorizationPolicy / Envoy JWT). Adjudicated recall is issuers 89.6\%, audiences
+99.0\%, and claims 82.1\% (scoped to repositories where a JWT consumer exists;
+claims declared in repositories whose RequestAuthentication is absent from the
+corpus have no consumer to attach to). The adjudication removed 17 parser
+over-declarations, which both raises the honest recall and demonstrates the proxy
+oracle is itself imperfect.
+
+\noindent\textbf{Precision (non-circular negative control).} An independent-parse
+oracle cannot honestly measure precision: it reads the same fields as the
+extractor, so captures are almost always a subset and precision $\approx 100\%$
+\emph{by construction}. We therefore use a negative control: configurations with
+planted distractor values a correct discoverer must ignore---a commented-out
+issuer, an \texttt{issuer:}/claim in a non-auth ConfigMap, a claim behind a
+non-matching AuthorizationPolicy selector (the real attribution risk), and strings
+in annotations. Result: 4 planted, 0 leaked, with real values still captured.
+
+\noindent\textbf{Gold standard.} Both above are automated proxies.
+\gate{hand-label a stratified sample for the definitive precision/recall, adjudicating
+each captured value as real, correctly attributed, or spurious.}
+
+\section{Preliminary results}\label{sec:results}
+\emph{These numbers are preliminary (small N, no human labels) and are not to be
+cited as final; they are reported to demonstrate the instrument and to bound the
+work remaining.}
+
+\noindent\textbf{Prevalence.} Over 102 distinct JWT-validating configurations
+(Wilson 95\% CIs): no algorithm pinning \emph{in configuration} 100\%
+[96.4, 100]; no required claims 85.3\% [77.1, 90.9]; unbound audience 42.2\%
+[33.0, 51.9]. The algorithm-pinning figure reflects reliance on the verifying
+\emph{library's default}, which configuration does not restate---a static-vs-runtime
+gap, not a 100\% vulnerability rate; we report it as ``not pinned in config.''
+\gate{re-run over the scaled, labelled corpus; add co-occurrence analysis.}
+
+\noindent\textbf{Drift (RQ: how contracts change over time).}
+\gate{longitudinal analysis over commit history; today we validate the drift
+\emph{classifier} on a 1{,}226-pair synthetic corpus at 100\% recall / 0\% FPR,
+with mutation testing (24 mutants, 100\% killed) and a held-out adversarial set at
+Youden 0.75, but drift-in-the-wild is future work.}
+
+\section{Limitations and threats to validity}\label{sec:limitations}
+\textbf{Static discovery sees configuration, not the running verifier;} where true
+behaviour diverges from config and library defaults, only live probing (out of
+scope here) would catch it. \textbf{Templating:} $\approx$17\% of corpus files are
+Helm-templated and $\approx$2\% carry kustomize/variable markers---roughly one in
+five configurations is under-resolved without rendering. \textbf{Selection bias:}
+public configuration skews to samples, demos, and OSS and is not representative of
+private enterprise deployments; this must be stated, not hidden. \textbf{Proxy
+oracles:} \S\ref{sec:validation}'s recall/precision are automated approximations
+pending human labels. \textbf{Ethics:} we use only public configuration, read
+only; we do not probe third-party live endpoints and handle no real tokens;
+identifiable high-severity findings follow responsible disclosure.
+
+\section{Related work}\label{sec:related}
+\gate{position against: JWT/OIDC attack literature (alg=none, key confusion, jku)
+---individual attacks are known, our contribution is the population-scale contract
+and drift view; IaC/config scanners (Checkov, KICS, Semgrep)---pattern matching vs
+contract derivation with provenance; consumer-driven contract testing (Pact)---API
+shape vs auth verification; misconfiguration measurement studies---our
+methodological template; and the emerging MCP/agent-authorization literature.}
+
+\section{Conclusion}
+Authorization correctness is a property of what is running, not of what is written,
+and it drifts. We make the implicit token-auth contract explicit, measurable, and
+validated with a methodology candid about its own limits. The preliminary
+measurement and the released instrument are a step toward an empirical
+understanding of auth-verification hygiene at scale.
+
+\section*{Artifact availability}\label{sec:artifact}
+The discovery instrument, the measurement harness (prevalence with Wilson CIs), the
+kind-aware validator, the negative-control precision test, and the corpus manifest
+(repository + commit SHA + licence) are open source under MIT. \gate{camera-ready:
+DOI-pinned artifact + Artifact Evaluation ``Available/Reproduced'' badges.}

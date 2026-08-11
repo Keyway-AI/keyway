@@ -1,0 +1,81 @@
+% Shared body for Paper B (agent-auth SoK / position, work-in-progress).
+% Class-agnostic; the per-venue main.tex sets class/title/authors.
+\providecommand{\gate}[1]{\textbf{[PENDING: #1]}}
+
+\begin{abstract}
+Autonomous agents increasingly act on a user's behalf carrying OAuth/MCP bearer
+tokens, yet the authorization layer around them is new and largely unstudied. We
+systematize the authorization threat model for agent and Model Context Protocol
+(MCP) deployments, mapping each threat to its normative source (OAuth RFCs
+8693/8707/9728, the MCP authorization specification, OWASP LLM \& Agentic Top~10s)
+and to a concrete, checkable invariant. We contribute a cited taxonomy of 15
+agent-domain threats, a gap analysis of what existing OAuth machinery does and does
+not cover for autonomous callers, and an open-source static analyzer that flags
+audience-binding, delegation, scope, and expiry violations on a single token.
+\gate{a measurement of prevalence across public MCP deployments; this draft is
+work-in-progress / position and the empirical section is not yet complete.}
+\end{abstract}
+
+\section{Introduction}
+When an agent calls a tool or an MCP server on a user's behalf, a bearer token
+travels with the request. The failure modes are OAuth failure modes with sharper
+consequences because the caller is autonomous: a token \emph{not bound to the
+resource} it is presented to can be replayed or passed through (a confused deputy);
+an on-behalf-of token with no verifiable delegation chain makes ``who authorised
+this?'' unanswerable; an omnibus scope (\texttt{admin:*}) hands an injected or
+misbehaving agent the keys to everything; and a non-expiring credential never stops
+being useful to an attacker. These map directly onto the MCP authorization
+specification, OAuth token exchange, and the OWASP LLM/Agentic Top~10s---yet no
+systematic, source-grounded treatment exists. Being early and rigorous here is the
+contribution.
+
+\section{Threat systematization}
+We organize the agent-authorization threat space into categories---audience
+binding, delegation, scope, expiry, agent identity, and agency---and, for each
+threat, give its definition, normative source, the invariant that must hold, and
+the failure it prevents. Representative entries with checkable invariants:
+\begin{itemize}
+  \item \textbf{Unbound audience (MCP-02).} A token carrying no audience is not
+  bound to any resource and is replayable (RFC~8707/9728).
+  \item \textbf{Audience mismatch (MCP-01).} A token whose audience omits the
+  presented resource can be passed through to another server (RFC~8707).
+  \item \textbf{Missing delegation (DEL-01).} An on-behalf-of token without a
+  verifiable \texttt{act} chain has an unauditable delegation (RFC~8693).
+  \item \textbf{Over-broad scope (SCOPE-01).} Omnibus grants violate least
+  privilege (OWASP Agentic).
+  \item \textbf{Non-expiring credential (SCOPE-02).} No \texttt{exp} / excessive
+  lifetime (OAuth security BCP).
+\end{itemize}
+The full taxonomy (this work) spans 15 agent-domain threats, all cited.
+
+\section{Gap analysis}
+We contrast the classic OAuth/OIDC threat model with the autonomous-agent setting:
+which threats existing machinery (resource indicators, token exchange, protected-
+resource metadata) covers by default in common SDKs, and which are left to the
+deployer and therefore likely missed (e.g., confused-deputy via token passthrough;
+delegation chains that token exchange models but MCP deployments rarely verify).
+
+\section{Instrument}
+We provide an open-source static analyzer (\texttt{keyway agent inspect}) that
+decodes a token and emits cited findings against a supplied policy: audience
+binding, on-behalf-of delegation, scope minimisation, and expiry. It is stateless
+and runs on a single token---in CI or client-side---so nothing leaves the caller.
+Of the 15-threat agent taxonomy, the analyzer currently covers 6 (40\%); every gap
+is named.
+
+\section{Measurement (work in progress)}
+\gate{measure the prevalence of the checkable weaknesses above across a corpus of
+public MCP servers and reference agent-token deployments, with a hand-validated
+sample. This is the empirical contribution and is not yet complete; the present
+submission is positioned as SoK / position / work-in-progress accordingly.}
+
+\section{Threats to validity and ethics}
+The MCP specification is fast-moving; the systematization is date-stamped and
+coverage is a snapshot. Public MCP servers skew to early adopters. We probe no
+third-party live agents and use no real user tokens; identifiable high-severity
+findings follow responsible disclosure.
+
+\section{Conclusion}
+Agent authorization is an under-studied, high-stakes surface. We contribute a
+source-grounded threat systematization, a gap analysis, and an open-source
+instrument, as the foundation for a forthcoming measurement of the space.

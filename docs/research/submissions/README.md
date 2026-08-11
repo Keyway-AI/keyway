@@ -17,6 +17,24 @@ submitting — they move, and 2027 pages were still partial when this was compil
 >
 > Submitting before these gates close would be fabrication — exactly what we don't do.
 
+## Near-term (Aug–Sep 2026) — quickest turnaround
+
+The soonest realistic deadlines, and which of our papers can honestly go where:
+
+| Venue | Deadline | Types | Fit / honest path |
+|---|---|---|---|
+| **SSR 2026** (Security Standardisation Research) | **2026-09-15** | research / **SoK** / **Vision** | **Best.** Theme = how security standards (our RFCs!) are implemented in the wild. Its **Vision** track honestly fits Paper A *now* (approach + preliminary measurement + agenda); its **SoK** track fits Paper B. ≤23 pp LNCS. |
+| **AIDC 2026** (Agentic-AI, co-ACSAC) | **2026-09-25** | workshop / early work | Paper B (SoK/position). |
+| **SaTML 2027** | **2026-09-29** | research / **SoK** / **position** | Paper B (SoK/position). |
+| **SECITC 2026** | **2026-09-07** | full research | Paper A — but wants a *complete* study; submit only after the gates close. ≤12 pp LNCS. |
+| **OWASP AppSec Days Portugal 2026** | **2026-09-23** | practitioner talk | The tool, not the paper. |
+
+**Recommendation for a quick submission:** **SSR 2026 (Sep 15)** — submit Paper B
+as an **SoK**, and/or Paper A as a **Vision paper**. The Vision type is the one
+venue-and-format combination where our *current* honest state (preliminary
+measurement + validation methodology + research agenda) is a legitimate
+submission, not a padded one. SaTML/AIDC are the workshop fallbacks for Paper B.
+
 ## Paper A — measurement study (`paper-a/`)
 
 Venue-formatted wrappers all `\input` one shared body (`paper-a/common/body.tex`),
@@ -24,7 +42,9 @@ so the content stays identical and only the template/length differs.
 
 | Venue | Next deadline | Page limit (body) | Template | Blind | Fit |
 |---|---|---|---|---|---|
-| **IMC 2027** (Internet Measurement Conf.) | Cycle 1 ~**Nov 2026**, Cycle 2 ~**Apr 2027** (IMC'26 was 11/20 & 4/29) | 13 pp text+figs, refs/appendix unlimited | ACM `acmart` `sigconf` | double | **Best** — measurement is IMC's core |
+| **SSR 2026** (Security Standardisation Research) | **2026-09-15** | ≤23 pp incl. refs | Springer `llncs` | double | **Best near-term** — standards-in-the-wild; Vision track fits *now* |
+| **SECITC 2026** | **2026-09-07** | ≤12 pp excl. refs | Springer `llncs` | double | Full paper; after gates close |
+| **IMC 2027** (Internet Measurement Conf.) | Cycle 1 ~**Nov 2026**, Cycle 2 ~**Apr 2027** (IMC'26 was 11/20 & 4/29) | 13 pp text+figs, refs/appendix unlimited | ACM `acmart` `sigconf` | double | **Best (later)** — measurement is IMC's core |
 | **USENIX Security '27** | Cycle 2 **2027-01-26** (abs 01-19) | 13 pp excl. refs/appendix | USENIX `usenix-2020-09` | double | Strong; measurement-friendly, most runway |
 | **NDSS 2027** | Fall cycle ~**Nov 2026** | 18 pp **total** (incl. refs) | NDSS `ndss` (Times 10pt, 2-col, US-letter) | double | Strong |
 | **IEEE S&P 2027** | **2026-11-17** (abs 11-10) | ~13 pp + refs (confirm) | `IEEEtran` (conference) | double + Ethics §| Stretch |

@@ -4,51 +4,70 @@
 \providecommand{\gate}[1]{\textbf{[PENDING: #1]}}
 
 \begin{abstract}
-Whether a bearer token is accepted is decided by a \emph{verifier}'s configuration:
-the issuers it trusts, the audiences it binds to, the algorithms it allows, and the
-claims it requires. This configuration is an implicit \emph{authorization contract}
-that is rarely written down and, when it drifts, causes outages or silent
-over-acceptance. We present a method to derive these contracts automatically from
-deployment configuration and a measurement of their prevalence in the wild across
-public repositories. On a preliminary corpus of \gate{final N} public repositories
-(currently 428), we quantify concrete, RFC-defined weaknesses --- unbound
-audiences, absent algorithm pinning, missing required claims --- with Wilson
-confidence intervals, and we validate the extraction with a kind-aware
-independent-parse oracle (recall: issuers 89.6\%, audiences 99.0\%, claims 82.1\%)
-and a non-circular negative-control test for precision. We release the instrument,
-the corpus manifest, and the analysis. \gate{hand-labelled validation and
-scaled-corpus results before submission.}
+Authorization is the security property everyone assumes and no one measures.
+Whether a bearer token is accepted is decided not by code but by
+\emph{configuration}---the issuers a verifier trusts, the audiences it binds to,
+the algorithms it allows, the claims it requires---an implicit \emph{authorization
+contract} that is rarely written down and, when it drifts, causes outages or silent
+over-acceptance. We argue this contract should be a first-class, measurable object,
+and take a concrete first step: a method to derive it automatically from deployment
+configuration, and a preliminary measurement of its hygiene across 428 public
+repositories. We quantify RFC-defined weaknesses---unbound audiences, absent
+algorithm pinning, missing required claims---with Wilson confidence intervals; and
+because a measurement is only as trustworthy as its instrument, we validate
+extraction with a kind-aware oracle for recall (issuers 89.6\%, audiences 99.0\%)
+and a deliberately non-circular negative control for precision, reporting what each
+can and cannot establish. We release the instrument, the corpus manifest, and the
+analysis, and set out the research agenda---scale, drift, and the static/runtime
+frontier---that a full study will complete.
+\gate{hand-labelled validation and scaled-corpus results before a full-paper
+submission; this Vision draft leads with the agenda.}
 \end{abstract}
 
 \section{Introduction}
-Distributed systems authenticate requests with bearer tokens: JWTs between
-services, and increasingly OAuth/MCP tokens carried by autonomous agents. A
-token is accepted or rejected by a verifier whose behaviour is an emergent
-property of configuration spread across service meshes (Istio), proxies (Envoy),
-identity providers, and the \emph{defaults} of the verifying library. We call this
-implicit specification the \emph{authorization contract}. It is almost never
-centralised, and when it changes---a rotated key, a widened audience, a dropped
-claim---some verifiers begin rejecting valid users (an outage) or accepting tokens
-they should not (a silent security regression).
+An engineer rotates a signing key on a Friday. No code changes; every test passes.
+By Monday a downstream service is rejecting every valid user, because its verifier
+cached the retired key longer than anyone realised. The same week, elsewhere, a
+verifier quietly begins accepting a second audience nobody intended. Neither
+failure lives in the code, and neither would be caught by reading it: both live in
+the \emph{configuration} that actually decides whether a bearer token is accepted.
 
-Two classes of tooling exist and neither answers ``is the deployed auth contract
-correct, and what does it look like at scale?'' Static code scanners reason about
-source, not about which \emph{running} verifier trusts which issuer; gateways and
-IdPs \emph{are} the artifact under test. We take the empirical view: derive the
-contract from real configuration and \emph{measure} it.
+That configuration is an implicit specification---the issuers a verifier trusts,
+the audiences it binds to, the algorithms it allows, the claims it requires, and
+the JWKS behaviour of the library beneath it. We call it the \emph{authorization
+contract}. It is emergent (spread across service meshes, proxies, identity
+providers, and library defaults), almost never centralised, and it \emph{drifts}:
+a rotated key, a widened audience, a dropped claim turns valid users away (an
+outage) or admits tokens that should be refused (a silent regression). And as
+autonomous agents begin carrying OAuth/MCP tokens on a user's behalf, the same
+contract now governs a faster-moving, higher-stakes surface.
+
+Despite being where auth correctness actually lives, this contract is essentially
+\emph{unmeasured}. Two classes of tooling exist and neither answers ``what does the
+deployed auth contract look like, at scale, and how healthy is it?'': static code
+scanners reason about source, not about which \emph{running} verifier trusts which
+issuer; gateways and IdPs \emph{are} the artifact under test, not a test of it. We
+argue the authorization contract should be a first-class, measurable object, and
+this paper is the first step toward measuring it.
 
 \noindent\textbf{Contributions.}
-(i) A method to derive JWT/agent authorization contracts from heterogeneous
-deployment configuration, with per-field provenance
-(\S\ref{sec:method}).
-(ii) A measurement of the prevalence of concrete, cited verification weaknesses
-across public configuration, with confidence intervals
-(\S\ref{sec:results}).
-(iii) A validation methodology that is candid about its own limits---a kind-aware
-independent-parse oracle for recall and a non-circular negative control for
-precision (\S\ref{sec:validation}).
-(iv) A released artifact: the discovery instrument, the corpus manifest (repo +
-commit SHA + licence), and the analysis (\S\ref{sec:artifact}).
+(i) A framing---the authorization contract as a derivable, versioned, measurable
+artifact---and a method to derive it from heterogeneous deployment configuration
+with per-field provenance (\S\ref{sec:method}).
+(ii) A preliminary measurement of the prevalence of concrete, RFC-cited weaknesses
+across 428 public repositories, with confidence intervals (\S\ref{sec:results}).
+(iii) A validation methodology candid about its own limits---a kind-aware oracle
+for recall and a non-circular negative control for precision, each with its
+failure mode stated (\S\ref{sec:validation}); we contend this candor is what a
+security measurement should look like.
+(iv) A released instrument, corpus manifest, and analysis (\S\ref{sec:artifact}),
+and a research agenda---scale, drift, and the static/runtime frontier
+(\S\ref{sec:vision})---that a full study completes.
+
+\noindent This is deliberately a \emph{vision-and-first-step} paper: we contribute
+the framing, a validated instrument, and an honest baseline, and set the agenda the
+community (and we) should pursue; \S\ref{sec:limitations} is candid about what the
+preliminary measurement does not yet establish.
 
 \section{Background}\label{sec:background}
 A JWT verifier is defined by: the \emph{issuers} it trusts, the \emph{audiences}

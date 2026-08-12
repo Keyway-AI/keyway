@@ -6,19 +6,22 @@
 \providecommand{\yes}{\ensuremath{\surd}}
 
 \begin{abstract}
-Autonomous agents increasingly act on a user's behalf carrying OAuth/MCP bearer
-tokens, yet the authorization layer around them is new and largely unsystematized.
-We survey and organize the authorization threat model for agent and Model Context
-Protocol (MCP) deployments into six categories---audience binding, delegation,
-scope, agent identity, confused-deputy, and agency---and map each of 15 threats to
-its normative source (OAuth RFCs 8693/8707/9728/9700, the MCP authorization
-specification, OWASP LLM \& Agentic Top~10s, CWEs) and to a concrete invariant that
-must hold. We show which threats are decidable from a single token or server
-manifest (6 of 15 are statically checkable, and we provide an open-source analyzer
-for them) and which fundamentally require runtime consent, human-in-the-loop, or
-workload identity. \gate{a measurement of prevalence across public MCP
-deployments; this submission is positioned as SoK / work-in-progress and the
-empirical section is a gate.}
+Autonomous agents now act on a user's behalf carrying OAuth/MCP bearer tokens, but
+the authorization layer around them is new, high-stakes, and unsystematized:
+practitioner lists enumerate risks without a shared model of what must hold or what
+a tool can even check. We systematize the agent-authorization threat model for
+Model Context Protocol (MCP) and agent deployments into six categories---audience
+binding, delegation, scope, agent identity, confused-deputy, and agency---and map
+each of 15 threats to its normative source (OAuth RFCs 8693/8707/9728/9700, the MCP
+authorization specification, OWASP LLM \& Agentic Top~10s, CWEs) and to a precise
+invariant that must hold. Our central result is a \emph{decidability line}: 6 of
+the 15 threats are checkable from a single token or server manifest---and we
+provide an open-source analyzer for them---while the other 9 fundamentally require
+runtime consent, a human in the loop, or a workload-identity substrate the
+ecosystem is still standardizing. This line tells builders what to automate and
+tells the field where the open problems are.
+\gate{a measurement of prevalence across public MCP deployments; this submission is
+positioned as SoK / work-in-progress and the empirical section is a gate.}
 \end{abstract}
 
 \section{Introduction}

@@ -39,7 +39,7 @@ jobs:
             -o "dist/$out/keyway-runner" ./cmd/keyway-runner
           tar -czf "dist/${out}.tar.gz" -C "dist/$out" .
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: keyway-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*.tar.gz

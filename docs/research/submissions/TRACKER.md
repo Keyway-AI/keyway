@@ -5,6 +5,11 @@ tasks that stand between the current drafts and a real submission. Update the
 **Status** and check boxes as work lands. Dates researched 2026-08-08 — re-confirm
 on each CFP.
 
+**As of ~2026-08-13, NO deadline below has passed.** Nearest upcoming, in order:
+NDSS'27 summer **Aug 19**, USENIX Sec'27 Cy1 **Aug 25**, SECITC **Sep 7**,
+SSR **Sep 15**, OWASP Portugal **Sep 23**, AIDC **Sep 25**, SaTML **Sep 29**,
+S&P'27 **Nov 17**, NDSS'27 fall / IMC'27 Cy1 **~Nov**, USENIX Sec'27 Cy2 **Jan 26 2027**.
+
 Legend: ☐ todo · ◑ in progress · ☑ done · ⧗ blocked on a research gate (human
 labelling / corpus scaling).
 
@@ -25,6 +30,38 @@ labelling / corpus scaling).
 | 9 | **IEEE S&P 2027** | A | full research | **2026-11-17** | `IEEEtran` conf | ~13 pp + refs | double + Ethics§ | ⧗ needs gates |
 | — | Black Hat EU Arsenal | tool | demo | confirm | — | — | — | ☐ optional |
 | — | OWASP AppSec Portugal | tool | talk | **2026-09-23** | — | — | — | ☐ optional |
+
+## Readiness (as of ~2026-08-13)
+
+Readiness = how close the relevant draft is to submittable **for that venue's
+track**, given its bar and the two research gates (G1 hand-labelling, G2 corpus
+scaling). "Deadline feasible?" judges whether we can realistically close the gap in
+time.
+
+| Venue (deadline) | Track bar | Readiness | Gaps to submittable | Deadline feasible? |
+|---|---|---|---|---|
+| **SSR 2026** (Sep 15) — Paper B SoK | SoK: no measurement required | **~85%** | proofread, Overleaf compile, length trim, confirm track | **Yes** — the realistic target |
+| **SSR 2026** (Sep 15) — Paper A Vision | Vision: forward-looking OK | **~80%** | reframed intro done; proofread + compile + trim; confirm Vision track exists in final CFP | **Yes** |
+| **AIDC 2026** (Sep 25) — Paper B | workshop / early work | **~80%** | confirm CFP (limit/blind); reuse SoK body | **Yes** |
+| **SaTML 2027** (Sep 29) — Paper B | SoK/position | **~80%** | confirm limits; reuse SoK body | **Yes** |
+| **NDSS 2027 summer** (Aug 19) — Paper A | full research | **~35%** | needs G1 **and** G2 | **No** (~1 wk) → aim fall |
+| **USENIX Sec '27 Cy1** (Aug 25) — Paper A | full research | **~35%** | needs G1 **and** G2 | **No** (~2 wks) → aim Cy2 |
+| **SECITC 2026** (Sep 7) — Paper A | full research | **~35%** | needs G1 + G2; trim to 12 pp | **No** (too tight) |
+| **IEEE S&P 2027** (Nov 17) — Paper A | full research, top-tier | **~40%** | G1 + G2 + heavier writing/relatedwork; a co-author strongly helps | Stretch |
+| **NDSS 2027 fall** (~Nov) — Paper A | full research, top-tier | **~40%** | G1 + G2 + polish | Stretch |
+| **IMC 2027 Cy1** (~Nov) — Paper A | full research, measurement-core | **~40%** | G1 + G2 + polish (best topical fit) | Stretch |
+| **USENIX Sec '27 Cy2** (Jan 26 2027) — Paper A | full research, top-tier | **~45%** | G1 + G2 + polish; **most runway** | **Yes, if G1/G2 done** |
+| **IMC 2027 Cy2** (~Apr 2027) — Paper A | full research | **~45%** | G1 + G2 + polish; most runway | **Yes, if G1/G2 done** |
+
+**Bottom line.** Two clusters. (a) *Ready-ish now* — the SoK/Vision/workshop tracks
+(SSR, AIDC, SaTML) at ~80–85%: only human polish + Overleaf, no gates. (b) *Blocked
+on gates* — every full-research Paper A venue at ~35–45%: needs **G1** (an hour of
+human labelling) and **G2** (a scaled corpus, needs a token + background crawl). The
+readiness number for those cannot rise past ~45% no matter how much drafting is
+done, because the missing piece is *results*, not prose. Aim the near-deadline
+full-paper venues (Aug 19 / Aug 25 / Sep 7) at their *later* cycles, and target
+**USENIX Sec '27 Cy2 (Jan 26)** or **IMC 2027** as the top-venue Paper-A home once
+G1/G2 close.
 
 **Fastest honest path:** SSR 2026 (Sep 15) — rows 1 & 2. SoK (B) and Vision (A)
 tracks accept our current honest state without fabrication. The `⧗` rows are

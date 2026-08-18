@@ -5,6 +5,9 @@
 \providecommand{\gate}[1]{\textbf{[PENDING: #1]}}
 \providecommand{\yes}{\ensuremath{\surd}}
 \providecommand{\no}{\ensuremath{\times}}
+% Let TeX relax line breaking on paragraphs with long unbreakable \texttt{} tokens
+% instead of overrunning the margin. Class-agnostic; applies under every wrapper.
+\emergencystretch=3em
 
 \begin{abstract}
 When an AI agent calls a tool or an MCP server on your behalf, it carries a bearer

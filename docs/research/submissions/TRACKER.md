@@ -19,8 +19,8 @@ labelling / corpus scaling).
 
 | # | Venue | Paper | Type | Deadline | Template | Limit | Blind | Status |
 |---|---|---|---|---|---|---|---|---|
-| 1 | **SSR 2026** | B (SoK) | SoK | **2026-09-15** | Springer `llncs` | 23 pp incl refs | double | ◑ drafting |
-| 2 | **SSR 2026** | A (Vision) | Vision | **2026-09-15** | Springer `llncs` | 23 pp incl refs | double | ◑ drafting |
+| 1 | **SSR 2026** | B (SoK) | SoK | **2026-09-15** | Springer `llncs` | 23 pp incl refs | double | ◑ submission-prep → `paper-b/SUBMISSION-ssr.md` |
+| 2 | **SSR 2026** | A (Vision) | Vision | **2026-09-15** | Springer `llncs` | 23 pp incl refs | double | ◑ submission-prep → `paper-a/SUBMISSION-ssr.md` |
 | 3 | **AIDC 2026** | B | workshop | **2026-09-25** | ACM `acmart` sigconf | (confirm) | double | ☐ |
 | 4 | **SaTML 2027** | B | SoK/position | **2026-09-29** | `IEEEtran` conf | (confirm) | double | ☐ |
 | 5 | **SECITC 2026** | A | full research | **2026-09-07** | Springer `llncs` | 12 pp excl refs | double | ⧗ needs gates |

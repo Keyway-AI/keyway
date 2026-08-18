@@ -2,6 +2,10 @@
 % main.tex sets \documentclass, title, authors, and \begin{document}, then
 % \input{../common/body}. Every unfinished number is wrapped in \gate{...}.
 \providecommand{\gate}[1]{\textbf{[PENDING: #1]}}
+% Let TeX relax line breaking on paragraphs with long unbreakable \texttt{} kind
+% names (RequestAuthentication, AuthorizationPolicy) instead of overrunning the
+% margin. Class-agnostic; applies under every venue wrapper.
+\emergencystretch=3em
 
 \begin{abstract}
 Whether a service accepts a bearer token comes down to configuration, not code:

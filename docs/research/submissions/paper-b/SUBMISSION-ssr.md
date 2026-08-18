@@ -13,20 +13,21 @@ SoK: Authorization for Autonomous Agents
 
 ## Abstract (portal-ready plaintext — paste into the submission form)
 
-> Autonomous agents now act on a user's behalf carrying OAuth/MCP bearer tokens,
-> but the authorization layer around them is new, high-stakes, and unsystematized:
-> practitioner lists enumerate risks without a shared model of what must hold or
-> what a tool can even check. We systematize the agent-authorization threat model
-> for Model Context Protocol (MCP) and agent deployments into six categories —
-> audience binding, delegation, scope, agent identity, confused-deputy, and agency
-> — and map each of 15 threats to its normative source (OAuth RFCs
-> 8693/8707/9728/9700, the MCP authorization specification, OWASP LLM & Agentic Top
-> 10s, CWEs) and to a precise invariant that must hold. Our central result is a
-> decidability line: 6 of the 15 threats are checkable from a single token or
-> server manifest — and we provide an open-source analyzer for them — while the
-> other 9 fundamentally require runtime consent, a human in the loop, or a
-> workload-identity substrate the ecosystem is still standardizing. This line tells
-> builders what to automate and the field where the open problems are.
+> AI agents increasingly act for a user while carrying OAuth or MCP bearer tokens,
+> but the authorization around them is new and not well understood. The practitioner
+> lists that exist name risks without agreeing on what has to hold or on what a tool
+> can actually check. We organize the agent-authorization threat model for Model
+> Context Protocol (MCP) and agent deployments into six categories: audience
+> binding, delegation, scope, agent identity, confused-deputy, and agency. For each
+> of 15 threats we give its normative source (OAuth RFCs 8693/8707/9728/9700, the
+> MCP authorization specification, the OWASP LLM and Agentic Top 10s, and the
+> relevant CWEs) and the invariant it breaks. Our main point is where the line falls
+> between what a tool can decide statically and what it cannot. Six of the 15 threats
+> can be checked from a single token or server manifest, and we give an open-source
+> analyzer for those; the other nine need runtime consent, a human in the loop, or a
+> workload-identity layer the ecosystem is still building. Knowing which side of
+> that line a threat sits on tells you what to automate and what is still an open
+> problem.
 
 ## Readiness: ~85%. Checklist before submit
 

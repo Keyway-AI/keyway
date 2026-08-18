@@ -4,22 +4,23 @@
 \providecommand{\gate}[1]{\textbf{[PENDING: #1]}}
 
 \begin{abstract}
-Authorization is the security property everyone assumes and no one measures.
-Whether a bearer token is accepted is decided not by code but by
-\emph{configuration}---the issuers a verifier trusts, the audiences it binds to,
-the algorithms it allows, the claims it requires---an implicit \emph{authorization
-contract} that is rarely written down and, when it drifts, causes outages or silent
-over-acceptance. We argue this contract should be a first-class, measurable object,
-and take a concrete first step: a method to derive it automatically from deployment
-configuration, and a preliminary measurement of its hygiene across 428 public
-repositories. We quantify RFC-defined weaknesses---unbound audiences, absent
-algorithm pinning, missing required claims---with Wilson confidence intervals; and
-because a measurement is only as trustworthy as its instrument, we validate
-extraction with a kind-aware oracle for recall (issuers 89.6\%, audiences 99.0\%)
-and a deliberately non-circular negative control for precision, reporting what each
-can and cannot establish. We release the instrument, the corpus manifest, and the
-analysis, and set out the research agenda---scale, drift, and the static/runtime
-frontier---that a full study will complete.
+Whether a service accepts a bearer token is decided by configuration, not by code:
+the issuers it trusts, the audiences it binds to, the algorithms it allows, and the
+claims it requires. That configuration is an implicit \emph{authorization contract}.
+It is rarely written down, and when it drifts without anyone noticing, services
+either turn valid users away or start accepting tokens they should refuse. We think
+this contract is worth measuring directly, and this paper is a first step toward
+that. We give a method that derives the contract from deployment configuration, and
+we run it over 428 public repositories to see how healthy these contracts are in
+practice. We report how common a set of concrete, RFC-defined problems are
+(audiences bound to nothing, algorithms left unpinned, required claims missing),
+with Wilson confidence intervals. A measurement is only as good as the tool behind
+it, so we check the extractor two ways: a kind-aware oracle for recall (issuers
+89.6\%, audiences 99.0\%), and a negative control for precision that plants values
+a correct tool must ignore. We are explicit about what each check does and does not
+show. We release the tool, the corpus manifest, and the analysis, and set out the
+agenda a full study needs: scale, drift over time, and where configuration stops
+telling you what runtime does.
 \gate{hand-labelled validation and scaled-corpus results before a full-paper
 submission; this Vision draft leads with the agenda.}
 \end{abstract}
@@ -32,41 +33,41 @@ verifier quietly begins accepting a second audience nobody intended. Neither
 failure lives in the code, and neither would be caught by reading it: both live in
 the \emph{configuration} that actually decides whether a bearer token is accepted.
 
-That configuration is an implicit specification---the issuers a verifier trusts,
+That configuration is an implicit specification: the issuers a verifier trusts,
 the audiences it binds to, the algorithms it allows, the claims it requires, and
 the JWKS behaviour of the library beneath it. We call it the \emph{authorization
-contract}. It is emergent (spread across service meshes, proxies, identity
-providers, and library defaults), almost never centralised, and it \emph{drifts}:
-a rotated key, a widened audience, a dropped claim turns valid users away (an
-outage) or admits tokens that should be refused (a silent regression). And as
-autonomous agents begin carrying OAuth/MCP tokens on a user's behalf, the same
-contract now governs a faster-moving, higher-stakes surface.
+contract}. It is spread across service meshes, proxies, identity providers, and
+library defaults, it is almost never centralised, and it \emph{drifts}: a rotated
+key, a widened audience, or a dropped claim turns valid users away (an outage) or
+admits tokens that should be refused (a silent regression). As autonomous agents
+begin carrying OAuth/MCP tokens on a user's behalf, the same contract now governs a
+faster-moving, higher-stakes surface.
 
-Despite being where auth correctness actually lives, this contract is essentially
-\emph{unmeasured}. Two classes of tooling exist and neither answers ``what does the
-deployed auth contract look like, at scale, and how healthy is it?'': static code
+This contract is where auth correctness actually lives, and yet almost nobody
+measures it. Two kinds of tooling exist, and neither answers ``what does the
+deployed auth contract look like, at scale, and how healthy is it?'' Static code
 scanners reason about source, not about which \emph{running} verifier trusts which
-issuer; gateways and IdPs \emph{are} the artifact under test, not a test of it. We
-argue the authorization contract should be a first-class, measurable object, and
-this paper is the first step toward measuring it.
+issuer. Gateways and identity providers are the thing being configured, so they
+cannot tell you whether that configuration is healthy. We think the authorization
+contract should be something you can measure, and this paper is the first step
+toward measuring it.
 
 \noindent\textbf{Contributions.}
-(i) A framing---the authorization contract as a derivable, versioned, measurable
-artifact---and a method to derive it from heterogeneous deployment configuration
-with per-field provenance (\S\ref{sec:method}).
-(ii) A preliminary measurement of the prevalence of concrete, RFC-cited weaknesses
+(i) A way of treating the authorization contract as something you can derive,
+version, and measure, and a method to derive it from heterogeneous deployment
+configuration with per-field provenance (\S\ref{sec:method}).
+(ii) A preliminary measurement of how common concrete, RFC-cited weaknesses are
 across 428 public repositories, with confidence intervals (\S\ref{sec:results}).
-(iii) A validation methodology candid about its own limits---a kind-aware oracle
-for recall and a non-circular negative control for precision, each with its
-failure mode stated (\S\ref{sec:validation}); we contend this candor is what a
-security measurement should look like.
+(iii) A validation methodology that is honest about its own limits: a kind-aware
+oracle for recall and a non-circular negative control for precision, each with its
+failure mode stated (\S\ref{sec:validation}).
 (iv) A released instrument, corpus manifest, and analysis (\S\ref{sec:artifact}),
-and a research agenda---scale, drift, and the static/runtime frontier
-(\S\ref{sec:vision})---that a full study completes.
+and a research agenda (scale, drift, and the static/runtime frontier,
+\S\ref{sec:vision}) that a full study completes.
 
-\noindent This is deliberately a \emph{vision-and-first-step} paper: we contribute
-the framing, a validated instrument, and an honest baseline, and set the agenda the
-community (and we) should pursue; \S\ref{sec:limitations} is candid about what the
+\noindent This is a vision-and-first-step paper by design: we contribute the
+framing, a validated instrument, and an honest baseline, and we set the agenda we
+think the community should pursue. \S\ref{sec:limitations} is open about what the
 preliminary measurement does not yet establish.
 
 \section{Background}\label{sec:background}
@@ -111,7 +112,7 @@ are explicit about what each can and cannot establish.
 
 \noindent\textbf{Recall (kind-aware independent parse).} An independent YAML parse
 of each repository yields the declared issuers/audiences/claims; we compare to what
-discovery captured, per repository. Crucially, the independent parser
+discovery captured, per repository. The independent parser also
 \emph{over-declares}: it scrapes \texttt{issuer:} keys and claim-like strings from
 non-auth resources (a ConfigMap, an annotation). We therefore measure recall only
 against values in \emph{genuine} auth resources (RequestAuthentication /
@@ -126,7 +127,7 @@ oracle is itself imperfect.
 oracle cannot honestly measure precision: it reads the same fields as the
 extractor, so captures are almost always a subset and precision $\approx 100\%$
 \emph{by construction}. We therefore use a negative control: configurations with
-planted distractor values a correct discoverer must ignore---a commented-out
+planted distractor values a correct discoverer must ignore: a commented-out
 issuer, an \texttt{issuer:}/claim in a non-auth ConfigMap, a claim behind a
 non-matching AuthorizationPolicy selector (the real attribution risk), and strings
 in annotations. Result: 4 planted, 0 leaked, with real values still captured.
@@ -144,8 +145,9 @@ work remaining.}
 (Wilson 95\% CIs): no algorithm pinning \emph{in configuration} 100\%
 [96.4, 100]; no required claims 85.3\% [77.1, 90.9]; unbound audience 42.2\%
 [33.0, 51.9]. The algorithm-pinning figure reflects reliance on the verifying
-\emph{library's default}, which configuration does not restate---a static-vs-runtime
-gap, not a 100\% vulnerability rate; we report it as ``not pinned in config.''
+\emph{library's default}, which configuration does not restate. This is a
+static-vs-runtime gap, not a 100\% vulnerability rate; we report it as
+``not pinned in config.''
 \gate{re-run over the scaled, labelled corpus; add co-occurrence analysis.}
 
 \input{../common/fig-prevalence}
@@ -160,7 +162,7 @@ Youden 0.75, but drift-in-the-wild is future work.}
 \textbf{Static discovery sees configuration, not the running verifier;} where true
 behaviour diverges from config and library defaults, only live probing (out of
 scope here) would catch it. \textbf{Templating:} $\approx$17\% of corpus files are
-Helm-templated and $\approx$2\% carry kustomize/variable markers---roughly one in
+Helm-templated and $\approx$2\% carry kustomize/variable markers, so roughly one in
 five configurations is under-resolved without rendering. \textbf{Selection bias:}
 public configuration skews to samples, demos, and OSS and is not representative of
 private enterprise deployments; this must be stated, not hidden. \textbf{Proxy
@@ -170,11 +172,11 @@ only; we do not probe third-party live endpoints and handle no real tokens;
 identifiable high-severity findings follow responsible disclosure.
 
 \section{Related work}\label{sec:related}
-\textbf{JWT/OIDC attacks.} Individual verification flaws---\texttt{alg=none}, RS/HS
-key confusion, \texttt{jku}/\texttt{kid} injection---are well
+\textbf{JWT/OIDC attacks.} Individual verification flaws (\texttt{alg=none}, RS/HS
+key confusion, \texttt{jku}/\texttt{kid} injection) are well
 documented~\cite{mclean2015jwt,portswigger-jwt}, and OAuth itself has been formally
 analysed~\cite{fett2016oauth}. These establish \emph{which} misconfigurations
-matter; our contribution is orthogonal: a \emph{population-scale} view of the
+matter; our contribution is a different one: a \emph{population-scale} view of the
 derived contract and its drift, grounded in the same normative
 sources~\cite{rfc8725,rfc8707,rfc9728,rfc8693}.
 \textbf{IaC/config scanners} (Checkov, KICS, Semgrep~\cite{checkov,kics,semgrep})
@@ -191,9 +193,9 @@ systematization.
 \section{A research agenda (vision)}\label{sec:vision}
 Beyond the present preliminary measurement, we see a program: (i) scale to a
 representative corpus and report prevalence with tight intervals and a
-hand-validated extractor; (ii) characterise \emph{drift} longitudinally---do auth
+hand-validated extractor; (ii) characterise \emph{drift} longitudinally: do auth
 contracts widen more than they narrow, and are widenings tied to reviewable
-events?; (iii) quantify the static-vs-runtime frontier---what fraction of
+events?; (iii) quantify the static-vs-runtime frontier: what fraction of
 weaknesses are decidable from configuration versus require probing; and
 (iv) extend the same instrument to the agent/MCP frontier. This paper contributes
 the method, the validated instrument, and the honest baseline that make the
@@ -202,13 +204,13 @@ program tractable.
 \section{Conclusion}
 Authorization correctness is a property of what is running, not of what is written,
 and it drifts. We make the implicit token-auth contract explicit, measurable, and
-validated with a methodology candid about its own limits. The preliminary
-measurement and the released instrument are a step toward an empirical
-understanding of auth-verification hygiene at scale.
+validated with a methodology that is honest about its own limits. The preliminary
+measurement and the released instrument are a step toward understanding
+auth-verification hygiene at scale.
 
 \section*{Ethics considerations}\label{sec:ethics}
 This study measures only \emph{public} configuration, fetched read-only at pinned
-commits, and never probes third-party live endpoints or handles real tokens---the
+commits, and never probes third-party live endpoints or handles real tokens; the
 attack surface it characterises is exercised only against local, self-owned
 negative-control fixtures. We report \emph{population} prevalence, never a verdict
 on any single project, and we name no project as insecure. For any identifiable,

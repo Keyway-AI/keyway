@@ -4,22 +4,23 @@
 % empirical results are wrapped in \gate{...}.
 \providecommand{\gate}[1]{\textbf{[PENDING: #1]}}
 \providecommand{\yes}{\ensuremath{\surd}}
+\providecommand{\no}{\ensuremath{\times}}
 
 \begin{abstract}
-Autonomous agents now act on a user's behalf carrying OAuth/MCP bearer tokens, but
-the authorization layer around them is new, high-stakes, and unsystematized:
-practitioner lists enumerate risks without a shared model of what must hold or what
-a tool can even check. We systematize the agent-authorization threat model for
-Model Context Protocol (MCP) and agent deployments into six categories---audience
-binding, delegation, scope, agent identity, confused-deputy, and agency---and map
-each of 15 threats to its normative source (OAuth RFCs 8693/8707/9728/9700, the MCP
-authorization specification, OWASP LLM \& Agentic Top~10s, CWEs) and to a precise
-invariant that must hold. Our central result is a \emph{decidability line}: 6 of
-the 15 threats are checkable from a single token or server manifest---and we
-provide an open-source analyzer for them---while the other 9 fundamentally require
-runtime consent, a human in the loop, or a workload-identity substrate the
-ecosystem is still standardizing. This line tells builders what to automate and
-tells the field where the open problems are.
+AI agents increasingly act for a user while carrying OAuth or MCP bearer tokens,
+but the authorization around them is new and not well understood. The practitioner
+lists that exist name risks without agreeing on what has to hold or on what a tool
+can actually check. We organize the agent-authorization threat model for Model
+Context Protocol (MCP) and agent deployments into six categories: audience binding,
+delegation, scope, agent identity, confused-deputy, and agency. For each of 15
+threats we give its normative source (OAuth RFCs 8693/8707/9728/9700, the MCP
+authorization specification, the OWASP LLM and Agentic Top~10s, and the relevant
+CWEs) and the invariant it breaks. Our main point is where the line falls between
+what a tool can decide statically and what it cannot. Six of the 15 threats can be
+checked from a single token or server manifest, and we give an open-source analyzer
+for those; the other nine need runtime consent, a human in the loop, or a
+workload-identity layer the ecosystem is still building. Knowing which side of that
+line a threat sits on tells you what to automate and what is still an open problem.
 \gate{a measurement of prevalence across public MCP deployments; this submission is
 positioned as SoK / work-in-progress and the empirical section is a gate.}
 \end{abstract}
@@ -34,8 +35,8 @@ delegation chain makes ``who authorised this?'' unanswerable; an omnibus scope
 (\texttt{admin:*}) hands an injected agent the keys to everything; and a
 non-expiring credential never stops being useful. These map onto the MCP
 authorization specification~\cite{mcpauth}, OAuth token exchange~\cite{rfc8693},
-and the OWASP LLM/Agentic Top~10s~\cite{owaspllm,owaspagentic}---but no systematic,
-source-grounded treatment ties them together. This SoK does so, and separates what
+and the OWASP LLM/Agentic Top~10s~\cite{owaspllm,owaspagentic}, but no systematic,
+source-grounded treatment ties them together. This SoK does that, and separates what
 is statically checkable from what is not.
 
 \section{A threat model for agent authorization}\label{sec:tax}
@@ -60,21 +61,21 @@ MCP-02 & high & missing resource indicator / unbound audience & \yes \\
 \multicolumn{4}{@{}l}{\emph{Delegation} (RFC 8693~\cite{rfc8693})}\\
 DEL-01 & high & missing or forged \texttt{act} claim & \yes \\
 DEL-02 & high & delegation-chain / transitive-trust abuse & \yes \\
-DEL-03 & high & \texttt{may\_act} not enforced on exchange & --- \\
-DEL-04 & med  & impersonation where delegation is required & --- \\
+DEL-03 & high & \texttt{may\_act} not enforced on exchange & \no \\
+DEL-04 & med  & impersonation where delegation is required & \no \\
 \multicolumn{4}{@{}l}{\emph{Scope}}\\
 SCOPE-01 & high & over-scoped agent credential & \yes \\
 SCOPE-02 & high & non-expiring / long-lived token & \yes \\
-SCOPE-03 & high & agent reuses the human's root credential & --- \\
+SCOPE-03 & high & agent reuses the human's root credential & \no \\
 \multicolumn{4}{@{}l}{\emph{Agent identity} (WIMSE/SPIFFE~\cite{wimse,spiffe})}\\
-AID-01 & high & session used as authentication & --- \\
-AID-02 & med  & no distinct workload/agent identity & --- \\
+AID-01 & high & session used as authentication & \no \\
+AID-02 & med  & no distinct workload/agent identity & \no \\
 \multicolumn{4}{@{}l}{\emph{Confused deputy} (CWE-441~\cite{cwe441,hardy1988confused})}\\
-CD-01 & crit & confused deputy via static client ID & --- \\
-CD-02 & high & dynamic client registration abuse (RFC 7591~\cite{rfc7591}) & --- \\
+CD-01 & crit & confused deputy via static client ID & \no \\
+CD-02 & high & dynamic client registration abuse (RFC 7591~\cite{rfc7591}) & \no \\
 \multicolumn{4}{@{}l}{\emph{Agency} (OWASP~\cite{owaspllm,owaspagentic})}\\
-AGT-01 & crit & prompt-injection-driven privilege escalation & --- \\
-AGT-02 & high & tool poisoning / rug-pull & --- \\
+AGT-01 & crit & prompt-injection-driven privilege escalation & \no \\
+AGT-02 & high & tool poisoning / rug-pull & \no \\
 \hline
 \end{tabular}
 \end{table}
@@ -94,21 +95,21 @@ high-impact actions MUST require per-action authorization or a human in the loop
 that prompt injection cannot escalate~\cite{owaspllm,owaspagentic}.
 
 \section{What is statically decidable, and what is not}\label{sec:gap}
-A central observation: \textbf{6 of 15 threats (audience binding, \texttt{act}
+Concretely, \textbf{6 of 15 threats (audience binding, \texttt{act}
 delegation, scope, expiry) are decidable from a single token or manifest}; the
 remaining 9 are not, because they depend on runtime consent flows (CD-01/02),
 server-side enforcement and human-in-the-loop (AGT-01/02, DEL-03/04, SCOPE-03), or
 a workload-identity substrate the ecosystem is still standardizing (AID-01/02).
-This line matters for tooling and for the ecosystem: classic OAuth machinery
+This line matters for tooling and for the ecosystem. Classic OAuth machinery
 (resource indicators, token exchange, protected-resource metadata) \emph{models}
-several of these, but common MCP deployments rarely \emph{verify} them, leaving the
-non-static threats to the deployer---exactly where they are most often missed.
+several of these, but common MCP deployments rarely \emph{verify} them, so the
+non-static threats fall to the deployer, which is where they are most often missed.
 
 \section{An instrument for the statically-checkable subset}\label{sec:instrument}
 We provide an open-source static analyzer that decodes a token and emits cited
 findings against a policy: audience binding (MCP-01/02), on-behalf-of delegation
 (DEL-01/02), scope minimisation (SCOPE-01), and expiry (SCOPE-02). It is stateless
-and runs on a single token---in CI or client-side---so nothing leaves the caller.
+and runs on a single token, in CI or client-side, so nothing leaves the caller.
 It thus covers the 6 statically-decidable threats of \S\ref{sec:gap}; the taxonomy
 names the remaining 9 as out of static scope.
 
@@ -128,8 +129,8 @@ classical~\cite{hardy1988confused,cwe441}. Emerging drafts address on-behalf-of
 agent authentication~\cite{oboagents} and workload
 identity~\cite{wimse,spiffe}. Practitioner taxonomies exist
 (OWASP~\cite{owaspllm,owaspagentic}), but a source-grounded systematization that
-maps each threat to a checkable invariant and to what is statically decidable---and
-an accompanying open analyzer---is, to our knowledge, novel; establishing that gap
+maps each threat to a checkable invariant and to what is statically decidable, plus
+an accompanying open analyzer, is to our knowledge novel; establishing that gap
 precisely is part of this SoK.
 
 \section{Threats to validity}

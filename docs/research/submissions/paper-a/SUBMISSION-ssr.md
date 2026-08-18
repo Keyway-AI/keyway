@@ -13,22 +13,23 @@ Configuration at Scale
 
 ## Abstract (portal-ready plaintext — paste into the submission form)
 
-> Authorization is the security property everyone assumes and no one measures.
-> Whether a bearer token is accepted is decided not by code but by configuration —
-> the issuers a verifier trusts, the audiences it binds to, the algorithms it
-> allows, the claims it requires — an implicit authorization contract that is
-> rarely written down and, when it drifts, causes outages or silent
-> over-acceptance. We argue this contract should be a first-class, measurable
-> object, and take a concrete first step: a method to derive it automatically from
-> deployment configuration, and a preliminary measurement of its hygiene across 428
-> public repositories. We quantify RFC-defined weaknesses — unbound audiences,
-> absent algorithm pinning, missing required claims — with Wilson confidence
-> intervals; and because a measurement is only as trustworthy as its instrument, we
-> validate extraction with a kind-aware oracle for recall (issuers 89.6%, audiences
-> 99.0%) and a deliberately non-circular negative control for precision, reporting
-> what each can and cannot establish. We release the instrument, the corpus
-> manifest, and the analysis, and set out the research agenda — scale, drift, and
-> the static/runtime frontier — that a full study will complete.
+> Whether a service accepts a bearer token is decided by configuration, not by
+> code: the issuers it trusts, the audiences it binds to, the algorithms it allows,
+> and the claims it requires. That configuration is an implicit authorization
+> contract. It is rarely written down, and when it drifts without anyone noticing,
+> services either turn valid users away or start accepting tokens they should
+> refuse. We think this contract is worth measuring directly, and this paper is a
+> first step toward that. We give a method that derives the contract from deployment
+> configuration, and we run it over 428 public repositories to see how healthy these
+> contracts are in practice. We report how common a set of concrete, RFC-defined
+> problems are (audiences bound to nothing, algorithms left unpinned, required
+> claims missing), with Wilson confidence intervals. A measurement is only as good
+> as the tool behind it, so we check the extractor two ways: a kind-aware oracle for
+> recall (issuers 89.6%, audiences 99.0%), and a negative control for precision that
+> plants values a correct tool must ignore. We are explicit about what each check
+> does and does not show. We release the tool, the corpus manifest, and the
+> analysis, and set out the agenda a full study needs: scale, drift over time, and
+> where configuration stops telling you what runtime does.
 
 ## Readiness: ~80%. Checklist before submit
 

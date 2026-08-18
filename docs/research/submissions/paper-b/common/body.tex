@@ -7,20 +7,24 @@
 \providecommand{\no}{\ensuremath{\times}}
 
 \begin{abstract}
-AI agents increasingly act for a user while carrying OAuth or MCP bearer tokens,
-but the authorization around them is new and not well understood. The practitioner
-lists that exist name risks without agreeing on what has to hold or on what a tool
-can actually check. We organize the agent-authorization threat model for Model
-Context Protocol (MCP) and agent deployments into six categories: audience binding,
-delegation, scope, agent identity, confused-deputy, and agency. For each of 15
-threats we give its normative source (OAuth RFCs 8693/8707/9728/9700, the MCP
-authorization specification, the OWASP LLM and Agentic Top~10s, and the relevant
-CWEs) and the invariant it breaks. Our main point is where the line falls between
-what a tool can decide statically and what it cannot. Six of the 15 threats can be
-checked from a single token or server manifest, and we give an open-source analyzer
-for those; the other nine need runtime consent, a human in the loop, or a
-workload-identity layer the ecosystem is still building. Knowing which side of that
-line a threat sits on tells you what to automate and what is still an open problem.
+When an AI agent calls a tool or an MCP server on your behalf, it carries a bearer
+token (OAuth or MCP) on the request, and the ways this goes wrong are OAuth failures
+with sharper consequences: a token not bound to the server it is sent to can be
+replayed elsewhere, an over-broad scope hands an injected agent far more than it
+needs, and a token with no verifiable delegation chain makes ``who authorised
+this?'' unanswerable. The practitioner lists that catalogue these risks do not agree
+on what must hold or on what a tool can actually check. We organize the
+agent-authorization threat model for the Model Context Protocol (MCP) and agent
+deployments into six categories (audience binding, delegation, scope, agent
+identity, confused-deputy, and agency), and for each of 15 threats we give its
+normative source (OAuth RFCs 8693/8707/9728/9700, the MCP authorization
+specification, the OWASP LLM and Agentic Top~10s, and the relevant CWEs) and the
+invariant it breaks. Our main result is where the line falls between what a tool can
+decide on its own and what it cannot: 6 of the 15 threats can be checked from a
+single token or server manifest, and we release an open-source analyzer for them,
+while the other 9 need runtime consent, a human in the loop, or a workload-identity
+layer the ecosystem is still building. Knowing which side of that line a threat sits
+on tells you what to automate and what remains an open problem.
 \gate{a measurement of prevalence across public MCP deployments; this submission is
 positioned as SoK / work-in-progress and the empirical section is a gate.}
 \end{abstract}

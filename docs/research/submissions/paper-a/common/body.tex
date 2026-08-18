@@ -4,23 +4,25 @@
 \providecommand{\gate}[1]{\textbf{[PENDING: #1]}}
 
 \begin{abstract}
-Whether a service accepts a bearer token is decided by configuration, not by code:
-the issuers it trusts, the audiences it binds to, the algorithms it allows, and the
-claims it requires. That configuration is an implicit \emph{authorization contract}.
-It is rarely written down, and when it drifts without anyone noticing, services
-either turn valid users away or start accepting tokens they should refuse. We think
-this contract is worth measuring directly, and this paper is a first step toward
-that. We give a method that derives the contract from deployment configuration, and
-we run it over 428 public repositories to see how healthy these contracts are in
-practice. We report how common a set of concrete, RFC-defined problems are
-(audiences bound to nothing, algorithms left unpinned, required claims missing),
-with Wilson confidence intervals. A measurement is only as good as the tool behind
-it, so we check the extractor two ways: a kind-aware oracle for recall (issuers
-89.6\%, audiences 99.0\%), and a negative control for precision that plants values
-a correct tool must ignore. We are explicit about what each check does and does not
-show. We release the tool, the corpus manifest, and the analysis, and set out the
-agenda a full study needs: scale, drift over time, and where configuration stops
-telling you what runtime does.
+Whether a service accepts a bearer token comes down to configuration, not code:
+which issuers it trusts, which audiences it binds to, which algorithms it allows,
+and which claims it requires. These settings are spread across service meshes,
+proxies, and identity providers, they are rarely written down in one place, and a
+single change (a rotated key, a widened audience, a dropped claim) silently turns
+valid users away or starts admitting tokens that should be refused. We call this
+configuration a service's implicit \emph{authorization contract}, and we think it
+should be measured directly rather than assumed. We give a method that derives the
+contract from deployment configuration and run it over 428 public repositories. In a
+first sample of 102 JWT-validating configurations, none pinned a signing algorithm
+in configuration (100\%, leaving it to the verifying library's default), 85.3\%
+required no claims, and 42.2\% left the token audience unbound, all with Wilson
+95\% confidence intervals. Because a measurement is only as good as its extractor,
+we validate it two ways and state each method's limits: a kind-aware oracle for
+recall (issuers 89.6\%, audiences 99.0\%), and a negative control for precision that
+plants values a correct tool must ignore. We release the tool, the corpus manifest,
+and the analysis. These numbers are preliminary and from a small sample; the paper
+sets out the agenda a full study needs: scale, drift over time, and the line between
+what configuration reveals and what only runtime can.
 \gate{hand-labelled validation and scaled-corpus results before a full-paper
 submission; this Vision draft leads with the agenda.}
 \end{abstract}

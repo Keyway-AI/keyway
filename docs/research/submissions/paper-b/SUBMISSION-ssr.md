@@ -4,9 +4,12 @@
 **Deadline:** 2026-09-15 (AoE). **Track:** Systematization of Knowledge (SoK).
 **Format:** Springer LNCS (`llncs`), ≤23 pp incl. references, double-blind.
 **Build:** `paper-b/ssr26/main.tex` → Overleaf (Springer LNCS template).
-**Confirm on the CFP before submitting:** SoK track exists and its exact rules;
-double-blind policy; page limit; whether a work-in-progress/empirical-pending SoK
-is in scope (state it in the paper as we do).
+**CFP confirmed (2026-08-19, cfp.sciltp.com):** double-blind review; tracks are
+Regular / **SoK** / Vision; ≤23 pp Springer LNCS incl. references, appendices
+excluded; deadline 2026-09-15. Author block is anonymized as "Anonymous Author(s)"
+(the conventional form); real names go in only at camera-ready. The CFP text did not
+spell out extra work-in-progress rules, so we keep the empirical section explicitly
+scoped as future work in the paper; skim the CFP once more before upload.
 
 ## Title
 SoK: Authorization for Autonomous Agents

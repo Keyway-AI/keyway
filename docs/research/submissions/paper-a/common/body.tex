@@ -1,7 +1,15 @@
 % Shared body for the Paper A measurement study. Class-agnostic: the per-venue
 % main.tex sets \documentclass, title, authors, and \begin{document}, then
 % \input{../common/body}. Every unfinished number is wrapped in \gate{...}.
-\providecommand{\gate}[1]{\textbf{[PENDING: #1]}}
+% Submission vs. working-copy rendering. Default: submission (clean prose). A
+% wrapper can predefine \submissionfalse before \input{../common/body} to bring
+% back the loud [PENDING]/[NOTE] markers for internal tracking.
+\ifdefined\ifsubmission\else\expandafter\newif\csname ifsubmission\endcsname\submissiontrue\fi
+% \gate{...}: forward-looking text. Submission -> plain prose; draft -> [PENDING].
+% Content is written to read as a finished future-work sentence either way.
+\providecommand{\gate}[1]{\ifsubmission #1\else \textbf{[PENDING: #1]}\fi}
+% \draftonly{...}: internal note. Submission -> nothing; draft -> [NOTE].
+\providecommand{\draftonly}[1]{\ifsubmission\else \textbf{[NOTE: #1]}\fi}
 % Let TeX relax line breaking on paragraphs with long unbreakable \texttt{} kind
 % names (RequestAuthentication, AuthorizationPolicy) instead of overrunning the
 % margin. Class-agnostic; applies under every venue wrapper.
@@ -27,7 +35,7 @@ plants values a correct tool must ignore. We release the tool, the corpus manife
 and the analysis. These numbers are preliminary and from a small sample; the paper
 sets out the agenda a full study needs: scale, drift over time, and the line between
 what configuration reveals and what only runtime can.
-\gate{hand-labelled validation and scaled-corpus results before a full-paper
+\draftonly{hand-labelled validation and scaled-corpus results before a full-paper
 submission; this Vision draft leads with the agenda.}
 \end{abstract}
 
@@ -109,8 +117,8 @@ Two cleaning steps address representativeness: we exclude tutorial/vendored copi
 by path, and we deduplicate identical configurations (a canonical sample pasted
 across repositories counts once). The preliminary corpus is 603 files across 428
 public repositories, yielding 102 distinct JWT-validating configurations after
-cleaning. \gate{scale to $10^3$--$10^4$ services; report exact N with CIs and the
-selection-bias analysis.}
+cleaning. \gate{A full study will scale the corpus toward $10^3$--$10^4$ services
+and report the exact $N$ with confidence intervals and a selection-bias analysis.}
 
 \section{Validation methodology}\label{sec:validation}
 Measurement is only as good as the extractor. We validate discovery two ways and
@@ -139,8 +147,8 @@ non-matching AuthorizationPolicy selector (the real attribution risk), and strin
 in annotations. Result: 4 planted, 0 leaked, with real values still captured.
 
 \noindent\textbf{Gold standard.} Both above are automated proxies.
-\gate{hand-label a stratified sample for the definitive precision/recall, adjudicating
-each captured value as real, correctly attributed, or spurious.}
+\gate{The definitive precision and recall await a hand-labelled stratified sample,
+with each captured value adjudicated as real, correctly attributed, or spurious.}
 
 \section{Preliminary results}\label{sec:results}
 \emph{These numbers are preliminary (small N, no human labels) and are not to be
@@ -154,15 +162,17 @@ work remaining.}
 \emph{library's default}, which configuration does not restate. This is a
 static-vs-runtime gap, not a 100\% vulnerability rate; we report it as
 ``not pinned in config.''
-\gate{re-run over the scaled, labelled corpus; add co-occurrence analysis.}
+\gate{We will re-run these over the scaled, hand-labelled corpus and add a
+co-occurrence analysis.}
 
 \input{../common/fig-prevalence}
 
 \noindent\textbf{Drift (RQ: how contracts change over time).}
-\gate{longitudinal analysis over commit history; today we validate the drift
-\emph{classifier} on a 1{,}226-pair synthetic corpus at 100\% recall / 0\% FPR,
-with mutation testing (24 mutants, 100\% killed) and a held-out adversarial set at
-Youden 0.75, but drift-in-the-wild is future work.}
+Longitudinal analysis over commit history is future work. Today we validate the
+drift \emph{classifier} on a 1{,}226-pair synthetic corpus at 100\% recall / 0\%
+FPR, with mutation testing (24 mutants, 100\% killed) and a held-out adversarial
+set at Youden 0.75. \gate{Drift in the wild, over real commit histories, is left to
+the full study.}
 
 \section{Limitations and threats to validity}\label{sec:limitations}
 \textbf{Static discovery sees configuration, not the running verifier;} where true
@@ -230,10 +240,11 @@ In keeping with open-science expectations, we release the discovery instrument, 
 measurement harness (prevalence with Wilson CIs), the kind-aware validator, the
 non-circular negative-control precision test, the analysis scripts, and the corpus
 \emph{manifest} (repository + commit SHA + licence per artifact) so the measurement
-is reproducible from public sources. \gate{camera-ready: a DOI-pinned archival
-snapshot and, where the venue offers it, Artifact-Evaluation ``Available'' and
+is reproducible from public sources. \gate{At camera-ready we will add a DOI-pinned
+archival snapshot and, where the venue offers it, Artifact-Evaluation ``Available'' and
 ``Reproduced'' badges.}
 
 \section*{Artifact availability}\label{sec:artifact}
 The instrument, harness, validator, negative-control test, and corpus manifest are
-open source under the MIT licence. \gate{insert the archival DOI at camera-ready.}
+open source under the MIT licence. \gate{The archival DOI will be added at
+camera-ready.}

@@ -4,15 +4,29 @@
 **Deadline:** 2026-09-15 (AoE). **Track:** Vision paper.
 **Format:** Springer LNCS (`llncs`), ≤23 pp incl. references, double-blind.
 **Build:** `paper-a/ssr26/main.tex` → Overleaf (Springer LNCS template).
-**CFP confirmed (2026-08-19, cfp.sciltp.com):** double-blind review; tracks are
-Regular / **SoK** / **Vision**; ≤23 pp Springer LNCS incl. references, appendices
-excluded; deadline 2026-09-15. Author block is anonymized as "Anonymous Author(s)"
-(the conventional form); real names go in only at camera-ready. Still worth a final
-skim of the CFP for any anonymization specifics before upload.
+**CFP confirmed (2026-08-19, ssresearch26.umbc.edu/call-for-papers):**
+- **Review:** double-blind. Exact rule: *"author names and affiliations must be
+  omitted, and references to the authors' own prior work should be written in the
+  third person."* Author block anonymized as "Anonymous Author(s)"; the one
+  self-reference ("our companion systematization") was rephrased in the third person.
+- **Track:** Vision (work-in-progress / preliminary results / position). **Title
+  must start with `Vision:`** — done.
+- **Length:** ≤23 pp Springer LNCS incl. references, appendices excluded
+  ("reviewers are not required to read the appendices").
+- **Submission server:** EasyChair — https://easychair.org/conferences/?conf=ssr2026
+- **Originality:** *"original, unpublished, and not submitted to journals or other
+  conferences/workshops that have proceedings."* SSR has LNCS proceedings, so
+  publishing this Vision paper here makes the later full measurement paper (USENIX /
+  IMC) a follow-on that must be substantially extended — plan accordingly.
+- **Dates:** submit 2026-09-15 · notify 2026-10-05 · camera-ready 2026-10-15 ·
+  conference Dec 13–15. One author must register. PC chair Keke Chen
+  (ssr2026pc@gmail.com).
 
 ## Title
-Authorization Contracts in the Wild: Measuring JWT Verification Configuration
-at Scale
+Vision: Measuring JWT Authorization Contracts in the Wild
+
+(SSR requires Vision-track titles to start with `Vision:`. The full-research
+wrappers for other venues keep the longer, un-prefixed title.)
 
 ## Abstract (portal-ready plaintext — paste into the submission form)
 

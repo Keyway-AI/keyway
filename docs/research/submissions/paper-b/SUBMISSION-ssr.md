@@ -4,12 +4,21 @@
 **Deadline:** 2026-09-15 (AoE). **Track:** Systematization of Knowledge (SoK).
 **Format:** Springer LNCS (`llncs`), ≤23 pp incl. references, double-blind.
 **Build:** `paper-b/ssr26/main.tex` → Overleaf (Springer LNCS template).
-**CFP confirmed (2026-08-19, cfp.sciltp.com):** double-blind review; tracks are
-Regular / **SoK** / Vision; ≤23 pp Springer LNCS incl. references, appendices
-excluded; deadline 2026-09-15. Author block is anonymized as "Anonymous Author(s)"
-(the conventional form); real names go in only at camera-ready. The CFP text did not
-spell out extra work-in-progress rules, so we keep the empirical section explicitly
-scoped as future work in the paper; skim the CFP once more before upload.
+**CFP confirmed (2026-08-19, ssresearch26.umbc.edu/call-for-papers):**
+- **Review:** double-blind. Exact rule: *"author names and affiliations must be
+  omitted, and references to the authors' own prior work should be written in the
+  third person."* Author block anonymized as "Anonymous Author(s)". This paper cites
+  no prior work of ours, so no self-references to rewrite.
+- **Track:** SoK. **Title must start with `SoK:`** — already does
+  ("SoK: Authorization for Autonomous Agents").
+- **Length:** ≤23 pp Springer LNCS incl. references, appendices excluded.
+- **Submission server:** EasyChair — https://easychair.org/conferences/?conf=ssr2026
+- **Originality:** *"original, unpublished, and not submitted to journals or other
+  conferences/workshops that have proceedings."* The measurement section is stated
+  as future work, so no unpublished-elsewhere conflict.
+- **Dates:** submit 2026-09-15 · notify 2026-10-05 · camera-ready 2026-10-15 ·
+  conference Dec 13–15. One author must register. PC chair Keke Chen
+  (ssr2026pc@gmail.com).
 
 ## Title
 SoK: Authorization for Autonomous Agents

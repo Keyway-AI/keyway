@@ -8,8 +8,8 @@
 (some venues cap Vision at fewer pages); double-blind policy; page limit.
 
 ## Title
-Authorization Contracts in the Wild: Measuring JWT and Agent-Auth Verification
-Configuration at Scale
+Authorization Contracts in the Wild: Measuring JWT Verification Configuration
+at Scale
 
 ## Abstract (portal-ready plaintext — paste into the submission form)
 

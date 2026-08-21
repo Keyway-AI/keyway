@@ -26,6 +26,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/Keyway-AI/keyway/bench/measurement/render"
 	"github.com/Keyway-AI/keyway/internal/contract"
 	"github.com/Keyway-AI/keyway/internal/discovery"
 	"github.com/Keyway-AI/keyway/internal/discovery/envoy"
@@ -144,22 +145,46 @@ func main() {
 		"copies (by source path) from the denominator")
 	dedup := flag.Bool("dedup", false, "collapse identical configs (issuers+audiences+"+
 		"algorithms+required_claims) to one observation, removing copied-example inflation")
+	resolveTemplates := flag.Bool("resolve-templates", false, "render Helm/kustomize before "+
+		"discovery: chart/kustomize dirs via helm/kustomize, standalone templated files via a "+
+		"value-preserving neutralizer, so a templated issuer/audience is not misread as absent. "+
+		"Writes a coverage report to <out>/templating.json")
 	flag.Parse()
 	if *path == "" {
 		fmt.Fprintln(os.Stderr, "error: --path is required")
 		os.Exit(2)
 	}
 
+	// Optionally resolve templating into a discovery-ready copy first. This closes
+	// the ~1-in-5 under-resolved gap noted in FINDINGS without inventing any value.
+	scanPath := *path
+	var tmplReport *render.Report
+	if *resolveTemplates {
+		tmp, terr := os.MkdirTemp("", "keyway-rendered-*")
+		if terr != nil {
+			fmt.Fprintln(os.Stderr, "render: mkdtemp:", terr)
+			os.Exit(1)
+		}
+		defer func() { _ = os.RemoveAll(tmp) }()
+		rep, rerr := render.PrepareCorpus(*path, tmp)
+		if rerr != nil {
+			fmt.Fprintln(os.Stderr, "render:", rerr)
+			os.Exit(1)
+		}
+		tmplReport = &rep
+		scanPath = tmp
+	}
+
 	var consumers []model.Consumer
 	var err error
 	switch {
 	case *perRepo:
-		consumers, err = discoverPerRepo(*path)
+		consumers, err = discoverPerRepo(scanPath)
 	case *perFile:
-		consumers, err = discoverPerFile(*path)
+		consumers, err = discoverPerFile(scanPath)
 	default:
 		consumers, err = discovery.Run(context.Background(),
-			discovery.Scope{ConfigPaths: []string{*path}},
+			discovery.Scope{ConfigPaths: []string{scanPath}},
 			istio.New(), k8s.New(), envoy.New(),
 		)
 	}
@@ -259,6 +284,16 @@ func main() {
 		os.Exit(1)
 	}
 	printTable(sum)
+
+	if tmplReport != nil {
+		if b, mErr := json.MarshalIndent(tmplReport, "", "  "); mErr == nil {
+			_ = os.WriteFile(filepath.Join(*out, "templating.json"), b, 0o600)
+		}
+		fmt.Printf("templating: %d files — %d plain, %d helm-templated, %d kustomize; "+
+			"%d neutralized, %d with a templated auth field\n",
+			tmplReport.Files, tmplReport.Plain, tmplReport.Helm, tmplReport.Kustomize,
+			tmplReport.Neutralized, tmplReport.AuthFieldTemplated)
+	}
 }
 
 // discoverPerFile runs discovery on each YAML file under root independently and

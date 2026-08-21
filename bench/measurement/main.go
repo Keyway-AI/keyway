@@ -159,20 +159,22 @@ func main() {
 	// the ~1-in-5 under-resolved gap noted in FINDINGS without inventing any value.
 	scanPath := *path
 	var tmplReport *render.Report
+	var renderTmp string
 	if *resolveTemplates {
 		tmp, terr := os.MkdirTemp("", "keyway-rendered-*")
 		if terr != nil {
 			fmt.Fprintln(os.Stderr, "render: mkdtemp:", terr)
 			os.Exit(1)
 		}
-		defer func() { _ = os.RemoveAll(tmp) }()
 		rep, rerr := render.PrepareCorpus(*path, tmp)
 		if rerr != nil {
+			_ = os.RemoveAll(tmp)
 			fmt.Fprintln(os.Stderr, "render:", rerr)
 			os.Exit(1)
 		}
 		tmplReport = &rep
 		scanPath = tmp
+		renderTmp = tmp
 	}
 
 	var consumers []model.Consumer
@@ -187,6 +189,12 @@ func main() {
 			discovery.Scope{ConfigPaths: []string{scanPath}},
 			istio.New(), k8s.New(), envoy.New(),
 		)
+	}
+	// Discovery has read the rendered copies into memory, so the temp dir is done.
+	// Remove it explicitly (not via defer) so the os.Exit paths below still clean up
+	// (avoids gocritic exitAfterDefer).
+	if renderTmp != "" {
+		_ = os.RemoveAll(renderTmp)
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "discovery:", err)

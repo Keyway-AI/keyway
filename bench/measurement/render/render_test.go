@@ -128,10 +128,10 @@ func TestPrepareCorpus(t *testing.T) {
 	}
 }
 
-// TestRenderDir exercises the real helm/kustomize shell-out path. It skips when
-// the tool is not installed, so CI without helm/kustomize stays green while a
+// TestTree exercises the real helm/kustomize shell-out path. It skips when the
+// tool is not installed, so CI without helm/kustomize stays green while a
 // developer with them gets real coverage.
-func TestRenderDir(t *testing.T) {
+func TestTree(t *testing.T) {
 	if _, err := exec.LookPath("kustomize"); err != nil {
 		t.Skip("kustomize not installed; skipping real-render path")
 	}
@@ -144,7 +144,7 @@ func TestRenderDir(t *testing.T) {
 	must("ra.yaml", "apiVersion: security.istio.io/v1\nkind: RequestAuthentication\nmetadata:\n  name: r\n")
 	must("kustomization.yaml", "resources:\n- ra.yaml\n")
 
-	out, err := RenderDir(dir)
+	out, err := Tree(dir)
 	if err != nil {
 		t.Fatalf("RenderDir: %v", err)
 	}
@@ -153,8 +153,8 @@ func TestRenderDir(t *testing.T) {
 	}
 }
 
-func TestRenderDirNotARenderableUnit(t *testing.T) {
-	if _, err := RenderDir(t.TempDir()); err == nil {
+func TestTreeNotARenderableUnit(t *testing.T) {
+	if _, err := Tree(t.TempDir()); err == nil {
 		t.Error("expected an error for a directory with no chart/kustomization, got nil")
 	}
 }

@@ -131,11 +131,11 @@ func Neutralize(b []byte) []byte {
 	return []byte(strings.Join(out, "\n"))
 }
 
-// RenderDir renders a real chart/kustomize directory to plain YAML by shelling out
-// to the standard tools. It is the correct path when the crawler has fetched a
-// whole tree. Returns a clear error (not a fake) when the tool is unavailable or
-// the directory is not a renderable unit, so callers can fall back to Neutralize.
-func RenderDir(dir string) ([]byte, error) {
+// Tree renders a real chart/kustomize directory to plain YAML by shelling out to
+// the standard tools. It is the correct path when the crawler has fetched a whole
+// tree. Returns a clear error (not a fake) when the tool is unavailable or the
+// directory is not a renderable unit, so callers can fall back to Neutralize.
+func Tree(dir string) ([]byte, error) {
 	switch {
 	case fileExists(filepath.Join(dir, "kustomization.yaml")),
 		fileExists(filepath.Join(dir, "kustomization.yml")):
@@ -185,7 +185,9 @@ func PrepareCorpus(srcDir, dstDir string) (Report, error) {
 		if !strings.HasSuffix(low, ".yaml") && !strings.HasSuffix(low, ".yml") {
 			return nil
 		}
-		b, rerr := os.ReadFile(p) // #nosec G304 -- caller-provided corpus dir
+		// #nosec G304 G122 -- caller-provided corpus dir, read-only; no privilege
+		// boundary to TOCTOU across (same pattern as internal/cli/cloud.go).
+		b, rerr := os.ReadFile(p)
 		if rerr != nil {
 			return nil // a single unreadable file must not abort the run
 		}
@@ -207,8 +209,10 @@ func PrepareCorpus(srcDir, dstDir string) (Report, error) {
 			outBytes = Neutralize(b)
 			rep.Neutralized++
 		}
-		dst := filepath.Join(dstDir, filepath.Base(p)) // #nosec G304 -- fixed dst dir
-		return os.WriteFile(dst, outBytes, 0o600)
+		// dst is dstDir + the file's base name only; Base strips any directory
+		// components, so there is no traversal out of the caller-fixed output dir.
+		dst := filepath.Join(dstDir, filepath.Base(p))
+		return os.WriteFile(dst, outBytes, 0o600) // #nosec G304 G703 -- dst = fixed dstDir + Base(p); no traversal
 	})
 	return rep, err
 }

@@ -26,6 +26,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/Keyway-AI/keyway/bench/measurement/cooccur"
 	"github.com/Keyway-AI/keyway/bench/measurement/dedup"
 	"github.com/Keyway-AI/keyway/bench/measurement/render"
 	"github.com/Keyway-AI/keyway/internal/contract"
@@ -116,7 +117,10 @@ type summary struct {
 	// NearDuplicates reports how much residual copying remains in the denominator
 	// at each similarity threshold (diagnostic only — not applied to prevalence).
 	NearDuplicates []dedup.NearDupStat `json:"near_duplicates,omitempty"`
-	Note           string              `json:"note"`
+	// CoOccurrence reports how the weakness checks travel together (joint prevalence
+	// and conditionals), sorted most-common-combination first.
+	CoOccurrence []cooccur.Pair `json:"cooccurrence,omitempty"`
+	Note         string         `json:"note"`
 }
 
 // exampleRe matches source paths that are tutorial/sample/vendored copies rather
@@ -283,6 +287,18 @@ func main() {
 	}
 	nearStats := dedup.NearDupReport(cfgs, 0.90, 0.80)
 
+	// Co-occurrence: how the weaknesses travel together over the same denominator.
+	checkIDs := make([]string, len(checks))
+	for i, ck := range checks {
+		checkIDs[i] = ck.ID
+	}
+	flagsPerConfig := make([]map[string]bool, len(records))
+	for i, r := range records {
+		flagsPerConfig[i] = r.Flags
+	}
+	coPairs := cooccur.Analyze(checkIDs, flagsPerConfig)
+	cooccur.ByJointDesc(coPairs)
+
 	sum := summary{
 		Consumers:        len(consumers),
 		JWTConsumers:     jwtCount,
@@ -290,6 +306,7 @@ func main() {
 		Denominator:      n,
 		Deduped:          *doDedup,
 		NearDuplicates:   nearStats,
+		CoOccurrence:     coPairs,
 		Note: "Prevalence is over the denominator (JWT-validating consumers, after " +
 			"any --exclude-examples / --dedup). 'Absent in config' can mean 'set by a " +
 			"library default' — see README (RQ4). This is measurement, not a judgement " +
@@ -495,6 +512,16 @@ func printTable(sum summary) {
 			fmt.Printf("  >= %.2f similarity: %d distinct of %d (%d near-dups)\n",
 				s.Threshold, s.Clusters, sum.Denominator, s.Collapsed)
 		}
+	}
+	if len(sum.CoOccurrence) > 0 {
+		fmt.Print("\nco-occurrence of weaknesses (which travel together):\n")
+		cw := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
+		fmt.Fprintln(cw, "PAIR\tBOTH/N\tJOINT\tP(B|A)\tP(A|B)\tLIFT")
+		for _, p := range sum.CoOccurrence {
+			fmt.Fprintf(cw, "%s\t%d/%d\t%.1f%%\t%.0f%%\t%.0f%%\t%.2f\n",
+				p.Key, p.Both, p.N, p.JointPrev*100, p.ProbBGivenA*100, p.ProbAGivenB*100, p.Lift)
+		}
+		_ = cw.Flush()
 	}
 	fmt.Printf("\n%s\n", sum.Note)
 }

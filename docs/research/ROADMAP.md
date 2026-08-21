@@ -27,7 +27,7 @@ Legend: ☐ todo · ◑ in progress · ☑ done · ⧗ blocked (needs a human/to
 | A1 | **G1 — hand-label the validation sample** (~85 rows; packet ready via `make_labeling_packet.py`). Gold-standard precision/recall. Decide single- vs two-annotator (κ). | Human | — | ⧗ |
 | A2 | **G2 — scale corpus 428 → 10³–10⁴ repos** (crawl + re-run); add OIDC/MCP sources; report selection bias. | Me (drive) | fresh GH token | ⧗ |
 | A3 | Re-run prevalence + validation on the scaled, labelled corpus. | Me | A1, A2 | ☐ |
-| A4 | Co-occurrence analysis of weaknesses (e.g. unbound-audience ∧ no-claims). | Me | — | ☐ |
+| A4 | Co-occurrence analysis of weaknesses (e.g. unbound-audience ∧ no-claims). Shipped the `cooccur` package: pairwise joint prevalence, conditionals P(B\|A)/P(A\|B), and lift, printed and in `summary.json`. | Me | — | ☑ |
 | A5 | Quantify the static-vs-runtime frontier (RQ4): what fraction is decidable from config vs needs live probing. | Me | — | ☐ |
 | A6 | Drift-in-the-wild: longitudinal analysis over real commit history (classifier already validated). | Me | — | ☐ |
 | A7 | **Paper B empirical**: build an MCP-server / agent-token corpus and measure prevalence of the 6 statically-checkable weaknesses. | Me | maybe token | ☐ |

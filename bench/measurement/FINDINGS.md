@@ -124,8 +124,14 @@ fetching whole chart trees so `helm template` has its values context.
    crawl — not the target 10³–10⁴, and public config skews to samples/OSS.
 3. **P3 = "not pinned in config" ≠ "vulnerable."** Almost certainly the verifying
    library's default — the static-vs-runtime gap (RQ4), not a 100% vuln rate.
-4. **Dedup is by exact config signature; near-misses remain.** Fork/near-duplicate
-   handling needs strengthening.
+4. **Dedup was by exact config signature; near-misses remained.** *Improved:* the
+   `dedup` package ([`dedup/`](dedup/dedup.go)) now dedups on a **canonical**
+   signature — issuer host case and a trailing slash, algorithm case, and list
+   order are folded — so a fork with a cosmetic tweak no longer double-counts. Each
+   run also prints a **near-duplicate diagnostic** (Jaccard ≥ 0.90 / ≥ 0.80) so the
+   residual copying in the denominator is reported, not hidden. Fuzzy near-collapse
+   is never auto-applied (it would change N); fork-of-upstream collapsing still
+   needs the crawler to record GitHub fork metadata (G2).
 
 ## Reproduce
 

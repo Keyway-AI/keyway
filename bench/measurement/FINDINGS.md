@@ -123,7 +123,12 @@ fetching whole chart trees so `helm template` has its values context.
 2. **Partial corpus, selection bias.** 428 repos, public only, one rate-limited
    crawl — not the target 10³–10⁴, and public config skews to samples/OSS.
 3. **P3 = "not pinned in config" ≠ "vulnerable."** Almost certainly the verifying
-   library's default — the static-vs-runtime gap (RQ4), not a 100% vuln rate.
+   library's default — the static-vs-runtime gap (RQ4), not a 100% vuln rate. This
+   is now *quantified*: each run reports a static/runtime frontier — how many check
+   types are conclusive from config (P1/P2/P4/P5) versus need a live probe or a
+   library-defaults DB (P3) — and what fraction of the raised flags carry that
+   caveat (`static_runtime_frontier` in summary.json, and the `static_decidable`
+   flag on each finding).
 4. **Dedup was by exact config signature; near-misses remained.** *Improved:* the
    `dedup` package ([`dedup/`](dedup/dedup.go)) now dedups on a **canonical**
    signature — issuer host case and a trailing slash, algorithm case, and list

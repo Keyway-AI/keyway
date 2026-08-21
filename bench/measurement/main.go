@@ -43,6 +43,12 @@ type check struct {
 	ID     string
 	Title  string
 	Source string // normative citation
+	// Static marks whether a raised flag is conclusive from configuration alone.
+	// true: config settles it (e.g. an audience list is either present or not; no
+	// library invents one). false: "absent in config" may be supplied by a library
+	// default at runtime, so the flag is an upper bound needing a live probe or a
+	// library-defaults DB to confirm — this is the RQ4 static/runtime frontier.
+	Static bool
 	// Flag reports whether this consumer exhibits the weakness. It is only
 	// evaluated over the denominator (consumers that validate at least one issuer).
 	Flag func(model.Consumer) bool
@@ -56,30 +62,35 @@ var checks = []check{
 		ID:     "P1-unbound-audience",
 		Title:  "validates a token but declares no audience (unbound to a resource)",
 		Source: "RFC 8707 / RFC 9728",
+		Static: true, // no library invents an audience; absent means unbound
 		Flag:   func(c model.Consumer) bool { return len(c.Expects.Audiences) == 0 },
 	},
 	{
 		ID:     "P2-no-required-claims",
 		Title:  "requires no claims beyond issuer/audience (no authorization constraint)",
 		Source: "RFC 8725 §3.9 (validate all claims)",
+		Static: true, // no default set of required claims; absent means none enforced
 		Flag:   func(c model.Consumer) bool { return len(c.Expects.RequiredClaims) == 0 },
 	},
 	{
 		ID:     "P3-no-algorithm-pinning",
 		Title:  "pins no signing algorithm in config (relies on the library default)",
 		Source: "RFC 8725 §3.1 (restrict algorithms)",
+		Static: false, // libraries apply a default allow-list; a live probe / defaults DB confirms
 		Flag:   func(c model.Consumer) bool { return len(c.Expects.Algorithms) == 0 },
 	},
 	{
 		ID:     "P4-multi-issuer-trust",
 		Title:  "trusts more than one issuer (wider trust surface; descriptive)",
 		Source: "descriptive — not a weakness per se",
+		Static: true, // the issuer list is fully enumerated in config
 		Flag:   func(c model.Consumer) bool { return len(c.Expects.Issuers) > 1 },
 	},
 	{
 		ID:     "P5-wide-clock-skew",
 		Title:  "accepts a clock skew greater than 5 minutes",
 		Source: "RFC 8725 §3.11 (bound token lifetime); operational norm",
+		Static: true, // only flagged when config sets an explicit wide skew
 		Flag:   func(c model.Consumer) bool { return c.Expects.ClockSkewSec > 300 },
 	},
 }
@@ -105,6 +116,17 @@ type finding struct {
 	Prevalence float64 `json:"prevalence"`
 	CILow      float64 `json:"ci_low"`
 	CIHigh     float64 `json:"ci_high"`
+	Static     bool    `json:"static_decidable"` // conclusive from config alone (RQ4)
+}
+
+// frontier is the RQ4 rollup: how much of the measured weakness is settled by
+// configuration alone versus needs a runtime probe or a library-defaults database.
+type frontier struct {
+	StaticCheckTypes    int      `json:"static_check_types"`
+	TotalCheckTypes     int      `json:"total_check_types"`
+	StaticFlags         int      `json:"static_flags"`          // weakness instances from static-conclusive checks
+	RuntimeCaveatFlags  int      `json:"runtime_caveat_flags"`  // instances carrying the library-default caveat
+	RuntimeCaveatChecks []string `json:"runtime_caveat_checks"` // which checks need runtime confirmation
 }
 
 type summary struct {
@@ -120,7 +142,9 @@ type summary struct {
 	// CoOccurrence reports how the weakness checks travel together (joint prevalence
 	// and conditionals), sorted most-common-combination first.
 	CoOccurrence []cooccur.Pair `json:"cooccurrence,omitempty"`
-	Note         string         `json:"note"`
+	// Frontier is the RQ4 static-vs-runtime rollup.
+	Frontier frontier `json:"static_runtime_frontier"`
+	Note     string   `json:"note"`
 }
 
 // exampleRe matches source paths that are tutorial/sample/vendored copies rather
@@ -312,6 +336,7 @@ func main() {
 			"library default' — see README (RQ4). This is measurement, not a judgement " +
 			"of any single project.",
 	}
+	fr := frontier{TotalCheckTypes: len(checks)}
 	for _, ck := range checks {
 		k := counts[ck.ID]
 		lo, hi := wilson(k, n)
@@ -321,9 +346,17 @@ func main() {
 		}
 		sum.Findings = append(sum.Findings, finding{
 			ID: ck.ID, Title: ck.Title, Source: ck.Source,
-			K: k, N: n, Prevalence: p, CILow: lo, CIHigh: hi,
+			K: k, N: n, Prevalence: p, CILow: lo, CIHigh: hi, Static: ck.Static,
 		})
+		if ck.Static {
+			fr.StaticCheckTypes++
+			fr.StaticFlags += k
+		} else {
+			fr.RuntimeCaveatFlags += k
+			fr.RuntimeCaveatChecks = append(fr.RuntimeCaveatChecks, ck.ID)
+		}
 	}
+	sum.Frontier = fr
 
 	if err := writeOutputs(*out, records, sum); err != nil {
 		fmt.Fprintln(os.Stderr, "write:", err)
@@ -522,6 +555,18 @@ func printTable(sum summary) {
 				p.Key, p.Both, p.N, p.JointPrev*100, p.ProbBGivenA*100, p.ProbAGivenB*100, p.Lift)
 		}
 		_ = cw.Flush()
+	}
+	if f := sum.Frontier; f.TotalCheckTypes > 0 {
+		total := f.StaticFlags + f.RuntimeCaveatFlags
+		pct := 0.0
+		if total > 0 {
+			pct = 100 * float64(f.StaticFlags) / float64(total)
+		}
+		fmt.Printf("\nstatic/runtime frontier (RQ4): %d of %d check types are conclusive from config; "+
+			"%v need a runtime probe or a library-defaults DB.\n",
+			f.StaticCheckTypes, f.TotalCheckTypes, f.RuntimeCaveatChecks)
+		fmt.Printf("  of %d weakness flags raised, %d (%.0f%%) are static-conclusive; %d carry the library-default caveat.\n",
+			total, f.StaticFlags, pct, f.RuntimeCaveatFlags)
 	}
 	fmt.Printf("\n%s\n", sum.Note)
 }

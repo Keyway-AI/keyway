@@ -101,8 +101,20 @@ hand-labelled sample.
 Static single-file discovery reads raw manifests, not rendered output. In this
 corpus: **17% of files are Helm-templated (`{{ }}`)** and ~2% carry
 kustomize/variable markers — ~1 in 5 configs is under-resolved without rendering.
-This is a named threat to validity and explains part of the recall gap; rendering
-Helm/kustomize before discovery is future work.
+This is a named threat to validity and explains part of the recall gap.
+
+**Resolved (`--resolve-templates`).** The `render` package
+([`render/`](render/render.go)) now closes most of this gap without inventing any
+value: a chart/kustomize *directory* is rendered via `helm template` /
+`kustomize build`, and a standalone templated file (the current single-blob corpus)
+is neutralized — control lines are dropped and a templated scalar like
+`issuer: {{ .Values.iss }}` becomes `issuer: __KEYWAY_TEMPLATED__`, so the config
+counts as a present-but-unresolved issuer rather than an absent one. A templated
+`RequestAuthentication` that discovery saw as **0 consumers** raw is measured as
+**1** with the flag. The run writes a computed coverage report to
+`out/templating.json` (files, plain/helm/kustomize, neutralized, auth-field
+templated), replacing the estimate above. Full fidelity still depends on G2
+fetching whole chart trees so `helm template` has its values context.
 
 ## Why none of this is a result yet
 
@@ -119,9 +131,12 @@ Helm/kustomize before discovery is future work.
 
 ```bash
 GH_TOKEN=<token> MAX_PAGES=2 bash bench/measurement/crawl.sh
-go run ./bench/measurement --path bench/measurement/corpus --per-repo --exclude-examples --dedup
+go run ./bench/measurement --path bench/measurement/corpus --per-repo --exclude-examples --dedup --resolve-templates
 go run ./bench/measurement --path bench/measurement/corpus --per-repo   # raw, for validation
 python3 bench/measurement/validate.py bench/measurement/corpus bench/measurement/out
 ```
+
+Add `--resolve-templates` to render Helm/kustomize (and neutralize standalone
+templated files) before discovery; it also writes `out/templating.json`.
 
 (`corpus/` and `out/` are gitignored; only `sources.tsv` is committed.)

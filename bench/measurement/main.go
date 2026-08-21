@@ -26,6 +26,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/Keyway-AI/keyway/bench/measurement/dedup"
 	"github.com/Keyway-AI/keyway/bench/measurement/render"
 	"github.com/Keyway-AI/keyway/internal/contract"
 	"github.com/Keyway-AI/keyway/internal/discovery"
@@ -112,7 +113,10 @@ type summary struct {
 	Denominator      int       `json:"denominator"`       // n used for prevalence (after excl/dedup)
 	Deduped          bool      `json:"deduped"`
 	Findings         []finding `json:"findings"`
-	Note             string    `json:"note"`
+	// NearDuplicates reports how much residual copying remains in the denominator
+	// at each similarity threshold (diagnostic only — not applied to prevalence).
+	NearDuplicates []dedup.NearDupStat `json:"near_duplicates,omitempty"`
+	Note           string              `json:"note"`
 }
 
 // exampleRe matches source paths that are tutorial/sample/vendored copies rather
@@ -120,16 +124,21 @@ type summary struct {
 // production, so the study excludes them from the denominator.
 var exampleRe = regexp.MustCompile(`(?i)example|sample|tutorial|demo|quickstart|getting.?started|/test|testdata|vendor|/docs?/`)
 
-// signature is the config fingerprint used to collapse near-duplicate copies (the
-// same RequestAuthentication pasted across many repos) into one observation.
-func signature(c model.Consumer) string {
-	norm := func(s []string) string {
-		d := append([]string(nil), s...)
-		sort.Strings(d)
-		return strings.Join(d, ",")
+// configOf projects a discovered consumer onto the contract fields the dedup
+// package canonicalizes and compares.
+func configOf(c model.Consumer) dedup.Config {
+	return dedup.Config{
+		Issuers: c.Expects.Issuers, Audiences: c.Expects.Audiences,
+		Algorithms: c.Expects.Algorithms, Claims: c.Expects.RequiredClaims,
 	}
-	return norm(c.Expects.Issuers) + "|" + norm(c.Expects.Audiences) + "|" +
-		norm(c.Expects.Algorithms) + "|" + norm(c.Expects.RequiredClaims)
+}
+
+// signature is the canonical config fingerprint used to collapse duplicate copies
+// (the same RequestAuthentication pasted across many repos) into one observation.
+// Canonicalization folds meaning-preserving variants (issuer host case, a trailing
+// slash, algorithm case) so a fork with a cosmetic tweak no longer double-counts.
+func signature(c model.Consumer) string {
+	return dedup.Signature(configOf(c))
 }
 
 func main() {
@@ -143,7 +152,7 @@ func main() {
 		"within a repo while keeping repos isolated. The correct unit for this corpus")
 	excludeExamples := flag.Bool("exclude-examples", false, "drop tutorial/sample/vendored "+
 		"copies (by source path) from the denominator")
-	dedup := flag.Bool("dedup", false, "collapse identical configs (issuers+audiences+"+
+	doDedup := flag.Bool("dedup", false, "collapse identical configs (issuers+audiences+"+
 		"algorithms+required_claims) to one observation, removing copied-example inflation")
 	resolveTemplates := flag.Bool("resolve-templates", false, "render Helm/kustomize before "+
 		"discovery: chart/kustomize dirs via helm/kustomize, standalone templated files via a "+
@@ -229,7 +238,7 @@ func main() {
 	}
 
 	// Optionally collapse identical configs (copied-example de-inflation).
-	if *dedup {
+	if *doDedup {
 		seen := map[string]bool{}
 		var uniq []model.Consumer
 		for _, c := range jwt {
@@ -263,12 +272,24 @@ func main() {
 	}
 
 	n := len(jwt)
+
+	// Near-duplicate diagnostic over the denominator: how many configs would still
+	// collapse if near-misses (forks with a cosmetic tweak, a single extra claim)
+	// were merged. Reported at two thresholds, never applied — collapsing changes N,
+	// so it is a sensitivity bound, not the headline number.
+	cfgs := make([]dedup.Config, 0, len(jwt))
+	for _, c := range jwt {
+		cfgs = append(cfgs, configOf(c))
+	}
+	nearStats := dedup.NearDupReport(cfgs, 0.90, 0.80)
+
 	sum := summary{
 		Consumers:        len(consumers),
 		JWTConsumers:     jwtCount,
 		ExcludedExamples: excluded,
 		Denominator:      n,
-		Deduped:          *dedup,
+		Deduped:          *doDedup,
+		NearDuplicates:   nearStats,
 		Note: "Prevalence is over the denominator (JWT-validating consumers, after " +
 			"any --exclude-examples / --dedup). 'Absent in config' can mean 'set by a " +
 			"library default' — see README (RQ4). This is measurement, not a judgement " +
@@ -468,5 +489,12 @@ func printTable(sum summary) {
 			r.ID, r.K, r.N, r.Prevalence*100, r.CILow*100, r.CIHigh*100, r.Source)
 	}
 	_ = tw.Flush()
+	if len(sum.NearDuplicates) > 0 {
+		fmt.Print("\nnear-duplicates in the denominator (Jaccard, diagnostic — not applied):\n")
+		for _, s := range sum.NearDuplicates {
+			fmt.Printf("  >= %.2f similarity: %d distinct of %d (%d near-dups)\n",
+				s.Threshold, s.Clusters, sum.Denominator, s.Collapsed)
+		}
+	}
 	fmt.Printf("\n%s\n", sum.Note)
 }

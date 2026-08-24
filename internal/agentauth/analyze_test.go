@@ -71,6 +71,41 @@ func TestAnalyze_MissingDelegation(t *testing.T) {
 	}
 }
 
+func TestAnalyze_DelegationChainMalformed(t *testing.T) {
+	// An act chain whose inner link has no sub is unverifiable → DEL-02.
+	tok := makeToken(map[string]any{
+		"aud": "r", "exp": float64(time.Now().Add(time.Minute).Unix()),
+		"act": map[string]any{"sub": "agent-1", "act": map[string]any{"purpose": "x"}}, // inner link missing sub
+	})
+	f, _ := Analyze(tok, Policy{})
+	if !has(f, ThreatDelegationChain) {
+		t.Fatalf("expected DEL-02 for an unverifiable act chain, got %+v", f)
+	}
+	// A well-formed single-hop chain must NOT be flagged.
+	clean := makeToken(map[string]any{
+		"aud": "r", "exp": float64(time.Now().Add(time.Minute).Unix()),
+		"act": map[string]any{"sub": "agent-1"},
+	})
+	if f2, _ := Analyze(clean, Policy{}); has(f2, ThreatDelegationChain) {
+		t.Fatalf("well-formed act chain should not raise DEL-02, got %+v", f2)
+	}
+}
+
+func TestAnalyze_DelegationChainTooDeep(t *testing.T) {
+	// sub->sub->sub is 3 actors deep; a max of 1 flags it.
+	tok := makeToken(map[string]any{
+		"aud": "r", "exp": float64(time.Now().Add(time.Minute).Unix()),
+		"act": map[string]any{"sub": "a", "act": map[string]any{"sub": "b", "act": map[string]any{"sub": "c"}}},
+	})
+	if f, _ := Analyze(tok, Policy{MaxDelegationDepth: 1}); !has(f, ThreatDelegationChain) {
+		t.Fatalf("expected DEL-02 for a chain deeper than the max, got %+v", f)
+	}
+	// The same chain is fine when no depth bound is set.
+	if f, _ := Analyze(tok, Policy{}); has(f, ThreatDelegationChain) {
+		t.Fatalf("depth should not be flagged when MaxDelegationDepth is 0, got %+v", f)
+	}
+}
+
 func TestAnalyze_OverScope(t *testing.T) {
 	now := time.Now()
 	// Wildcard scope is always over-broad.

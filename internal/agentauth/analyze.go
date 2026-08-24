@@ -24,6 +24,7 @@ const (
 	ThreatAudienceMismatch  = "MCP-01"   // aud present but not bound to the resource
 	ThreatAudienceUnbound   = "MCP-02"   // aud absent → token bound to nothing
 	ThreatMissingDelegation = "DEL-01"   // on-behalf-of token missing act
+	ThreatDelegationChain   = "DEL-02"   // act present but the chain is malformed/over-deep
 	ThreatOverScope         = "SCOPE-01" // omnibus / beyond-allowlist scopes
 	ThreatNonExpiring       = "SCOPE-02" // no exp, or lifetime beyond the bound
 )
@@ -31,18 +32,22 @@ const (
 // CheckedThreatIDs returns the distinct, sorted threat IDs this analyzer can
 // detect. Keep in lockstep with the taxonomy's DetAnalyzer marks (bridge test).
 func CheckedThreatIDs() []string {
-	ids := []string{ThreatAudienceMismatch, ThreatAudienceUnbound, ThreatMissingDelegation, ThreatOverScope, ThreatNonExpiring}
+	ids := []string{
+		ThreatAudienceMismatch, ThreatAudienceUnbound, ThreatMissingDelegation,
+		ThreatDelegationChain, ThreatOverScope, ThreatNonExpiring,
+	}
 	sort.Strings(ids)
 	return ids
 }
 
 // Policy is what a correct agent token must satisfy for this deployment.
 type Policy struct {
-	Audience          string        // expected resource URI / audience (RFC 8707/9728)
-	RequireDelegation bool          // an agent/OBO token MUST carry act (RFC 8693)
-	MaxLifetime       time.Duration // 0 = don't bound; otherwise exp-iat must be ≤ this
-	AllowedScopes     []string      // if set, scopes must be a subset (wildcards always flagged)
-	Now               time.Time     // defaults to time.Now
+	Audience           string        // expected resource URI / audience (RFC 8707/9728)
+	RequireDelegation  bool          // an agent/OBO token MUST carry act (RFC 8693)
+	MaxLifetime        time.Duration // 0 = don't bound; otherwise exp-iat must be ≤ this
+	AllowedScopes      []string      // if set, scopes must be a subset (wildcards always flagged)
+	MaxDelegationDepth int           // 0 = don't bound; otherwise the act chain must be ≤ this deep
+	Now                time.Time     // defaults to time.Now
 }
 
 // Finding is one violated invariant.
@@ -85,10 +90,30 @@ func Analyze(token string, p Policy) ([]Finding, error) {
 	}
 
 	// --- delegation / act (DEL-01) -----------------------------------------
+	act, hasAct := claims["act"]
 	if p.RequireDelegation {
-		if act, ok := claims["act"]; !ok || act == nil {
+		if !hasAct || act == nil {
 			out = append(out, Finding{ThreatMissingDelegation, model.SeverityHigh,
 				"on-behalf-of token is missing the act claim — the delegation chain is unverifiable (RFC 8693)"})
+		}
+	}
+
+	// --- delegation chain shape (DEL-02) -----------------------------------
+	// DEL-01 covers a missing act; DEL-02 covers a present-but-unverifiable chain.
+	// From the token alone we can flag two token-side signals of transitive-trust
+	// abuse: an actor link with no sub (a hop cannot independently validate who is
+	// acting), and an over-deep chain (a wider transitive-trust surface). Whether a
+	// sibling resource actually accepts the token is the runtime half, left to the
+	// harness (DEL-02 carries both an analyzer and a harness detector).
+	if hasAct && act != nil {
+		depth, malformed := inspectActChain(act)
+		switch {
+		case malformed:
+			out = append(out, Finding{ThreatDelegationChain, model.SeverityHigh,
+				"delegation act chain has an actor with no sub — an unverifiable link, so a hop cannot independently validate the delegation (RFC 8693)"})
+		case p.MaxDelegationDepth > 0 && depth > p.MaxDelegationDepth:
+			out = append(out, Finding{ThreatDelegationChain, model.SeverityHigh,
+				fmt.Sprintf("delegation chain is %d actors deep, beyond the max %d — a wide transitive-trust surface", depth, p.MaxDelegationDepth)})
 		}
 	}
 
@@ -148,6 +173,25 @@ func decodeClaims(token string) (map[string]any, error) {
 func numClaim(c map[string]any, key string) (float64, bool) {
 	f, ok := c[key].(float64)
 	return f, ok
+}
+
+// inspectActChain walks a nested RFC 8693 act (actor) claim, returning the chain
+// depth and whether any link is malformed. A well-formed chain is a nesting of
+// {"sub": <actor>, "act": <inner>?} objects; a link that is not an object, or that
+// carries no non-empty sub, is unverifiable and makes the chain malformed.
+func inspectActChain(act any) (depth int, malformed bool) {
+	for act != nil {
+		m, ok := act.(map[string]any)
+		if !ok {
+			return depth, true
+		}
+		depth++
+		if sub, ok := m["sub"].(string); !ok || strings.TrimSpace(sub) == "" {
+			return depth, true
+		}
+		act = m["act"]
+	}
+	return depth, false
 }
 
 func isEmptyAud(aud any) bool {

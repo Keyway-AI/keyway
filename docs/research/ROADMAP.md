@@ -39,7 +39,7 @@ Legend: ☐ todo · ◑ in progress · ☑ done · ⧗ blocked (needs a human/to
 | B1 | **Render Helm/kustomize before discovery** — ~1 in 5 corpus configs are under-resolved templates (17% Helm, ~2% kustomize). Biggest recall lever. Shipped as the `render` package + `--resolve-templates` (neutralizes standalone templated files today; `helm template`/`kustomize build` runs on whole trees once G2 fetches them) + `out/templating.json` coverage report. | Me | ☑ |
 | B2 | Near-duplicate / fork-aware dedup (current dedup is exact-signature only). Shipped the `dedup` package: canonical signature (folds issuer host/slash, algorithm case, order) + a reported Jaccard near-duplicate diagnostic. Fork-of-upstream collapse still needs GitHub fork metadata from the G2 crawl. | Me | ☑ |
 | B3 | Broaden discovery sources (more gateways / OIDC / MCP) for G2 representativeness. | Me | ☐ |
-| B4 | Package the agent-auth analyzer as a public, documented CLI/Action (Paper B "we release an open-source analyzer"). | Me | ☐ |
+| B4 | Package the agent-auth analyzer as a public, documented CLI/Action (Paper B "we release an open-source analyzer"). Found + closed a paper/tool gap: the analyzer covered 5 of the 6 statically-checkable threats (DEL-02 was harness-only). Implemented a real static DEL-02 check (malformed/over-deep `act` chain) so the analyzer covers all 6, matching Paper B. Remaining: a GitHub Action wrapper + README quickstart. | Me | ◑ |
 | B5 | One-command reproducible artifact bundle with pinned deps (for the DOI + Artifact Evaluation). | Me | ☐ |
 
 ## C. Manual / ops / calendar

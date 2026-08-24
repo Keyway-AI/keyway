@@ -51,10 +51,10 @@ func agentThreats() []Threat {
 		},
 		{
 			ID: "DEL-02", Title: "delegation-chain / transitive-trust abuse", Category: CatDelegation, Severity: model.SeverityHigh,
-			Description: "In agent-to-agent or on-behalf-of chains, a token minted for one hop is accepted at another because each hop does not independently validate audience and delegation purpose — trust becomes transitive.",
-			Invariant:   "Each hop MUST independently validate audience and the delegation purpose; a token bound to one hop MUST NOT be accepted at another.",
+			Description: "In agent-to-agent or on-behalf-of chains, a token minted for one hop is accepted at another because each hop does not independently validate audience and delegation purpose — trust becomes transitive. The token-side signal is statically checkable: an act chain with an unverifiable actor (a link with no sub) or an over-deep chain widens the transitive-trust surface. Whether a sibling resource actually accepts the token is the runtime half.",
+			Invariant:   "Each hop MUST independently validate audience and the delegation purpose; a token bound to one hop MUST NOT be accepted at another, and its act chain MUST be well-formed and bounded.",
 			Sources:     []Source{rfc("8693", "OAuth 2.0 Token Exchange"), owasp("OWASP Agentic Top 10 (2025)", "https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/"), rfc("9700", "OAuth 2.0 Security BCP")},
-			Detections:  []Detection{harnessDet("sibling_resource")},
+			Detections:  []Detection{analyzerDet("delegation_chain"), harnessDet("sibling_resource")},
 		},
 		{
 			ID: "DEL-03", Title: "may_act not enforced on token exchange", Category: CatDelegation, Severity: model.SeverityHigh,

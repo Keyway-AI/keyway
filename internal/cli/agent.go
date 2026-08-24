@@ -30,8 +30,9 @@ func newAgentInspectCmd() *cobra.Command {
 		Use:   "inspect",
 		Short: "Statically check an agent/MCP/OBO token against the agent-auth invariants",
 		Long: "Inspects a JWT's own hygiene (no signature verification): audience binding\n" +
-			"(RFC 8707/9728), the delegation act claim (RFC 8693), scope minimization, and\n" +
-			"expiry. Each finding maps to a threat in `keyway threats coverage --domain agent`.\n\n" +
+			"(RFC 8707/9728), the delegation act claim and chain shape (RFC 8693), scope\n" +
+			"minimization, and expiry. Each finding maps to a threat in\n" +
+			"`keyway threats coverage --domain agent`.\n\n" +
 			"Pass the token via --token or on stdin.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			token, _ := cmd.Flags().GetString("token")
@@ -50,10 +51,11 @@ func newAgentInspectCmd() *cobra.Command {
 			reqDel, _ := cmd.Flags().GetBool("require-delegation")
 			maxLife, _ := cmd.Flags().GetDuration("max-lifetime")
 			scopes, _ := cmd.Flags().GetStringSlice("allowed-scopes")
+			maxDepth, _ := cmd.Flags().GetInt("max-delegation-depth")
 
 			findings, err := agentauth.Analyze(token, agentauth.Policy{
 				Audience: aud, RequireDelegation: reqDel, MaxLifetime: maxLife,
-				AllowedScopes: scopes, Now: time.Now(),
+				AllowedScopes: scopes, MaxDelegationDepth: maxDepth, Now: time.Now(),
 			})
 			if err != nil {
 				return err
@@ -85,5 +87,6 @@ func newAgentInspectCmd() *cobra.Command {
 	cmd.Flags().Bool("require-delegation", false, "require the delegation `act` claim (on-behalf-of tokens)")
 	cmd.Flags().Duration("max-lifetime", 0, "flag tokens whose lifetime exceeds this (e.g. 1h)")
 	cmd.Flags().StringSlice("allowed-scopes", nil, "scopes the token may carry; anything else is flagged")
+	cmd.Flags().Int("max-delegation-depth", 0, "flag act delegation chains deeper than this (0 = only flag malformed chains)")
 	return cmd
 }

@@ -49,6 +49,9 @@ npm-debug.log*
 scorecard.json
 roc.svg
 
+# Reproduction bundle output (scripts/reproduce.sh, make reproduce)
+/artifact/
+
 # stray root build artifact from `go build ./bench/l2`
 /l2
 /measurement

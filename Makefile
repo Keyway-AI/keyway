@@ -163,6 +163,10 @@ coverage: ## Regenerate docs/threat-coverage.md from the threat taxonomy
 	$(GO) run ./cmd/keyway threats coverage > docs/threat-coverage.md
 	@echo "Wrote docs/threat-coverage.md"
 
+.PHONY: reproduce
+reproduce: ## Reproduce the papers' offline-verifiable claims into artifact/ (see REPRODUCE.md)
+	bash scripts/reproduce.sh artifact
+
 .PHONY: bench-oss
 bench-oss: ## Independent benchmark: run discovery + a real diff on external OSS configs
 	@echo "== Discovery (L1) on real, unseen configs (Istio/Envoy docs + istio/istio issues) =="

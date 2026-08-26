@@ -40,7 +40,7 @@ Legend: ☐ todo · ◑ in progress · ☑ done · ⧗ blocked (needs a human/to
 | B2 | Near-duplicate / fork-aware dedup (current dedup is exact-signature only). Shipped the `dedup` package: canonical signature (folds issuer host/slash, algorithm case, order) + a reported Jaccard near-duplicate diagnostic. Fork-of-upstream collapse still needs GitHub fork metadata from the G2 crawl. | Me | ☑ |
 | B3 | Broaden discovery sources (more gateways / OIDC / MCP) for G2 representativeness. | Me | ☐ |
 | B4 | Package the agent-auth analyzer as a public, documented CLI/Action (Paper B "we release an open-source analyzer"). Done: static DEL-02 check closes the paper/tool gap (analyzer now covers all 6); `keyway agent inspect --fail-on` gates CI; composite GitHub Action `actions/agent-inspect`; README + `docs/ci.md` quickstart. | Me | ☑ |
-| B5 | One-command reproducible artifact bundle with pinned deps (for the DOI + Artifact Evaluation). | Me | ☐ |
+| B5 | One-command reproducible artifact bundle with pinned deps (for the DOI + Artifact Evaluation). Done: `make reproduce` (`scripts/reproduce.sh`) runs every offline-verifiable claim into `artifact/` with a claim→output map; `REPRODUCE.md` documents it and the token-gated corpus steps. | Me | ☑ |
 
 ## C. Manual / ops / calendar
 

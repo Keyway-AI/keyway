@@ -140,6 +140,23 @@ against **Keyway Cloud** (hosted or your own `keyway-cloud`) for shared history,
 keyway cloud analyze --path deploy/ --baseline .keyway/baseline.json --fail-on high
 ```
 
+Or gate an **agent / MCP / OAuth token** on the agent-auth invariants (audience
+binding, delegation `act` chain, scope, expiry) — a single token, nothing leaves
+the caller:
+
+```yaml
+- uses: Keyway-AI/keyway/actions/agent-inspect@v0
+  with:
+    token: ${{ secrets.AGENT_TOKEN }}
+    audience: https://mcp.example/api
+    fail-on: high
+```
+
+```bash
+# locally or in any CI: pipe the token on stdin, fail the job on a high finding
+echo "$AGENT_TOKEN" | keyway agent inspect --audience https://mcp.example/api --fail-on high
+```
+
 See [**docs/ci.md**](docs/ci.md) for both modes, all flags, and token setup.
 
 ## Architecture

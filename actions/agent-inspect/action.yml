@@ -1,0 +1,81 @@
+# Keyway Agent-Auth Inspect — statically check an agent / MCP / OAuth token against
+# the agent-auth invariants (audience binding, delegation act chain, scope, expiry)
+# and fail the job on findings. Runs on a single token in CI or client-side; nothing
+# leaves the caller.
+#
+#   - uses: Keyway-AI/keyway/actions/agent-inspect@v0
+#     with:
+#       token: ${{ secrets.AGENT_TOKEN }}
+#       audience: https://mcp.example/api
+#       fail-on: high
+name: Keyway Agent-Auth Inspect
+description: Statically verify an agent / MCP / OAuth bearer token and fail CI on agent-auth findings.
+branding:
+  icon: shield
+  color: green
+
+inputs:
+  token:
+    description: The JWT to inspect. Pass via a secret; never hard-code it.
+    required: true
+  audience:
+    description: Expected resource URI the token must be bound to (RFC 8707/9728).
+    required: false
+    default: ""
+  require-delegation:
+    description: Require the delegation `act` claim (on-behalf-of tokens). "true" to enable.
+    required: false
+    default: "false"
+  max-lifetime:
+    description: Flag tokens whose lifetime exceeds this (e.g. 1h). Empty = don't check.
+    required: false
+    default: ""
+  allowed-scopes:
+    description: Comma-separated scopes the token may carry; anything else is flagged.
+    required: false
+    default: ""
+  max-delegation-depth:
+    description: Flag act delegation chains deeper than this (0 = only flag malformed chains).
+    required: false
+    default: "0"
+  fail-on:
+    description: Exit non-zero if any finding is at/above this severity (none|low|medium|high|critical).
+    required: false
+    default: "high"
+  version:
+    description: Keyway version to install (a release tag like v0.1.0, or "latest"). Pin for reproducibility.
+    required: false
+    default: "latest"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version: "1.25"
+    - name: Install keyway
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: go install "github.com/Keyway-AI/keyway/cmd/keyway@${VERSION}"
+    - name: Inspect token
+      shell: bash
+      # All inputs are passed through the environment (not interpolated into the
+      # script) so untrusted values cannot inject shell. The token is piped on
+      # stdin, never placed on the command line where it would show in `ps`.
+      env:
+        KEYWAY_TOKEN: ${{ inputs.token }}
+        AUDIENCE: ${{ inputs.audience }}
+        REQUIRE_DELEGATION: ${{ inputs.require-delegation }}
+        MAX_LIFETIME: ${{ inputs.max-lifetime }}
+        ALLOWED_SCOPES: ${{ inputs.allowed-scopes }}
+        MAX_DEPTH: ${{ inputs.max-delegation-depth }}
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        args=(agent inspect --fail-on "$FAIL_ON")
+        [ -n "$AUDIENCE" ]                && args+=(--audience "$AUDIENCE")
+        [ "$REQUIRE_DELEGATION" = "true" ] && args+=(--require-delegation)
+        [ -n "$MAX_LIFETIME" ]           && args+=(--max-lifetime "$MAX_LIFETIME")
+        [ -n "$ALLOWED_SCOPES" ]         && args+=(--allowed-scopes "$ALLOWED_SCOPES")
+        [ "$MAX_DEPTH" != "0" ]          && args+=(--max-delegation-depth "$MAX_DEPTH")
+        printf '%s' "$KEYWAY_TOKEN" | keyway "${args[@]}"

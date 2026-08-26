@@ -91,6 +91,45 @@ of `server`/`token`/`project`. The action installs the CLI, runs the analysis, a
 writes the report to the job summary. A full example lives at
 [`examples/github-actions/keyway.yml`](../examples/github-actions/keyway.yml).
 
+## Agent / MCP token check
+
+Gate an agent, MCP, or on-behalf-of **token** on the statically-checkable
+agent-auth invariants — audience binding (MCP-01/02), the delegation `act` claim
+and chain shape (DEL-01/02), scope minimization (SCOPE-01), and expiry (SCOPE-02).
+It runs on a single token, verifies no signature, and sends nothing anywhere.
+
+```yaml
+# .github/workflows/agent-token.yml
+name: Agent token
+on: [pull_request]
+jobs:
+  agent-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Keyway-AI/keyway/actions/agent-inspect@v0
+        with:
+          token: ${{ secrets.AGENT_TOKEN }}        # pass via a secret; piped on stdin
+          audience: https://mcp.example/api        # the resource the token must be bound to
+          require-delegation: "true"               # on-behalf-of tokens must carry act
+          max-lifetime: 1h                          # flag long-lived agent credentials
+          allowed-scopes: files:read,tasks:write    # anything else is flagged
+          max-delegation-depth: "2"                 # flag over-deep act chains
+          fail-on: high                             # exit non-zero at/above this severity
+          version: latest                           # pin to a release tag for reproducibility
+```
+
+Equivalent CLI (local or any CI):
+
+```bash
+echo "$AGENT_TOKEN" | keyway agent inspect \
+  --audience https://mcp.example/api --require-delegation \
+  --max-lifetime 1h --allowed-scopes files:read,tasks:write \
+  --max-delegation-depth 2 --fail-on high
+```
+
+Each finding maps to a threat in `keyway threats coverage --domain agent`. `--json`
+emits machine-readable findings.
+
 ## Tokens
 
 CI tokens are long-lived (1 year) bearer credentials minted per user via

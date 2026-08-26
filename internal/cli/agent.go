@@ -33,7 +33,10 @@ func newAgentInspectCmd() *cobra.Command {
 			"(RFC 8707/9728), the delegation act claim and chain shape (RFC 8693), scope\n" +
 			"minimization, and expiry. Each finding maps to a threat in\n" +
 			"`keyway threats coverage --domain agent`.\n\n" +
-			"Pass the token via --token or on stdin.",
+			"Pass the token via --token or on stdin. With --fail-on it exits non-zero when a\n" +
+			"finding meets that severity, so it gates CI.",
+		// A gating failure is a real result, not a usage mistake — don't print help.
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			token, _ := cmd.Flags().GetString("token")
 			if token == "" {
@@ -61,13 +64,18 @@ func newAgentInspectCmd() *cobra.Command {
 				return err
 			}
 
+			failOn, _ := cmd.Flags().GetString("fail-on")
+			out := cmd.OutOrStdout()
+
 			if asJSON, _ := cmd.Flags().GetBool("json"); asJSON {
-				return json.NewEncoder(cmd.OutOrStdout()).Encode(map[string]any{
+				if err := json.NewEncoder(out).Encode(map[string]any{
 					"findings": findings, "count": len(findings),
-				})
+				}); err != nil {
+					return err
+				}
+				return gateFindings(findings, failOn)
 			}
 
-			out := cmd.OutOrStdout()
 			if len(findings) == 0 {
 				fmt.Fprintln(out, "✓ no agent-auth findings for this token")
 				return nil
@@ -79,7 +87,7 @@ func newAgentInspectCmd() *cobra.Command {
 			}
 			_ = tw.Flush()
 			fmt.Fprintf(out, "\n%d finding(s). See `keyway threats coverage --domain agent`.\n", len(findings))
-			return nil
+			return gateFindings(findings, failOn)
 		},
 	}
 	cmd.Flags().String("token", "", "the JWT to inspect (default: read from stdin)")
@@ -88,5 +96,26 @@ func newAgentInspectCmd() *cobra.Command {
 	cmd.Flags().Duration("max-lifetime", 0, "flag tokens whose lifetime exceeds this (e.g. 1h)")
 	cmd.Flags().StringSlice("allowed-scopes", nil, "scopes the token may carry; anything else is flagged")
 	cmd.Flags().Int("max-delegation-depth", 0, "flag act delegation chains deeper than this (0 = only flag malformed chains)")
+	cmd.Flags().String("fail-on", "none", "exit non-zero if any finding is at or above this severity: none|low|medium|high|critical")
 	return cmd
+}
+
+// gateFindings returns a non-zero (error) result when any finding meets the
+// --fail-on severity threshold, so `keyway agent inspect` can gate CI. It reuses
+// the same severity ordering as `keyway cloud analyze`.
+func gateFindings(findings []agentauth.Finding, failOn string) error {
+	failOn = strings.ToLower(strings.TrimSpace(failOn))
+	if failOn == "" || failOn == "none" {
+		return nil
+	}
+	threshold, ok := severityRank[failOn]
+	if !ok {
+		return fmt.Errorf("invalid --fail-on %q (use none|low|medium|high|critical)", failOn)
+	}
+	for _, f := range findings {
+		if severityRank[strings.ToLower(string(f.Severity))] >= threshold {
+			return fmt.Errorf("agent-auth findings at or above %q severity", failOn)
+		}
+	}
+	return nil
 }

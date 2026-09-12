@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -33,13 +34,32 @@ func newAgentInspectCmd() *cobra.Command {
 			"(RFC 8707/9728), the delegation act claim and chain shape (RFC 8693), scope\n" +
 			"minimization, and expiry. Each finding maps to a threat in\n" +
 			"`keyway threats coverage --domain agent`.\n\n" +
-			"Pass the token via --token or on stdin. With --fail-on it exits non-zero when a\n" +
-			"finding meets that severity, so it gates CI.",
+			"Pass the token via --token or on stdin, or run with --demo to see it work on a\n" +
+			"built-in sample token. With --fail-on it exits non-zero when a finding meets\n" +
+			"that severity, so it gates CI.",
 		// A gating failure is a real result, not a usage mistake — don't print help.
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			out := cmd.OutOrStdout()
+			demo, _ := cmd.Flags().GetBool("demo")
+
 			token, _ := cmd.Flags().GetString("token")
-			if token == "" {
+			aud, _ := cmd.Flags().GetString("audience")
+			reqDel, _ := cmd.Flags().GetBool("require-delegation")
+			maxLife, _ := cmd.Flags().GetDuration("max-lifetime")
+			scopes, _ := cmd.Flags().GetStringSlice("allowed-scopes")
+			maxDepth, _ := cmd.Flags().GetInt("max-delegation-depth")
+
+			switch {
+			case demo:
+				// Note on stderr so --json keeps a clean stdout.
+				ew := cmd.ErrOrStderr()
+				fmt.Fprintln(ew, "Inspecting a built-in, deliberately-insecure sample token — no real token or setup needed.")
+				fmt.Fprintln(ew, "Run it on your own token:  echo \"$TOKEN\" | keyway agent inspect --audience <resource>")
+				fmt.Fprintln(ew)
+				token = demoToken()
+				aud, reqDel = "https://mcp.example/api", true
+			case token == "":
 				b, err := io.ReadAll(cmd.InOrStdin())
 				if err != nil {
 					return err
@@ -47,14 +67,8 @@ func newAgentInspectCmd() *cobra.Command {
 				token = strings.TrimSpace(string(b))
 			}
 			if token == "" {
-				return fmt.Errorf("no token provided (use --token or pipe it on stdin)")
+				return fmt.Errorf("no token provided (use --token, pipe it on stdin, or try --demo)")
 			}
-
-			aud, _ := cmd.Flags().GetString("audience")
-			reqDel, _ := cmd.Flags().GetBool("require-delegation")
-			maxLife, _ := cmd.Flags().GetDuration("max-lifetime")
-			scopes, _ := cmd.Flags().GetStringSlice("allowed-scopes")
-			maxDepth, _ := cmd.Flags().GetInt("max-delegation-depth")
 
 			findings, err := agentauth.Analyze(token, agentauth.Policy{
 				Audience: aud, RequireDelegation: reqDel, MaxLifetime: maxLife,
@@ -65,7 +79,9 @@ func newAgentInspectCmd() *cobra.Command {
 			}
 
 			failOn, _ := cmd.Flags().GetString("fail-on")
-			out := cmd.OutOrStdout()
+			if demo {
+				failOn = "none" // a demo should never exit non-zero
+			}
 
 			if asJSON, _ := cmd.Flags().GetBool("json"); asJSON {
 				if err := json.NewEncoder(out).Encode(map[string]any{
@@ -97,7 +113,19 @@ func newAgentInspectCmd() *cobra.Command {
 	cmd.Flags().StringSlice("allowed-scopes", nil, "scopes the token may carry; anything else is flagged")
 	cmd.Flags().Int("max-delegation-depth", 0, "flag act delegation chains deeper than this (0 = only flag malformed chains)")
 	cmd.Flags().String("fail-on", "none", "exit non-zero if any finding is at or above this severity: none|low|medium|high|critical")
+	cmd.Flags().Bool("demo", false, "inspect a built-in, deliberately-insecure sample token (no token or setup needed)")
 	return cmd
+}
+
+// demoToken builds a deliberately-insecure sample JWT (unsigned) so `--demo` shows a
+// spread of findings with zero input: no audience (MCP-02), an omnibus scope
+// (SCOPE-01), no expiry (SCOPE-02), and a malformed act chain — a link with no sub
+// (DEL-02). It is obviously not a real credential.
+func demoToken() string {
+	hdr := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"none","typ":"JWT"}`))
+	pay := base64.RawURLEncoding.EncodeToString([]byte(
+		`{"sub":"agent-42","scope":"admin:*","act":{"act":{"sub":"upstream"}}}`))
+	return hdr + "." + pay + "."
 }
 
 // gateFindings returns a non-zero (error) result when any finding meets the

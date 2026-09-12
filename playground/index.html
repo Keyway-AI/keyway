@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Keyway — Agent/MCP token inspector</title>
+<meta name="description" content="Paste an agent, MCP, or OAuth bearer token and check it against the agent-auth invariants. Runs entirely in your browser — the token never leaves this page." />
+<style>
+  :root {
+    --ink:#0b1220; --panel:#111a2b; --line:#24344d; --text:#e8eef7; --muted:#9fb0c7;
+    --emerald:#2fbf87; --emerald-ink:#0d3326;
+    --crit:#ef4444; --high:#f97316; --med:#f59e0b; --low:#64748b;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--ink); color:var(--text);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width:820px; margin:0 auto; padding:40px 20px 80px; }
+  h1 { font-size:26px; margin:0 0 6px; letter-spacing:-.02em; }
+  h1 .key { color:var(--emerald); }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  .privacy { display:inline-flex; gap:8px; align-items:center; font-size:13px; color:var(--emerald);
+    background:var(--emerald-ink); border:1px solid #1c5a44; border-radius:999px; padding:5px 12px; margin-bottom:24px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px; }
+  label { display:block; font-size:13px; color:var(--muted); margin:12px 0 6px; }
+  textarea, input[type=text] { width:100%; background:#0a1120; color:var(--text); border:1px solid var(--line);
+    border-radius:8px; padding:10px 12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; }
+  textarea { min-height:110px; resize:vertical; word-break:break-all; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; align-items:end; }
+  .row > div { flex:1; min-width:220px; }
+  .checks { display:flex; gap:18px; align-items:center; margin-top:14px; color:var(--muted); font-size:14px; }
+  .checks input { accent-color:var(--emerald); }
+  .actions { display:flex; gap:10px; margin-top:18px; }
+  button { cursor:pointer; border-radius:8px; padding:10px 16px; font-size:14px; font-weight:600; border:1px solid var(--line); }
+  .primary { background:var(--emerald); color:#04140d; border-color:var(--emerald); }
+  .ghost { background:transparent; color:var(--text); }
+  button:disabled { opacity:.5; cursor:progress; }
+  #out { margin-top:24px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  .sev { font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.04em; }
+  .sev.critical{color:var(--crit)} .sev.high{color:var(--high)} .sev.medium{color:var(--med)} .sev.low{color:var(--low)}
+  .tid { font-family:ui-monospace,monospace; }
+  .ok { color:var(--emerald); font-weight:600; }
+  .err { color:var(--crit); }
+  .foot { color:var(--muted); font-size:13px; margin-top:28px; }
+  a { color:var(--emerald); }
+  code { background:#0a1120; border:1px solid var(--line); border-radius:5px; padding:1px 6px; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="key">🔑</span> Keyway — agent/MCP token inspector</h1>
+  <p class="sub">Check an agent, MCP, or OAuth bearer token against the agent-auth invariants:
+     audience binding, delegation <code>act</code> chain, scope, and expiry.</p>
+  <span class="privacy">● Runs entirely in your browser — the token never leaves this page.</span>
+
+  <div class="panel">
+    <label for="token">Bearer token (JWT)</label>
+    <textarea id="token" placeholder="paste a token, or click “Load sample”…"></textarea>
+
+    <div class="row">
+      <div>
+        <label for="aud">Expected audience / resource (optional)</label>
+        <input id="aud" type="text" placeholder="https://mcp.example/api" />
+      </div>
+    </div>
+    <div class="checks">
+      <label style="margin:0"><input id="reqdel" type="checkbox" /> require delegation (<code>act</code>)</label>
+    </div>
+
+    <div class="actions">
+      <button id="go" class="primary" disabled>Loading analyzer…</button>
+      <button id="sample" class="ghost" type="button">Load sample</button>
+    </div>
+  </div>
+
+  <div id="out"></div>
+
+  <p class="foot">
+    Same analyzer as the CLI (<code>keyway agent inspect</code>), compiled to WebAssembly.
+    Install: <code>curl -fsSL https://raw.githubusercontent.com/Keyway-AI/keyway/main/install.sh | sh</code> ·
+    <a href="https://github.com/Keyway-AI/keyway">GitHub</a> ·
+    findings map to <a href="https://github.com/Keyway-AI/keyway/blob/main/docs/threat-coverage.md">the threat taxonomy</a>.
+  </p>
+</div>
+
+<script src="wasm_exec.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const b64url = (s) => btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+
+  // Load the analyzer (Go → WASM).
+  const go = new Go();
+  WebAssembly.instantiateStreaming(fetch("keyway.wasm"), go.importObject)
+    .then((res) => { go.run(res.instance); const b=$("go"); b.disabled=false; b.textContent="Inspect token"; })
+    .catch((e) => { $("out").innerHTML = '<p class="err">Failed to load the analyzer: '+e+'<br>Serve this over HTTP (not file://).</p>'; });
+
+  function render(json) {
+    let data;
+    try { data = JSON.parse(json); } catch (e) { $("out").innerHTML = '<p class="err">bad response</p>'; return; }
+    if (data.error) { $("out").innerHTML = '<p class="err">'+escapeHtml(data.error)+'</p>'; return; }
+    if (!data.count) { $("out").innerHTML = '<p class="ok">✓ No agent-auth findings for this token.</p>'; return; }
+    const rows = data.findings.map(f =>
+      `<tr><td class="tid">${escapeHtml(f.threat_id)}</td>`+
+      `<td><span class="sev ${escapeHtml(f.severity)}">${escapeHtml(f.severity)}</span></td>`+
+      `<td>${escapeHtml(f.message)}</td></tr>`).join("");
+    $("out").innerHTML =
+      `<p>${data.count} finding${data.count>1?'s':''}:</p>`+
+      `<table><thead><tr><th>Threat</th><th>Severity</th><th>Finding</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function inspect() {
+    const token = $("token").value.trim();
+    if (!token) { $("out").innerHTML = '<p class="err">paste a token first (or click “Load sample”).</p>'; return; }
+    const opts = { audience: $("aud").value.trim(), requireDelegation: $("reqdel").checked };
+    render(window.keywayInspect(token, opts));
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  $("go").addEventListener("click", inspect);
+  $("sample").addEventListener("click", () => {
+    // A deliberately-insecure sample: no aud, omnibus scope, no exp, malformed act chain.
+    $("token").value = b64url('{"alg":"none","typ":"JWT"}')+'.'+
+      b64url('{"sub":"agent-42","scope":"admin:*","act":{"act":{"sub":"upstream"}}}')+'.';
+    $("aud").value = "https://mcp.example/api";
+    $("reqdel").checked = true;
+    if (!$("go").disabled) inspect();
+  });
+</script>
+</body>
+</html>

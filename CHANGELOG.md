@@ -7,6 +7,43 @@ All notable changes to Keyway are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-12
+
+Adoption-focused release: get from zero to a real result in one command, and close
+the last gap between the shipped analyzer and the agent-auth threat model.
+
+### Added
+- **One-line installer** — `curl -fsSL https://raw.githubusercontent.com/Keyway-AI/keyway/main/install.sh | sh`
+  detects your OS/arch, downloads the matching release, verifies its SHA-256, and
+  installs `keyway`. Documented alongside every other method in
+  [docs/install.md](docs/install.md).
+- **Windows binaries** — releases now ship `windows/amd64` and `windows/arm64`
+  (`.zip`) in addition to Linux/macOS.
+- **`keyway agent inspect --demo`** — inspect a built-in, deliberately-insecure
+  sample token so the very first run shows findings with zero input.
+- **`keyway agent inspect --fail-on none|low|medium|high|critical`** — exit
+  non-zero when a finding meets the threshold, so it gates CI.
+- **`agent-inspect` GitHub Action** (`Keyway-AI/keyway/actions/agent-inspect@v0`)
+  with a copy-paste [example workflow](examples/github-actions/agent-token.yml).
+- **Browser playground** (`playground/`) — the agent analyzer compiled to
+  WebAssembly as a static page: paste a token, see the findings, and the token
+  never leaves the browser. Same code as the CLI; build with `make playground`.
+- **Static DEL-02 detection** — the agent analyzer now flags a malformed or
+  over-deep delegation `act` chain (`--max-delegation-depth`), so it covers all
+  six statically-checkable agent-auth threats (MCP-01/02, DEL-01/02, SCOPE-01/02).
+
+### Changed
+- README leads with "Who is this for?", an install block, and the low-friction
+  agent/MCP token check before the heavier discover→probe→blast-radius flow.
+
+### Research / benchmarks (developer-facing)
+- Paper A measurement instrument: prevalence with Wilson CIs, kind-aware recall,
+  a non-circular negative-control precision test, Helm/kustomize resolution
+  (`--resolve-templates`), canonical dedup + a near-duplicate diagnostic, weakness
+  co-occurrence, the static-vs-runtime frontier (RQ4), and drift-direction analysis.
+- **`make reproduce`** — one command reproduces the papers' offline-verifiable
+  claims into `artifact/`; see [REPRODUCE.md](REPRODUCE.md).
+
 ## [0.1.0] - 2026-08-07
 
 First public release.
@@ -72,5 +109,6 @@ First public release.
 - The probe engine is deny-by-default with a staging allowlist and a hard production guard.
 - Security audit: [docs/security-audit.md](docs/security-audit.md).
 
-[Unreleased]: https://github.com/Keyway-AI/keyway/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Keyway-AI/keyway/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Keyway-AI/keyway/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Keyway-AI/keyway/releases/tag/v0.1.0

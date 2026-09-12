@@ -86,6 +86,13 @@ Remove the binaries from wherever you installed them, e.g.:
 rm -f /usr/local/bin/keyway /usr/local/bin/keyway-runner
 ```
 
+## Windows
+
+The one-line installer is Linux/macOS only. On Windows, use `go install` (§2), the
+container image (§3), or download `keyway_<version>_windows_amd64.zip` from the
+[releases page](https://github.com/Keyway-AI/keyway/releases), unzip it, and put
+`keyway.exe` on your `PATH`.
+
 ## Homebrew
 
 Not yet — a tap is on the roadmap. For now use the one-line installer or `go install`.

@@ -33,7 +33,7 @@ jobs:
       KEYWAY_DB_URL: postgres://keyway:keyway@localhost:5432/keyway?sslmode=disable
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.25.13"
           cache: true
@@ -75,7 +75,7 @@ jobs:
     needs: go
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.25.13"
           cache: true

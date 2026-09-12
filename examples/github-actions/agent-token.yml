@@ -1,0 +1,30 @@
+# Example: fail a build when an agent / MCP / OAuth bearer token violates the
+# agent-auth invariants (audience binding, delegation act chain, scope, expiry).
+# Copy this to .github/workflows/agent-token.yml in your repo.
+#
+# The token is checked statically on a single value — no signature verification,
+# no network — so nothing leaves the runner. Store the token as a repository secret.
+name: Agent token
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  agent-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Keyway-AI/keyway/actions/agent-inspect@v0
+        with:
+          token: ${{ secrets.AGENT_TOKEN }}        # the JWT to check (a secret)
+          audience: https://mcp.example/api        # the resource it must be bound to
+          require-delegation: "true"               # on-behalf-of tokens must carry `act`
+          max-lifetime: 1h                          # flag long-lived agent credentials
+          allowed-scopes: files:read,tasks:write    # anything else is flagged
+          max-delegation-depth: "2"                 # flag over-deep delegation chains
+          fail-on: high                             # fail the job at/above this severity
+          version: latest                           # pin to a release tag for reproducibility
+
+      # Prefer the CLI directly? (any runner with the keyway binary installed)
+      #   - run: echo "${{ secrets.AGENT_TOKEN }}" | keyway agent inspect \
+      #       --audience https://mcp.example/api --require-delegation --fail-on high

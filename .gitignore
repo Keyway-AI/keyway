@@ -52,6 +52,9 @@ roc.svg
 # Reproduction bundle output (scripts/reproduce.sh, make reproduce)
 /artifact/
 
+# WASM playground build artifact (rebuild with `make playground`)
+/playground/keyway.wasm
+
 # stray root build artifact from `go build ./bench/l2`
 /l2
 /measurement

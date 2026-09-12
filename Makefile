@@ -167,6 +167,12 @@ coverage: ## Regenerate docs/threat-coverage.md from the threat taxonomy
 reproduce: ## Reproduce the papers' offline-verifiable claims into artifact/ (see REPRODUCE.md)
 	bash scripts/reproduce.sh artifact
 
+.PHONY: playground
+playground: ## Build the browser WASM token inspector (playground/)
+	GOOS=js GOARCH=wasm $(GO) build -o playground/keyway.wasm ./playground
+	cp "$$($(GO) env GOROOT)/lib/wasm/wasm_exec.js" playground/wasm_exec.js
+	@echo "serve:  (cd playground && python3 -m http.server 8090)  ->  http://localhost:8090"
+
 .PHONY: bench-oss
 bench-oss: ## Independent benchmark: run discovery + a real diff on external OSS configs
 	@echo "== Discovery (L1) on real, unseen configs (Istio/Envoy docs + istio/istio issues) =="

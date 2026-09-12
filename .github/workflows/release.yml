@@ -45,7 +45,7 @@ jobs:
             tar -czf "dist/${out}.tar.gz" -C "dist/$out" .
           fi
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: keyway-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |

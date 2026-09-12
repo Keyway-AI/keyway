@@ -128,7 +128,8 @@ echo "$AGENT_TOKEN" | keyway agent inspect \
 ```
 
 Each finding maps to a threat in `keyway threats coverage --domain agent`. `--json`
-emits machine-readable findings.
+emits machine-readable findings. A copy-paste workflow lives at
+[`examples/github-actions/agent-token.yml`](../examples/github-actions/agent-token.yml).
 
 ## Tokens
 

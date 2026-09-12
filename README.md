@@ -85,9 +85,15 @@ All methods, plus checksum and signature verification, are in
 
 ### Fastest win — check an agent / MCP token (no setup)
 
-Inspect a bearer token against the agent-auth invariants (audience binding,
-delegation `act` chain, scope, expiry). It runs on a single token and sends nothing
-anywhere:
+See it work right now on a built-in sample token — no token, no config:
+
+```bash
+keyway agent inspect --demo
+```
+
+Then run it on your own bearer token against the agent-auth invariants (audience
+binding, delegation `act` chain, scope, expiry). It runs on a single token and
+sends nothing anywhere:
 
 ```bash
 echo "$AGENT_TOKEN" | keyway agent inspect --audience https://mcp.example/api --fail-on high

@@ -49,15 +49,55 @@ consumer responds.
 | **Runs a canary key** | Announces a key in JWKS _without signing_, then measures which consumers pick it up |
 | **Web dashboard** | React + TypeScript UI over the HTTP API |
 
+## Who is this for?
+
+Keyway is for engineers who work with JWTs and OAuth/OIDC — not a general-purpose
+app. You'll get the most from it if you:
+
+- **run a service mesh or gateway** (Istio, Envoy) behind an OIDC provider (Keycloak,
+  Auth0, …) and worry a key rotation or issuer migration will cause an outage — the
+  full **discover → probe → blast-radius** flow is built for you;
+- **want a CI gate** that fails a PR when a token contract silently drifts — this
+  works even with no mesh, pointed at your committed config;
+- **build AI agents** that carry OAuth/MCP bearer tokens — `keyway agent inspect`
+  checks a single token in seconds, and nothing leaves your machine.
+
+If you don't use JWTs, or you have one service with a single hardcoded secret,
+Keyway is overkill.
+
 ## Quickstart
 
-**Try it — zero config.** Runs the app and the embedded web UI on an in-memory
-store; no database, no cluster required.
+### Install
+
+```bash
+# one-liner (Linux/macOS) — downloads the right binary and verifies its checksum
+curl -fsSL https://raw.githubusercontent.com/Keyway-AI/keyway/main/install.sh | sh
+
+# with Go
+go install github.com/Keyway-AI/keyway/cmd/keyway@latest
+
+# container image (also serves the web UI)
+docker run -p 8080:8080 ghcr.io/keyway-ai/keyway
+```
+
+All methods, plus checksum and signature verification, are in
+[**docs/install.md**](docs/install.md).
+
+### Fastest win — check an agent / MCP token (no setup)
+
+Inspect a bearer token against the agent-auth invariants (audience binding,
+delegation `act` chain, scope, expiry). It runs on a single token and sends nothing
+anywhere:
+
+```bash
+echo "$AGENT_TOKEN" | keyway agent inspect --audience https://mcp.example/api --fail-on high
+```
+
+### Explore the dashboard — zero config, sample data
 
 ```bash
 make demo                                  # build + run on http://localhost:8080
-# or, prebuilt (published on each release):
-docker run -p 8080:8080 ghcr.io/keyway-ai/keyway
+# or, prebuilt:  docker run -p 8080:8080 ghcr.io/keyway-ai/keyway
 ```
 
 Open <http://localhost:8080>. The UI loads on built-in **sample data**, so you can
@@ -65,7 +105,9 @@ explore findings, coverage, blast radius and the agent inspector right away. (To
 drive the live API instead of sample data, set `KEYWAY_API_TOKEN` and connect from
 the UI's **Settings**.)
 
-**Run it for real.** Point Keyway at your own configs and a Postgres store:
+### Run it for real
+
+Point Keyway at your own configs and a Postgres store:
 
 ```bash
 # 1. Bring up Postgres (+ a reference Keycloak) for local dev, and point Keyway at it

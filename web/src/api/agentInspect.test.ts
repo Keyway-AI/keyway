@@ -102,4 +102,9 @@ describe("agentInspect — malformed input", () => {
     });
     expect(r.findings).toHaveLength(0);
   });
+
+  it("flags DEL-02 for a malformed act chain (a link with no sub)", () => {
+    const r = agentInspect({ token: jwt({ exp: 9_999_999_999, act: { act: { sub: "upstream" } } }) });
+    expect(r.findings.some((f) => f.threat_id === "DEL-02")).toBe(true);
+  });
 });

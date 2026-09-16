@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -97,8 +98,13 @@ func runServe(cmd *cobra.Command, _ []string) error {
 
 	// Optionally apply pending migrations on start, so a single distroless binary
 	// (which has no shell for a separate `migrate up` step) can deploy cleanly.
-	// Skipped for the in-memory store, which has no schema.
-	if doMigrate, _ := cmd.Flags().GetBool("migrate"); doMigrate && cfg.DBURL != "memory" {
+	// Driven by --migrate or KEYWAY_MIGRATE so a container needs no command
+	// override. Skipped for the in-memory store, which has no schema.
+	doMigrate, _ := cmd.Flags().GetBool("migrate")
+	if envTrue(os.Getenv("KEYWAY_MIGRATE")) {
+		doMigrate = true
+	}
+	if doMigrate && cfg.DBURL != "memory" {
 		if err := postgres.MigrateUp(cfg.DBURL); err != nil {
 			return fmt.Errorf("migrate: %w", err)
 		}
@@ -114,6 +120,13 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	scope := buildScope(cmd)
 	if len(scope.ConfigPaths) == 0 {
 		scope.ConfigPaths = cfg.Discovery.ConfigPaths
+	}
+	// Fall back to KEYWAY_DISCOVERY_PATH so a container can be pointed at its
+	// baked-in configs via env, with no command override.
+	if len(scope.ConfigPaths) == 0 {
+		if p := strings.TrimSpace(os.Getenv("KEYWAY_DISCOVERY_PATH")); p != "" {
+			scope.ConfigPaths = strings.Split(p, ",")
+		}
 	}
 	allow, _ := cmd.Flags().GetStringSlice("allow")
 	if len(allow) == 0 {
@@ -159,6 +172,13 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		token = cfg.APIToken
 	}
 	addr, _ := cmd.Flags().GetString("addr")
+	// Honor a platform-provided $PORT (Render/Heroku/Cloud Run) when --addr is the
+	// default, so the container listens where the host routes traffic.
+	if addr == ":8080" {
+		if p := strings.TrimSpace(os.Getenv("PORT")); p != "" {
+			addr = ":" + p
+		}
+	}
 
 	// The HTTP server shares the coordinator's idempotency store, so a retried
 	// write replays across replicas (not just within one process).
@@ -166,8 +186,17 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		WithIdempotency(application.Idempotency())
 
 	// Optional scheduler: periodically snapshot and notify on change events. It is
-	// leader-gated so exactly one replica snapshots on the interval.
-	if interval, _ := cmd.Flags().GetDuration("snapshot-interval"); interval > 0 {
+	// leader-gated so exactly one replica snapshots on the interval. The interval
+	// comes from --snapshot-interval or KEYWAY_SNAPSHOT_INTERVAL.
+	interval, _ := cmd.Flags().GetDuration("snapshot-interval")
+	if interval == 0 {
+		if s := strings.TrimSpace(os.Getenv("KEYWAY_SNAPSHOT_INTERVAL")); s != "" {
+			if d, derr := time.ParseDuration(s); derr == nil {
+				interval = d
+			}
+		}
+	}
+	if interval > 0 {
 		go runScheduler(ctx, cmd.OutOrStdout(), application.Deps, notifierFor(cfg), interval, application.Leader())
 	}
 
@@ -187,6 +216,34 @@ func runServe(cmd *cobra.Command, _ []string) error {
 // snapshots on the tick, so the interval fires once cluster-wide.
 func runScheduler(ctx context.Context, out io.Writer, deps app.Deps, n notify.Notifier, interval time.Duration, leader coordination.Leader) {
 	fmt.Fprintf(out, "scheduler: snapshotting every %s (leader-gated)\n", interval)
+
+	// snapshot performs one leader-gated snapshot and reports/notifies on the result.
+	snapshot := func() {
+		if !leader.IsLeader(ctx) {
+			return // another replica holds leadership
+		}
+		res, err := deps.Snapshot(ctx, "scheduled")
+		if err != nil {
+			fmt.Fprintln(out, "scheduler: snapshot error:", err)
+			return
+		}
+		switch {
+		case res.IsBaseline:
+			fmt.Fprintf(out, "scheduler: baseline established (%s)\n", short(res.Version.Hash))
+		case len(res.Events) > 0:
+			fmt.Fprintf(out, "scheduler: %d change event(s) (%s)\n", len(res.Events), short(res.Version.Hash))
+			if n != nil {
+				if err := n.Notify(ctx, res.Events); err != nil {
+					fmt.Fprintln(out, "scheduler: notify error:", err)
+				}
+			}
+		}
+	}
+
+	// Snapshot once immediately so a fresh deployment has a real baseline right
+	// away, not only after the first interval elapses.
+	snapshot()
+
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
@@ -194,27 +251,18 @@ func runScheduler(ctx context.Context, out io.Writer, deps app.Deps, n notify.No
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if !leader.IsLeader(ctx) {
-				continue // another replica holds leadership this tick
-			}
-			res, err := deps.Snapshot(ctx, "scheduled")
-			if err != nil {
-				fmt.Fprintln(out, "scheduler: snapshot error:", err)
-				continue
-			}
-			switch {
-			case res.IsBaseline:
-				fmt.Fprintf(out, "scheduler: baseline established (%s)\n", short(res.Version.Hash))
-			case len(res.Events) > 0:
-				fmt.Fprintf(out, "scheduler: %d change event(s) (%s)\n", len(res.Events), short(res.Version.Hash))
-				if n != nil {
-					if err := n.Notify(ctx, res.Events); err != nil {
-						fmt.Fprintln(out, "scheduler: notify error:", err)
-					}
-				}
-			}
+			snapshot()
 		}
 	}
+}
+
+// envTrue reports whether an environment value is a truthy flag.
+func envTrue(s string) bool {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "1", "true", "yes", "on":
+		return true
+	}
+	return false
 }
 
 // notifierFor builds a notifier from config (Slack if a webhook is set).

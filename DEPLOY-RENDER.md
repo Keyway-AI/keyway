@@ -10,7 +10,7 @@ serverless, which hosts the frontend). This repo ships a Render Blueprint
 One web service (the API **and** the web UI, same origin) plus a managed Postgres.
 The single binary:
 
-- **self-migrates** on start (`serve --migrate`), so there is no separate migrate
+- **self-migrates** on start (`KEYWAY_MIGRATE`), so there is no separate migrate
   step (the image is distroless and has no shell);
 - **self-seeds** — the scheduler discovers the real example configs baked into the
   image (`/seed/manifests`, from `bench/oss/manifests`) and persists a genuine

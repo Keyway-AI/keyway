@@ -2,11 +2,12 @@
 # managed Postgres. Near-one-click: on Render choose New > Blueprint, connect this
 # repo, and approve. Secrets are generated (nothing to paste). See DEPLOY-RENDER.md.
 #
-# The single distroless binary self-migrates (`--migrate`) and self-seeds: the
-# scheduler discovers the real example configs baked into the image
-# (/seed/manifests) and persists a genuine baseline, so the dashboards come up on
-# real data. The same binary also serves the web UI at /, so the deployed URL is a
-# full, live app (API + UI, same origin).
+# The image runs its own entrypoint (`keyway-runner serve`) — no command override,
+# because the runtime image is distroless (no shell). Everything is driven by env:
+# the binary self-migrates (KEYWAY_MIGRATE), discovers the real example configs baked
+# into the image (KEYWAY_DISCOVERY_PATH=/seed/manifests), snapshots a genuine
+# baseline immediately, and listens on Render's $PORT. It also serves the web UI at
+# /, so the deployed URL is a full, live app (API + UI, same origin).
 databases:
   - name: keyway-db
     plan: free # Render's free Postgres expires after 90 days — bump to a paid plan to keep it.
@@ -18,9 +19,6 @@ services:
     runtime: docker
     plan: free # free web services cold-start after inactivity; fine for a demo.
     dockerfilePath: ./Dockerfile
-    # Args are appended to the image ENTRYPOINT (keyway-runner), so this runs
-    # `keyway-runner serve --migrate --path /seed/manifests --snapshot-interval 6h`.
-    dockerCommand: serve --migrate --path /seed/manifests --snapshot-interval 6h
     healthCheckPath: /v1/health # unauthenticated; returns 200 once serving
     autoDeploy: true
     envVars:
@@ -30,3 +28,9 @@ services:
           property: connectionString
       - key: KEYWAY_API_TOKEN
         generateValue: true # Render generates it; copy it from the dashboard to unlock the live API
+      - key: KEYWAY_MIGRATE
+        value: "true" # apply pending migrations on start (single distroless binary, no shell)
+      - key: KEYWAY_DISCOVERY_PATH
+        value: /seed/manifests # real example configs baked into the image
+      - key: KEYWAY_SNAPSHOT_INTERVAL
+        value: 1h # re-discover on this interval; the first snapshot runs immediately

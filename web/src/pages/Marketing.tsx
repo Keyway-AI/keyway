@@ -47,7 +47,7 @@ function Hero() {
             </a>
           </div>
           <p className="mt-4 text-caption text-faint">
-            Runs on sample data out of the box — no backend, no signup to look around.
+            Runs on a real example dataset out of the box — no backend, no signup to look around.
           </p>
         </div>
 
@@ -354,7 +354,7 @@ function CTA() {
       <div className="mx-auto max-w-6xl px-5 py-20 text-center sm:px-8">
         <h2 className="mx-auto max-w-xl text-h1 font-semibold tracking-tight">See it on your own contracts.</h2>
         <p className="mx-auto mt-3 max-w-md text-body-lg text-muted">
-          The app runs on sample data out of the box — no backend required. Self-host the whole thing in one binary.
+          The app runs on a real example dataset (a Keyway run over public configs) out of the box — no backend required. Self-host the whole thing in one binary.
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <Link

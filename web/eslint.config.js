@@ -20,6 +20,9 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      // Allow intentionally-unused args/vars when prefixed with _ (e.g. a mock that
+      // ignores its argument).
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     },
   },
 );

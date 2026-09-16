@@ -13,7 +13,7 @@ const steps = [
   {
     n: "2",
     title: "Open the dashboard",
-    body: "The UI loads on sample data — explore findings, coverage, blast radius and the agent inspector.",
+    body: "The UI loads on a real example dataset — explore the discovered inventory, coverage, blast radius and the agent inspector.",
     code: "open http://localhost:8080",
   },
   {

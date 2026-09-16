@@ -1,0 +1,251 @@
+[
+  {
+    "id": "k8s://local/foo/httpbin",
+    "stable_id": "k8s://local/foo/httpbin",
+    "kind": "service",
+    "name": "httpbin",
+    "namespace": "foo",
+    "endpoints": [],
+    "expects": {
+      "issuers": [
+        "testing@secure.istio.io"
+      ],
+      "audiences": [],
+      "algorithms": [],
+      "required_claims": [
+        "groups"
+      ],
+      "clock_skew_sec": 0
+    },
+    "jwks_behavior": {
+      "jwks_uri": "https://raw.githubusercontent.com/istio/istio/release-1.30/security/tools/jwt/samples/jwks.json",
+      "source": "config"
+    },
+    "provenance": {
+      "expects.audiences": [
+        {
+          "source": "istio:RequestAuthentication/jwt-example",
+          "locator": "bench/oss/manifests/01-istio-httpbin.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ],
+      "expects.issuers": [
+        {
+          "source": "istio:RequestAuthentication/jwt-example",
+          "locator": "bench/oss/manifests/01-istio-httpbin.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ],
+      "expects.required_claims": [
+        {
+          "source": "istio:AuthorizationPolicy",
+          "locator": "bench/oss/manifests/01-istio-httpbin.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ]
+    },
+    "confidence": {
+      "expects.audiences": 1,
+      "expects.issuers": 1,
+      "expects.required_claims": 1,
+      "overall": 1
+    },
+    "probeable": true
+  },
+  {
+    "id": "k8s://local/istio-system/ingressgateway",
+    "stable_id": "k8s://local/istio-system/ingressgateway",
+    "kind": "service",
+    "name": "ingressgateway",
+    "namespace": "istio-system",
+    "endpoints": [],
+    "expects": {
+      "issuers": [
+        "testing@secure.istio.io"
+      ],
+      "audiences": [],
+      "algorithms": [],
+      "required_claims": [],
+      "clock_skew_sec": 0
+    },
+    "jwks_behavior": {
+      "jwks_uri": "https://raw.githubusercontent.com/istio/istio/release-1.30/security/tools/jwt/samples/jwks.json",
+      "source": "config"
+    },
+    "provenance": {
+      "expects.audiences": [
+        {
+          "source": "istio:RequestAuthentication/jwt-example",
+          "locator": "bench/oss/manifests/02-istio-ingressgateway.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ],
+      "expects.issuers": [
+        {
+          "source": "istio:RequestAuthentication/jwt-example",
+          "locator": "bench/oss/manifests/02-istio-ingressgateway.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ]
+    },
+    "confidence": {
+      "expects.audiences": 1,
+      "expects.issuers": 1,
+      "overall": 1
+    },
+    "probeable": true
+  },
+  {
+    "id": "k8s://local/graphql/graphql",
+    "stable_id": "k8s://local/graphql/graphql",
+    "kind": "service",
+    "name": "graphql",
+    "namespace": "graphql",
+    "endpoints": [],
+    "expects": {
+      "issuers": [
+        "https://login.mycompany.io/"
+      ],
+      "audiences": [],
+      "algorithms": [],
+      "required_claims": [],
+      "clock_skew_sec": 0
+    },
+    "jwks_behavior": {
+      "jwks_uri": "https://mycompany.us.auth0.com/.well-known/jwks.json",
+      "source": "config"
+    },
+    "provenance": {
+      "expects.audiences": [
+        {
+          "source": "istio:RequestAuthentication/graphql-jwt",
+          "locator": "bench/oss/manifests/04-istio-graphql-auth0.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ],
+      "expects.issuers": [
+        {
+          "source": "istio:RequestAuthentication/graphql-jwt",
+          "locator": "bench/oss/manifests/04-istio-graphql-auth0.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ]
+    },
+    "confidence": {
+      "expects.audiences": 1,
+      "expects.issuers": 1,
+      "overall": 1
+    },
+    "probeable": true
+  },
+  {
+    "id": "k8s://local/istio-system/request-authentication",
+    "stable_id": "k8s://local/istio-system/request-authentication",
+    "kind": "service",
+    "name": "request-authentication",
+    "namespace": "istio-system",
+    "endpoints": [],
+    "expects": {
+      "issuers": [
+        "https://app.platform-identity-provider.testing.k8.atcloud.io"
+      ],
+      "audiences": [
+        "delivery-platform-testing"
+      ],
+      "algorithms": [],
+      "required_claims": [],
+      "clock_skew_sec": 0
+    },
+    "jwks_behavior": {
+      "jwks_uri": "http://app.platform-identity-provider.svc.cluster.local/jwks",
+      "source": "config"
+    },
+    "provenance": {
+      "expects.audiences": [
+        {
+          "source": "istio:RequestAuthentication/request-authentication",
+          "locator": "bench/oss/manifests/05-istio-delivery-platform.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ],
+      "expects.issuers": [
+        {
+          "source": "istio:RequestAuthentication/request-authentication",
+          "locator": "bench/oss/manifests/05-istio-delivery-platform.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ]
+    },
+    "confidence": {
+      "expects.audiences": 1,
+      "expects.issuers": 1,
+      "overall": 1
+    },
+    "probeable": true
+  },
+  {
+    "id": "route://envoy/provider_name1",
+    "stable_id": "route://envoy/provider_name1",
+    "kind": "gateway_route",
+    "name": "provider_name1",
+    "endpoints": [],
+    "expects": {
+      "issuers": [
+        "https://example.com"
+      ],
+      "audiences": [
+        "bookstore_android.apps.googleusercontent.com",
+        "bookstore_web.apps.googleusercontent.com"
+      ],
+      "algorithms": [],
+      "required_claims": [],
+      "clock_skew_sec": 0
+    },
+    "jwks_behavior": {
+      "jwks_uri": "https://example.com/jwks.json",
+      "cache_ttl_sec": 300,
+      "source": "config"
+    },
+    "provenance": {
+      "expects.audiences": [
+        {
+          "source": "envoy:jwt_authn/provider_name1",
+          "locator": "bench/oss/manifests/03-envoy-bookstore.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ],
+      "expects.issuers": [
+        {
+          "source": "envoy:jwt_authn/provider_name1",
+          "locator": "bench/oss/manifests/03-envoy-bookstore.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ],
+      "jwks_behavior.cache_ttl": [
+        {
+          "source": "envoy:jwt_authn/provider_name1",
+          "locator": "bench/oss/manifests/03-envoy-bookstore.yaml",
+          "observed_at": "2026-09-01T00:00:00Z",
+          "confidence": 1
+        }
+      ]
+    },
+    "confidence": {
+      "expects.audiences": 1,
+      "expects.issuers": 1,
+      "overall": 1
+    },
+    "probeable": true
+  }
+]

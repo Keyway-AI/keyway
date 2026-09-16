@@ -1,0 +1,1332 @@
+{
+    "categories": [
+        {
+            "category": "signature",
+            "covered": 3,
+            "total": 3
+        },
+        {
+            "category": "algorithm",
+            "covered": 3,
+            "total": 4
+        },
+        {
+            "category": "header_key_injection",
+            "covered": 2,
+            "total": 6
+        },
+        {
+            "category": "claims_validation",
+            "covered": 7,
+            "total": 10
+        },
+        {
+            "category": "authorization",
+            "covered": 2,
+            "total": 3
+        },
+        {
+            "category": "key_management",
+            "covered": 2,
+            "total": 4
+        },
+        {
+            "category": "jwks",
+            "covered": 0,
+            "total": 2
+        },
+        {
+            "category": "encoding_parsing",
+            "covered": 2,
+            "total": 3
+        },
+        {
+            "category": "token_binding",
+            "covered": 2,
+            "total": 2
+        },
+        {
+            "category": "consent",
+            "covered": 0,
+            "total": 2
+        },
+        {
+            "category": "delegation",
+            "covered": 2,
+            "total": 4
+        },
+        {
+            "category": "scope",
+            "covered": 2,
+            "total": 3
+        },
+        {
+            "category": "agent_identity",
+            "covered": 0,
+            "total": 2
+        },
+        {
+            "category": "agency",
+            "covered": 0,
+            "total": 2
+        }
+    ],
+    "covered": 27,
+    "domains": [
+        {
+            "covered": 21,
+            "domain": "jwt",
+            "percent": 60,
+            "total": 35
+        },
+        {
+            "covered": 6,
+            "domain": "agent",
+            "percent": 40,
+            "total": 15
+        }
+    ],
+    "gaps": 23,
+    "percent": 54,
+    "threats": [
+        {
+            "ID": "SIG-01",
+            "Title": "none algorithm accepted",
+            "Domain": "jwt",
+            "Category": "signature",
+            "Severity": "critical",
+            "Description": "Verifier accepts a token whose header sets alg=none (no signature), trusting arbitrary claims.",
+            "Invariant": "A token with alg=none MUST be rejected unless unsecured JWTs are explicitly, separately enabled.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.2 Use Appropriate Algorithms",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.2"
+                },
+                {
+                    "Kind": "CVE",
+                    "Ref": "CVE-2015-9235",
+                    "URL": "https://nvd.nist.gov/vuln/detail/CVE-2015-9235"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-347 Improper Verification of Cryptographic Signature",
+                    "URL": "https://cwe.mitre.org/data/definitions/347.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "alg_none"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "alg_none"
+                }
+            ]
+        },
+        {
+            "ID": "SIG-02",
+            "Title": "signature not verified",
+            "Domain": "jwt",
+            "Category": "signature",
+            "Severity": "critical",
+            "Description": "Verifier decodes and trusts claims without cryptographically verifying the signature at all.",
+            "Invariant": "Claims MUST NOT be trusted unless the signature verifies under a trusted key.",
+            "Sources": [
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-347 Improper Verification of Cryptographic Signature",
+                    "URL": "https://cwe.mitre.org/data/definitions/347.html"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-345 Insufficient Verification of Data Authenticity",
+                    "URL": "https://cwe.mitre.org/data/definitions/345.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "tampered_signature"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "tampered_signature"
+                }
+            ]
+        },
+        {
+            "ID": "SIG-03",
+            "Title": "empty signature with a signing alg",
+            "Domain": "jwt",
+            "Category": "signature",
+            "Severity": "critical",
+            "Description": "Token declares a real alg (e.g. RS256) but carries an empty signature segment; some libraries treat verification as vacuously true.",
+            "Invariant": "A signing alg with an empty/missing signature MUST fail verification.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.1 Perform Algorithm Verification",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.1"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-347 Improper Verification of Cryptographic Signature",
+                    "URL": "https://cwe.mitre.org/data/definitions/347.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "harness",
+                    "ID": "empty_signature_rs256"
+                }
+            ]
+        },
+        {
+            "ID": "ALG-01",
+            "Title": "RS/HS key confusion",
+            "Domain": "jwt",
+            "Category": "algorithm",
+            "Severity": "critical",
+            "Description": "Verifier configured for RS256 also accepts HS256, letting an attacker sign with the (public) RSA key as the HMAC secret.",
+            "Invariant": "The accepted algorithm MUST be pinned; an asymmetric-keyed verifier MUST reject symmetric algs.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.1 Perform Algorithm Verification",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.1"
+                },
+                {
+                    "Kind": "CVE",
+                    "Ref": "CVE-2016-5431",
+                    "URL": "https://nvd.nist.gov/vuln/detail/CVE-2016-5431"
+                },
+                {
+                    "Kind": "CVE",
+                    "Ref": "CVE-2022-23541",
+                    "URL": "https://nvd.nist.gov/vuln/detail/CVE-2022-23541"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "alg_confusion"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "alg_confusion_rs_hs"
+                }
+            ]
+        },
+        {
+            "ID": "ALG-02",
+            "Title": "algorithm downgrade / unpinned alg",
+            "Domain": "jwt",
+            "Category": "algorithm",
+            "Severity": "high",
+            "Description": "Verifier accepts any alg in a family (or a weaker one than expected) because it reads alg from the token instead of pinning it.",
+            "Invariant": "The verifier MUST accept only an explicit allowlist of algorithms, not whatever the token's header requests.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.1 Perform Algorithm Verification",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.1"
+                },
+                {
+                    "Kind": "CVE",
+                    "Ref": "CVE-2022-23540",
+                    "URL": "https://nvd.nist.gov/vuln/detail/CVE-2022-23540"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "ALG-03",
+            "Title": "alg header case/whitespace variant",
+            "Domain": "jwt",
+            "Category": "algorithm",
+            "Severity": "high",
+            "Description": "Bypass of an alg blocklist via casing or padding, e.g. \"nONE\", \"None\", \"none \".",
+            "Invariant": "Algorithm matching MUST be exact; normalized variants of \"none\" MUST all be rejected.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.1 Perform Algorithm Verification",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.1"
+                },
+                {
+                    "Kind": "PortSwigger",
+                    "Ref": "JWT attacks: none variants",
+                    "URL": "https://portswigger.net/web-security/jwt"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "harness",
+                    "ID": "alg_none_variants"
+                }
+            ]
+        },
+        {
+            "ID": "ALG-04",
+            "Title": "invalid ECDSA signature (0,0) \u2014 \"psychic signature\"",
+            "Domain": "jwt",
+            "Category": "algorithm",
+            "Severity": "critical",
+            "Description": "ECDSA verifier accepts r=0,s=0 (or other degenerate values) as a valid signature.",
+            "Invariant": "Cryptographic inputs MUST be validated; degenerate ECDSA values MUST be rejected.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.4 Validate Cryptographic Inputs",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.4"
+                },
+                {
+                    "Kind": "CVE",
+                    "Ref": "CVE-2022-21449",
+                    "URL": "https://nvd.nist.gov/vuln/detail/CVE-2022-21449"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "harness",
+                    "ID": "psychic_signature_es256"
+                }
+            ]
+        },
+        {
+            "ID": "HDR-01",
+            "Title": "jku header \u2192 attacker-controlled JWKS",
+            "Domain": "jwt",
+            "Category": "header_key_injection",
+            "Severity": "critical",
+            "Description": "Verifier fetches the key set from the URL in the token's jku header, so the attacker supplies their own signing key (and an SSRF primitive).",
+            "Invariant": "Key material MUST come from pre-configured trust, never from a URL inside the token being verified.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.4 Validate Cryptographic Inputs",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.4"
+                },
+                {
+                    "Kind": "PortSwigger",
+                    "Ref": "JWT attacks: jku header injection",
+                    "URL": "https://portswigger.net/web-security/jwt"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-290 Authentication Bypass by Spoofing",
+                    "URL": "https://cwe.mitre.org/data/definitions/290.html"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "HDR-02",
+            "Title": "x5u header \u2192 attacker-controlled certificate",
+            "Domain": "jwt",
+            "Category": "header_key_injection",
+            "Severity": "critical",
+            "Description": "As jku, but the token's x5u header points verification at an attacker-hosted X.509 cert.",
+            "Invariant": "The verifier MUST ignore token-supplied x5u URLs.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.4 Validate Cryptographic Inputs",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.4"
+                },
+                {
+                    "Kind": "PortSwigger",
+                    "Ref": "JWT attacks: x5u header injection",
+                    "URL": "https://portswigger.net/web-security/jwt"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "HDR-03",
+            "Title": "embedded jwk self-signed token",
+            "Domain": "jwt",
+            "Category": "header_key_injection",
+            "Severity": "critical",
+            "Description": "Verifier trusts a public key embedded in the token's jwk header, letting the attacker sign with a matching private key.",
+            "Invariant": "A key embedded in the token header MUST NOT be used to verify that token.",
+            "Sources": [
+                {
+                    "Kind": "CVE",
+                    "Ref": "CVE-2018-0114",
+                    "URL": "https://nvd.nist.gov/vuln/detail/CVE-2018-0114"
+                },
+                {
+                    "Kind": "PortSwigger",
+                    "Ref": "JWT attacks: embedded jwk",
+                    "URL": "https://portswigger.net/web-security/jwt"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-347 Improper Verification of Cryptographic Signature",
+                    "URL": "https://cwe.mitre.org/data/definitions/347.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "harness",
+                    "ID": "embedded_jwk"
+                }
+            ]
+        },
+        {
+            "ID": "HDR-04",
+            "Title": "x5c embedded certificate chain",
+            "Domain": "jwt",
+            "Category": "header_key_injection",
+            "Severity": "high",
+            "Description": "Verifier trusts a certificate chain embedded in the token's x5c header without anchoring it to a configured trust store.",
+            "Invariant": "An embedded x5c chain MUST be validated against a pre-configured trust anchor, never trusted on its own.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.4 Validate Cryptographic Inputs",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.4"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "HDR-05",
+            "Title": "kid path traversal",
+            "Domain": "jwt",
+            "Category": "header_key_injection",
+            "Severity": "high",
+            "Description": "kid is used to build a filesystem path to a key; ../ escapes let the attacker point at a predictable file (e.g. /dev/null \u2192 empty HMAC key).",
+            "Invariant": "kid MUST be treated as an opaque lookup key, never interpolated into a path or query.",
+            "Sources": [
+                {
+                    "Kind": "PortSwigger",
+                    "Ref": "JWT attacks: kid path traversal",
+                    "URL": "https://portswigger.net/web-security/jwt"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-22 Improper Limitation of a Pathname (Path Traversal)",
+                    "URL": "https://cwe.mitre.org/data/definitions/22.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "harness",
+                    "ID": "kid_path_traversal"
+                }
+            ]
+        },
+        {
+            "ID": "HDR-06",
+            "Title": "kid SQL / command injection",
+            "Domain": "jwt",
+            "Category": "header_key_injection",
+            "Severity": "high",
+            "Description": "kid is interpolated into a SQL query or command used to fetch the key, enabling injection.",
+            "Invariant": "kid MUST NOT be interpolated into SQL/commands; use parameterized lookups.",
+            "Sources": [
+                {
+                    "Kind": "PortSwigger",
+                    "Ref": "JWT attacks: kid injection",
+                    "URL": "https://portswigger.net/web-security/jwt"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-89 SQL Injection",
+                    "URL": "https://cwe.mitre.org/data/definitions/89.html"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "CLM-01",
+            "Title": "expired token accepted (exp not validated)",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "high",
+            "Description": "Verifier does not check exp, so revoked/aged tokens keep working.",
+            "Invariant": "exp MUST be validated against current time (with bounded skew).",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.9 Use and Validate Audience",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.9"
+                },
+                {
+                    "Kind": "OWASP",
+                    "Ref": "JWT Cheat Sheet: token expiration",
+                    "URL": "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "expired"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "expired"
+                }
+            ]
+        },
+        {
+            "ID": "CLM-02",
+            "Title": "not-yet-valid token accepted (nbf ignored)",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "medium",
+            "Description": "Verifier ignores nbf, accepting tokens before their validity window.",
+            "Invariant": "nbf MUST be validated against current time (with bounded skew).",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.9 Use and Validate Audience",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.9"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "not_yet_valid"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "not_yet_valid"
+                }
+            ]
+        },
+        {
+            "ID": "CLM-03",
+            "Title": "issuer not validated",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "high",
+            "Description": "Verifier accepts a well-formed token from any issuer, so a token minted by a different (attacker-controlled) IdP is trusted.",
+            "Invariant": "iss MUST match the expected issuer exactly.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.8 Validate Issuer and Subject",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.8"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "wrong_issuer"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "wrong_issuer"
+                }
+            ]
+        },
+        {
+            "ID": "CLM-04",
+            "Title": "audience not validated",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "high",
+            "Description": "Verifier does not check aud, so a token minted for service A is accepted by service B (token replay across audiences).",
+            "Invariant": "aud MUST contain this service's expected value.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.9 Use and Validate Audience",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.9"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "wrong_audience"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "wrong_audience"
+                }
+            ]
+        },
+        {
+            "ID": "CLM-05",
+            "Title": "required authorization claim not enforced",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "high",
+            "Description": "An app-required claim (scope/role/tenant) is not enforced, so a valid but under-privileged token is accepted.",
+            "Invariant": "Every claim the policy requires MUST be present and checked.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.10 Do Not Trust Received Claims",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.10"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "missing_required_claim"
+                }
+            ]
+        },
+        {
+            "ID": "CLM-06",
+            "Title": "aud array/string type confusion",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "medium",
+            "Description": "aud may be a string or an array; a verifier that only handles one shape can be bypassed by sending the other.",
+            "Invariant": "Audience matching MUST handle both the string and array encodings of aud.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.9 Use and Validate Audience",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.9"
+                },
+                {
+                    "Kind": "OWASP",
+                    "Ref": "API2:2023 Broken Authentication",
+                    "URL": "https://owasp.org/API-Security/editions/2023/en/0xa2-broken-authentication/"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "harness",
+                    "ID": "aud_array_confusion"
+                }
+            ]
+        },
+        {
+            "ID": "CLM-07",
+            "Title": "claim type confusion",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "medium",
+            "Description": "Claims sent with unexpected types (exp as a string, aud as an object) slip past a naive validator.",
+            "Invariant": "Claim types MUST be validated; a mistyped claim MUST be a rejection, not a silent skip.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.10 Do Not Trust Received Claims",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.10"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "CLM-08",
+            "Title": "token with no expiry accepted",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "medium",
+            "Description": "A token that simply omits exp is accepted as never-expiring.",
+            "Invariant": "A token lacking exp MUST be rejected where expiry is required by policy.",
+            "Sources": [
+                {
+                    "Kind": "OWASP",
+                    "Ref": "JWT Cheat Sheet: token expiration",
+                    "URL": "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "harness",
+                    "ID": "missing_exp"
+                }
+            ]
+        },
+        {
+            "ID": "CLM-09",
+            "Title": "explicit typing not enforced (typ/cty)",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "medium",
+            "Description": "Verifier ignores the typ header, allowing one kind of JWT (e.g. a refresh or a nested JWE) to be used where another is expected.",
+            "Invariant": "Where multiple JWT types exist, typ SHOULD be validated (explicit typing).",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.11 Use Explicit Typing",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.11"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "CLM-10",
+            "Title": "cross-type token substitution",
+            "Domain": "jwt",
+            "Category": "claims_validation",
+            "Severity": "high",
+            "Description": "An access token, ID token, and refresh token share a key; one is accepted in place of another because validation rules aren't mutually exclusive.",
+            "Invariant": "Different JWT kinds MUST have mutually exclusive validation rules (distinct aud/typ/issuer scoping).",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.12 Use Mutually Exclusive Validation Rules for Different Kinds of JWTs",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.12"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "AUTHZ-01",
+            "Title": "sibling-audience token accepted",
+            "Domain": "jwt",
+            "Category": "authorization",
+            "Severity": "high",
+            "Description": "A validly-signed token issued for a sibling service is accepted, crossing a trust boundary.",
+            "Invariant": "aud (and issuer scoping) MUST confine a token to its intended service.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.9 Use and Validate Audience",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.9"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "sibling_client_token"
+                }
+            ]
+        },
+        {
+            "ID": "AUTHZ-02",
+            "Title": "identity header trusted without a token",
+            "Domain": "jwt",
+            "Category": "authorization",
+            "Severity": "critical",
+            "Description": "A gateway/service trusts an identity header (X-User, X-Forwarded-*) without a verified token behind it.",
+            "Invariant": "Identity MUST derive from a verified token, not a spoofable header.",
+            "Sources": [
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-290 Authentication Bypass by Spoofing",
+                    "URL": "https://cwe.mitre.org/data/definitions/290.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "header_bypass"
+                }
+            ]
+        },
+        {
+            "ID": "AUTHZ-03",
+            "Title": "authorized party (azp/client_id) not checked",
+            "Domain": "jwt",
+            "Category": "authorization",
+            "Severity": "medium",
+            "Description": "A token from a different OAuth client is accepted because azp/client_id is not validated.",
+            "Invariant": "Where policy scopes a token to a client, azp/client_id MUST be validated.",
+            "Sources": [
+                {
+                    "Kind": "OWASP",
+                    "Ref": "API2:2023 Broken Authentication",
+                    "URL": "https://owasp.org/API-Security/editions/2023/en/0xa2-broken-authentication/"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "KEY-01",
+            "Title": "retired key still accepted",
+            "Domain": "jwt",
+            "Category": "key_management",
+            "Severity": "high",
+            "Description": "A key removed from active signing is still honored by verifiers, extending the blast radius of a leaked key.",
+            "Invariant": "A retired/removed key MUST stop verifying once its grace period ends.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.5 Ensure Cryptographic Keys Have Sufficient Entropy",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.5"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "probe",
+                    "ID": "retired_key"
+                }
+            ]
+        },
+        {
+            "ID": "KEY-02",
+            "Title": "unknown-kid rotation outage",
+            "Domain": "jwt",
+            "Category": "key_management",
+            "Severity": "high",
+            "Description": "Verifier caches JWKS and does not refresh on an unknown kid, so a routine key rotation breaks all verification (availability, and pressure to disable checks).",
+            "Invariant": "On an unknown kid the verifier SHOULD refresh JWKS before rejecting.",
+            "Sources": [
+                {
+                    "Kind": "OWASP",
+                    "Ref": "JWKS rotation guidance",
+                    "URL": "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "libdefaults",
+                    "ID": "refreshes_on_unknown_kid"
+                },
+                {
+                    "Kind": "blast",
+                    "ID": "rotate_key"
+                },
+                {
+                    "Kind": "probe",
+                    "ID": "canary_key"
+                }
+            ]
+        },
+        {
+            "ID": "KEY-03",
+            "Title": "weak asymmetric key accepted (RSA < 2048)",
+            "Domain": "jwt",
+            "Category": "key_management",
+            "Severity": "medium",
+            "Description": "Verifier accepts tokens signed by an undersized RSA key, which is feasible to attack.",
+            "Invariant": "Signing keys MUST meet minimum strength (e.g. RSA \u2265 2048).",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.5 Ensure Cryptographic Keys Have Sufficient Entropy",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.5"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-326 Inadequate Encryption Strength",
+                    "URL": "https://cwe.mitre.org/data/definitions/326.html"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "KEY-04",
+            "Title": "weak/guessable HMAC secret",
+            "Domain": "jwt",
+            "Category": "key_management",
+            "Severity": "high",
+            "Description": "HS256 secret has low entropy and is brute-forceable offline from a single captured token.",
+            "Invariant": "Symmetric secrets MUST have sufficient entropy; short/dictionary secrets MUST be treated as compromised.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.5 Ensure Cryptographic Keys Have Sufficient Entropy",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.5"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-521 Weak Password Requirements",
+                    "URL": "https://cwe.mitre.org/data/definitions/521.html"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "JWKS-01",
+            "Title": "JWKS fetched over plaintext HTTP",
+            "Domain": "jwt",
+            "Category": "jwks",
+            "Severity": "high",
+            "Description": "Verifier loads its key set over http://, letting a network attacker swap in their own keys.",
+            "Invariant": "JWKS/OIDC metadata MUST be fetched over TLS.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.4 Validate Cryptographic Inputs",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.4"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-319 Cleartext Transmission of Sensitive Information",
+                    "URL": "https://cwe.mitre.org/data/definitions/319.html"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "JWKS-02",
+            "Title": "issuer discovery follows redirects to internal hosts",
+            "Domain": "jwt",
+            "Category": "jwks",
+            "Severity": "medium",
+            "Description": "OIDC discovery / JWKS fetch follows redirects, so a compromised issuer can point the verifier at internal metadata (SSRF).",
+            "Invariant": "Discovery/JWKS fetches MUST NOT follow redirects to untrusted hosts.",
+            "Sources": [
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-918 Server-Side Request Forgery (SSRF)",
+                    "URL": "https://cwe.mitre.org/data/definitions/918.html"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "ENC-01",
+            "Title": "malformed structure / extra segments accepted",
+            "Domain": "jwt",
+            "Category": "encoding_parsing",
+            "Severity": "medium",
+            "Description": "Tokens with the wrong number of segments or trailing data are accepted by a lax parser.",
+            "Invariant": "A JWS MUST have exactly three base64url segments; anything else MUST be rejected.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.1 Perform Algorithm Verification",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.1"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-20 Improper Input Validation",
+                    "URL": "https://cwe.mitre.org/data/definitions/20.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "harness",
+                    "ID": "extra_segments"
+                }
+            ]
+        },
+        {
+            "ID": "ENC-02",
+            "Title": "lax base64 / non-canonical encoding",
+            "Domain": "jwt",
+            "Category": "encoding_parsing",
+            "Severity": "low",
+            "Description": "Standard-base64 or padded input is accepted where only base64url is valid, enabling smuggling past filters.",
+            "Invariant": "Segments MUST be strict base64url without padding.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.7 Use UTF-8",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.7"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "harness",
+                    "ID": "non_base64url"
+                }
+            ]
+        },
+        {
+            "ID": "ENC-03",
+            "Title": "JWE decompression bomb",
+            "Domain": "jwt",
+            "Category": "encoding_parsing",
+            "Severity": "medium",
+            "Description": "A compressed JWE expands to exhaust memory (a \"billion laughs\" for tokens).",
+            "Invariant": "Compressed token payloads MUST be size-bounded, or compression disabled.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8725",
+                    "Ref": "\u00a73.6 Avoid Compression of Encrypted Data",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8725#section-3.6"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "MCP-01",
+            "Title": "token passthrough (wrong-audience token accepted)",
+            "Domain": "agent",
+            "Category": "token_binding",
+            "Severity": "critical",
+            "Description": "An MCP/resource server accepts an access token that was not issued to it and forwards it downstream, breaking audience validation, rate-limiting, and the audit trail \u2014 turning the server into an exfiltration proxy for a stolen token.",
+            "Invariant": "A resource server MUST reject any token whose audience is not its own canonical URI; it MUST NOT accept or forward tokens issued for another party.",
+            "Sources": [
+                {
+                    "Kind": "MCP",
+                    "Ref": "MCP spec: token passthrough anti-pattern",
+                    "URL": "https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices"
+                },
+                {
+                    "Kind": "RFC 8707",
+                    "Ref": "RFC 8707 Resource Indicators for OAuth 2.0",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8707"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-287 Improper Authentication",
+                    "URL": "https://cwe.mitre.org/data/definitions/287.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "analyzer",
+                    "ID": "aud_mismatch"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "resource_passthrough"
+                }
+            ]
+        },
+        {
+            "ID": "MCP-02",
+            "Title": "missing resource indicator / unbound audience",
+            "Domain": "agent",
+            "Category": "token_binding",
+            "Severity": "high",
+            "Description": "The client omits the `resource` parameter, so the issued token is not bound to the specific MCP server and can be replayed against a different one.",
+            "Invariant": "Clients MUST send the `resource` indicator on authorization and token requests; issued tokens MUST be audience-bound to the target resource.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8707",
+                    "Ref": "RFC 8707 Resource Indicators for OAuth 2.0",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8707"
+                },
+                {
+                    "Kind": "RFC 9728",
+                    "Ref": "RFC 9728 OAuth 2.0 Protected Resource Metadata",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc9728"
+                },
+                {
+                    "Kind": "MCP",
+                    "Ref": "MCP spec: authorization",
+                    "URL": "https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "analyzer",
+                    "ID": "aud_unbound"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "unbound_audience"
+                }
+            ]
+        },
+        {
+            "ID": "CD-01",
+            "Title": "confused deputy via static client ID",
+            "Domain": "agent",
+            "Category": "consent",
+            "Severity": "critical",
+            "Description": "A proxy MCP server using a static OAuth client ID to a third-party AS, plus dynamic client registration and a persisted consent cookie, lets an attacker craft a malicious redirect_uri that reuses the victim's existing consent to skip the consent screen and steal the authorization code.",
+            "Invariant": "An OAuth proxy MUST obtain per-client user consent, enforce exact redirect_uri matching, and validate `state`; it MUST NOT let a static client ID + prior consent bypass approval.",
+            "Sources": [
+                {
+                    "Kind": "MCP",
+                    "Ref": "MCP spec: confused deputy",
+                    "URL": "https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices"
+                },
+                {
+                    "Kind": "OWASP",
+                    "Ref": "CSA: AI agent confused deputy",
+                    "URL": "https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-agent-confused-deputy-prompt-injection/"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-441 Unintended Proxy or Intermediary (Confused Deputy)",
+                    "URL": "https://cwe.mitre.org/data/definitions/441.html"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "CD-02",
+            "Title": "dynamic client registration abuse",
+            "Domain": "agent",
+            "Category": "consent",
+            "Severity": "high",
+            "Description": "Open dynamic client registration lets an attacker register a client with an attacker-controlled redirect_uri or inflated metadata, seeding phishing/confused-deputy flows.",
+            "Invariant": "DCR MUST validate and constrain client metadata (redirect_uris, grant types); prefer Client-ID Metadata Documents over open RFC 7591 registration.",
+            "Sources": [
+                {
+                    "Kind": "RFC 7591",
+                    "Ref": "RFC 7591 OAuth 2.0 Dynamic Client Registration",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc7591"
+                },
+                {
+                    "Kind": "MCP",
+                    "Ref": "MCP spec: client registration",
+                    "URL": "https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices"
+                },
+                {
+                    "Kind": "Draft",
+                    "Ref": "OAuth Client ID Metadata Documents",
+                    "URL": "https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "DEL-01",
+            "Title": "missing or forged act (delegation) claim",
+            "Domain": "agent",
+            "Category": "delegation",
+            "Severity": "high",
+            "Description": "An on-behalf-of token omits the `act` claim (or carries a forged one), so the agent is treated as the user with no verifiable record of who is acting for whom \u2014 the delegation audit chain is broken.",
+            "Invariant": "A delegated token MUST carry a verifiable `act` chain recording the actor; verifiers requiring delegation MUST reject tokens without it.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8693",
+                    "Ref": "RFC 8693 OAuth 2.0 Token Exchange (act/may_act)",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8693"
+                },
+                {
+                    "Kind": "Draft",
+                    "Ref": "On-Behalf-Of User for AI Agents",
+                    "URL": "https://www.ietf.org/archive/id/draft-oauth-ai-agents-on-behalf-of-user-00.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "analyzer",
+                    "ID": "missing_act"
+                }
+            ]
+        },
+        {
+            "ID": "DEL-02",
+            "Title": "delegation-chain / transitive-trust abuse",
+            "Domain": "agent",
+            "Category": "delegation",
+            "Severity": "high",
+            "Description": "In agent-to-agent or on-behalf-of chains, a token minted for one hop is accepted at another because each hop does not independently validate audience and delegation purpose \u2014 trust becomes transitive. The token-side signal is statically checkable: an act chain with an unverifiable actor (a link with no sub) or an over-deep chain widens the transitive-trust surface. Whether a sibling resource actually accepts the token is the runtime half.",
+            "Invariant": "Each hop MUST independently validate audience and the delegation purpose; a token bound to one hop MUST NOT be accepted at another, and its act chain MUST be well-formed and bounded.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8693",
+                    "Ref": "RFC 8693 OAuth 2.0 Token Exchange",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8693"
+                },
+                {
+                    "Kind": "OWASP",
+                    "Ref": "OWASP Agentic Top 10 (2025)",
+                    "URL": "https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/"
+                },
+                {
+                    "Kind": "RFC 9700",
+                    "Ref": "RFC 9700 OAuth 2.0 Security BCP",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc9700"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "analyzer",
+                    "ID": "delegation_chain"
+                },
+                {
+                    "Kind": "harness",
+                    "ID": "sibling_resource"
+                }
+            ]
+        },
+        {
+            "ID": "DEL-03",
+            "Title": "may_act not enforced on token exchange",
+            "Domain": "agent",
+            "Category": "delegation",
+            "Severity": "high",
+            "Description": "A token is exchanged for an actor the subject never authorized, because the authorization server does not enforce the `may_act` constraint.",
+            "Invariant": "Token exchange MUST honor `may_act`: only pre-authorized actors may obtain a delegated token for a subject.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8693",
+                    "Ref": "RFC 8693 OAuth 2.0 Token Exchange (may_act)",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8693"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "DEL-04",
+            "Title": "impersonation where delegation is required",
+            "Domain": "agent",
+            "Category": "delegation",
+            "Severity": "medium",
+            "Description": "An impersonation token (agent fully assumes the user's identity) is issued/accepted where delegation was intended, erasing agent attribution and accountability.",
+            "Invariant": "Where policy requires delegation, impersonation tokens MUST be rejected; the actor MUST remain attributable in the token and audit log.",
+            "Sources": [
+                {
+                    "Kind": "RFC 8693",
+                    "Ref": "RFC 8693 OAuth 2.0 Token Exchange (delegation vs impersonation)",
+                    "URL": "https://datatracker.ietf.org/doc/html/rfc8693"
+                },
+                {
+                    "Kind": "Draft",
+                    "Ref": "OpenID: Identity Management for Agentic AI",
+                    "URL": "https://openid.net/wp-content/uploads/2025/10/Identity-Management-for-Agentic-AI.pdf"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "SCOPE-01",
+            "Title": "over-scoped agent credential",
+            "Domain": "agent",
+            "Category": "scope",
+            "Severity": "high",
+            "Description": "The agent holds omnibus scopes (files:*, admin:*, full-access) far beyond the tools it uses, so a single injection or token leak grants wide lateral movement and privilege chaining.",
+            "Invariant": "Agent tokens MUST follow least privilege: granted scopes minimal versus the tools the agent actually declares/uses.",
+            "Sources": [
+                {
+                    "Kind": "MCP",
+                    "Ref": "MCP spec: scope minimization",
+                    "URL": "https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices"
+                },
+                {
+                    "Kind": "OWASP",
+                    "Ref": "OWASP LLM06 Excessive Agency (2025)",
+                    "URL": "https://owasp.org/www-project-top-10-for-large-language-model-applications/"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "analyzer",
+                    "ID": "over_scope"
+                }
+            ]
+        },
+        {
+            "ID": "SCOPE-02",
+            "Title": "non-expiring / long-lived agent token",
+            "Domain": "agent",
+            "Category": "scope",
+            "Severity": "high",
+            "Description": "The agent authenticates with a static, long-lived key that is never rotated or revoked \u2014 the most common non-human-identity failure, with NHIs now vastly outnumbering humans.",
+            "Invariant": "Agent credentials MUST be short-lived and rotatable, with zero standing privilege between tasks.",
+            "Sources": [
+                {
+                    "Kind": "OWASP",
+                    "Ref": "2026 State of AI Agent Identity",
+                    "URL": "https://securityboulevard.com/2026/07/the-agent-identity-problem-non-human-identities-outnumber-humans-45-to-1-and-ai-agents-are-making-it-worse/"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-798 Use of Hard-coded Credentials",
+                    "URL": "https://cwe.mitre.org/data/definitions/798.html"
+                }
+            ],
+            "Detections": [
+                {
+                    "Kind": "analyzer",
+                    "ID": "non_expiring"
+                }
+            ]
+        },
+        {
+            "ID": "SCOPE-03",
+            "Title": "agent reuses the human's root credential",
+            "Domain": "agent",
+            "Category": "scope",
+            "Severity": "high",
+            "Description": "The agent is handed the user's own broad credential rather than its own scoped identity, so it can do anything the user can and its actions are indistinguishable from theirs.",
+            "Invariant": "An agent MUST act with its own scoped identity and delegated (act) token, never the user's raw credential.",
+            "Sources": [
+                {
+                    "Kind": "Draft",
+                    "Ref": "Auth0: Auth for AI Agents (Token Vault)",
+                    "URL": "https://auth0.com/blog/auth0-for-ai-agents-generally-available/"
+                },
+                {
+                    "Kind": "MCP",
+                    "Ref": "MCP spec: authorization",
+                    "URL": "https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "AID-01",
+            "Title": "session used as authentication",
+            "Domain": "agent",
+            "Category": "agent_identity",
+            "Severity": "high",
+            "Description": "An MCP server treats a session ID as proof of identity; a guessable or unbound session ID enables hijacking or impersonation.",
+            "Invariant": "Servers MUST NOT use sessions for authentication; session IDs MUST be non-deterministic and bound to user identity.",
+            "Sources": [
+                {
+                    "Kind": "MCP",
+                    "Ref": "MCP spec: session hijacking",
+                    "URL": "https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices"
+                },
+                {
+                    "Kind": "CWE",
+                    "Ref": "CWE-384 Session Fixation",
+                    "URL": "https://cwe.mitre.org/data/definitions/384.html"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "AID-02",
+            "Title": "no distinct workload/agent identity",
+            "Domain": "agent",
+            "Category": "agent_identity",
+            "Severity": "medium",
+            "Description": "The agent has no verifiable workload identity (e.g. SPIFFE/WIMSE), so it cannot be authenticated, attributed, or governed as a first-class principal.",
+            "Invariant": "Each agent/workload MUST have a verifiable identity credential distinct from the human and from other agents.",
+            "Sources": [
+                {
+                    "Kind": "Draft",
+                    "Ref": "IETF WIMSE \u2014 Workload Identity",
+                    "URL": "https://datatracker.ietf.org/doc/draft-ietf-wimse-workload-identity-practices/"
+                },
+                {
+                    "Kind": "Draft",
+                    "Ref": "SPIFFE",
+                    "URL": "https://spiffe.io/"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "AGT-01",
+            "Title": "prompt-injection-driven privilege escalation",
+            "Domain": "agent",
+            "Category": "agency",
+            "Severity": "critical",
+            "Description": "The master exploit: the agent cannot distinguish injected instructions (from web pages, tool output, documents) from legitimate ones, so any tool it holds becomes reachable by an attacker who controls the data it reads. Over-scoped tokens turn one injection into lateral movement.",
+            "Invariant": "High-impact actions MUST require per-action authorization or human-in-the-loop; tools MUST be least-privilege so injection cannot escalate.",
+            "Sources": [
+                {
+                    "Kind": "OWASP",
+                    "Ref": "OWASP LLM01 Prompt Injection (2025)",
+                    "URL": "https://owasp.org/www-project-top-10-for-large-language-model-applications/"
+                },
+                {
+                    "Kind": "OWASP",
+                    "Ref": "OWASP Agentic Top 10 (2025)",
+                    "URL": "https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/"
+                }
+            ],
+            "Detections": null
+        },
+        {
+            "ID": "AGT-02",
+            "Title": "tool poisoning / rug-pull",
+            "Domain": "agent",
+            "Category": "agency",
+            "Severity": "high",
+            "Description": "A tool mutates its description or behavior after the user approved it; because the host does not require re-approval on change, the malicious version is loaded silently.",
+            "Invariant": "A tool's definition/behavior change MUST invalidate prior approval and require re-consent; tool definitions SHOULD be integrity-pinned.",
+            "Sources": [
+                {
+                    "Kind": "CVE",
+                    "Ref": "CVE-2025-54136",
+                    "URL": "https://nvd.nist.gov/vuln/detail/CVE-2025-54136"
+                },
+                {
+                    "Kind": "Draft",
+                    "Ref": "MCP tool poisoning / rug-pull",
+                    "URL": "https://www.truefoundry.com/blog/blog-mcp-tool-poisoning-gateway-defense"
+                }
+            ],
+            "Detections": null
+        }
+    ],
+    "total": 50
+}

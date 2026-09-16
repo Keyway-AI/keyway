@@ -92,7 +92,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           <span className="text-sm">
             <span className="font-medium text-text">Live mode</span>
             <span className="mt-0.5 block text-xs text-muted">
-              Talk only to the real backend. When off, pages fall back to sample data if the API is
+              Talk only to the real backend. When off, pages fall back to the built-in example dataset if the API is
               unavailable, so the app stays navigable during a demo.
             </span>
           </span>

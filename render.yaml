@@ -1,0 +1,32 @@
+# Render Blueprint — deploy the Keyway backend (HTTP API + scheduler) with a
+# managed Postgres. Near-one-click: on Render choose New > Blueprint, connect this
+# repo, and approve. Secrets are generated (nothing to paste). See DEPLOY-RENDER.md.
+#
+# The single distroless binary self-migrates (`--migrate`) and self-seeds: the
+# scheduler discovers the real example configs baked into the image
+# (/seed/manifests) and persists a genuine baseline, so the dashboards come up on
+# real data. The same binary also serves the web UI at /, so the deployed URL is a
+# full, live app (API + UI, same origin).
+databases:
+  - name: keyway-db
+    plan: free # Render's free Postgres expires after 90 days — bump to a paid plan to keep it.
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: keyway-api
+    runtime: docker
+    plan: free # free web services cold-start after inactivity; fine for a demo.
+    dockerfilePath: ./Dockerfile
+    # Args are appended to the image ENTRYPOINT (keyway-runner), so this runs
+    # `keyway-runner serve --migrate --path /seed/manifests --snapshot-interval 6h`.
+    dockerCommand: serve --migrate --path /seed/manifests --snapshot-interval 6h
+    healthCheckPath: /v1/health # unauthenticated; returns 200 once serving
+    autoDeploy: true
+    envVars:
+      - key: KEYWAY_DB_URL
+        fromDatabase:
+          name: keyway-db
+          property: connectionString
+      - key: KEYWAY_API_TOKEN
+        generateValue: true # Render generates it; copy it from the dashboard to unlock the live API

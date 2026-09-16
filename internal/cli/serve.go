@@ -20,6 +20,7 @@ import (
 	"github.com/Keyway-AI/keyway/internal/libdefaults"
 	"github.com/Keyway-AI/keyway/internal/model"
 	"github.com/Keyway-AI/keyway/internal/notify"
+	"github.com/Keyway-AI/keyway/internal/store/postgres"
 	"github.com/Keyway-AI/keyway/internal/version"
 )
 
@@ -35,6 +36,7 @@ func newServeCmd() *cobra.Command {
 	cmd.Flags().StringSlice("allow", nil, "host substrings the probe engine may target")
 	cmd.Flags().String("issuer-url", "", "register a default generic issuer at this URL")
 	cmd.Flags().Duration("snapshot-interval", 0, "if >0, snapshot+notify on this interval (e.g. 1h)")
+	cmd.Flags().Bool("migrate", false, "run pending database migrations on start (Postgres); lets a single distroless binary deploy with no separate migrate step")
 	cmd.Flags().Bool("in-cluster", false, "discover live Istio CRDs from the Kubernetes API (client-go) instead of, or in addition to, --path")
 	cmd.Flags().String("kube-context", "", "kube-context to use for --in-cluster (default: in-cluster SA, else current context)")
 	cmd.Flags().String("key-store", "", "directory to persist canary keys (encrypted, single-node); mutually exclusive with --key-store-db")
@@ -91,6 +93,16 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	}
 	if err := cfg.Validate(); err != nil {
 		return err
+	}
+
+	// Optionally apply pending migrations on start, so a single distroless binary
+	// (which has no shell for a separate `migrate up` step) can deploy cleanly.
+	// Skipped for the in-memory store, which has no schema.
+	if doMigrate, _ := cmd.Flags().GetBool("migrate"); doMigrate && cfg.DBURL != "memory" {
+		if err := postgres.MigrateUp(cfg.DBURL); err != nil {
+			return fmt.Errorf("migrate: %w", err)
+		}
+		fmt.Fprintln(cmd.OutOrStdout(), "migrations applied")
 	}
 
 	// Issuer specs from config, plus an optional default generic issuer.

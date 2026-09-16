@@ -32,6 +32,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/keyway /usr/local/bin/keyway
 COPY --from=build /out/keyway-runner /usr/local/bin/keyway-runner
+# Real example auth configs so a fresh deployment self-seeds a genuine inventory
+# on first snapshot (see render.yaml: `serve --path /seed/manifests`).
+COPY --from=build /src/bench/oss/manifests /seed/manifests
 USER nonroot:nonroot
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/keyway-runner"]

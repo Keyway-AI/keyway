@@ -49,6 +49,8 @@ consumer responds.
 | **Runs a canary key** | Announces a key in JWKS _without signing_, then measures which consumers pick it up |
 | **Web dashboard** | React + TypeScript UI over the HTTP API |
 
+For runnable examples of the CLI's machine-readable output, see [CLI JSON examples](docs/cli.md).
+
 ## Who is this for?
 
 Keyway is for engineers who work with JWTs and OAuth/OIDC — not a general-purpose

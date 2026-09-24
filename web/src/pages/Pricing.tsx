@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { MarketingShell } from "../components/MarketingChrome";
+import { MarketingShell, PageHero } from "../components/MarketingChrome";
+import { Reveal } from "../components/Reveal";
 
 const tiers = [
   {
@@ -45,21 +46,18 @@ function Check() {
 export default function Pricing() {
   return (
     <MarketingShell>
-      <section className="aurora px-5 py-16 text-center sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl">
-          <span className="eyebrow">Pricing</span>
-          <h1 className="display mx-auto mt-2 max-w-2xl text-[2.4rem] sm:text-[3rem]">
-            Free and open source. Cloud when you want it.
-          </h1>
-          <p className="mx-auto mt-4 max-w-lg text-body-lg text-muted">
-            The whole tool is open source and self-hosted at no cost. A managed cloud with history and alerting is on the way.
-          </p>
-
-        <div className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-4 text-left md:grid-cols-2">
-          {tiers.map((t) => (
-            <div
+      <PageHero
+        eyebrow="Pricing"
+        title="Free and open source. Cloud when you want it."
+        line="Self-host the whole tool at no cost. A managed cloud with history and alerting is on the way."
+      />
+      <section className="px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-3xl grid grid-cols-1 gap-4 text-left md:grid-cols-2">
+          {tiers.map((t, i) => (
+            <Reveal
               key={t.name}
-              className={`flex flex-col rounded-2xl border bg-surface p-7 shadow-xs ${
+              delay={i * 90}
+              className={`lift flex flex-col rounded-2xl border bg-surface p-7 shadow-xs ${
                 t.highlight ? "border-accent/40 ring-1 ring-accent/20" : "border-border"
               }`}
             >
@@ -100,9 +98,8 @@ export default function Pricing() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           ))}
-          </div>
         </div>
       </section>
     </MarketingShell>

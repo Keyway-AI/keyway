@@ -2,6 +2,48 @@ import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { LogoBadge } from "./Logo";
+import { Reveal } from "./Reveal";
+
+/**
+ * PageHero — the one hero every sub-page uses, so /features, /pricing, /research
+ * and /contact open the same way: eyebrow, a short display headline, an optional
+ * single supporting line, and optional actions. Centered by default.
+ */
+export function PageHero({
+  eyebrow,
+  title,
+  line,
+  actions,
+  align = "center",
+}: {
+  eyebrow: string;
+  title: ReactNode;
+  line?: ReactNode;
+  actions?: ReactNode;
+  align?: "center" | "left";
+}) {
+  const centered = align === "center";
+  return (
+    <section className="aurora grid-ground border-b border-border px-5 py-20 sm:px-8 sm:py-28">
+      <div className={`mx-auto max-w-3xl ${centered ? "text-center" : "max-w-5xl text-left"}`}>
+        <Reveal>
+          <span className="eyebrow">{eyebrow}</span>
+          <h1 className="display mt-3 text-[2.4rem] leading-[1.03] sm:text-[3.1rem]">{title}</h1>
+          {line && (
+            <p className={`mt-5 text-body-lg text-muted ${centered ? "mx-auto max-w-xl" : "max-w-xl"}`}>
+              {line}
+            </p>
+          )}
+          {actions && (
+            <div className={`mt-8 flex flex-wrap items-center gap-3 ${centered ? "justify-center" : ""}`}>
+              {actions}
+            </div>
+          )}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
 
 export function BrandMark({ size = "md" }: { size?: "sm" | "md" }) {
   const badge = size === "sm" ? 24 : 28;
@@ -129,7 +171,7 @@ export function MarketingFooter() {
         </div>
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-caption text-faint sm:flex-row">
           <span>© {"2026"} Keyway — open source, MIT licensed.</span>
-          <span>Built for a world where machines authenticate machines.</span>
+          <span>Auth you can prove, not assume.</span>
         </div>
       </div>
     </footer>

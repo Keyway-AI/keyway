@@ -1,4 +1,4 @@
-import { MarketingShell } from "../components/MarketingChrome";
+import { MarketingShell, PageHero } from "../components/MarketingChrome";
 
 /**
  * The research & methods hub. Surfaces the whitepaper, the research-note series,
@@ -55,19 +55,12 @@ const stats = [
 export default function Research() {
   return (
     <MarketingShell>
-      {/* hero */}
-      <section className="aurora border-b border-border px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <span className="eyebrow">Research &amp; methods</span>
-          <h1 className="display mt-2 text-[2.4rem] sm:text-[3rem]">
-            We publish the stress tests, not just the wins.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-body-lg text-muted">
-            Keyway is measured against a cited taxonomy of documented threats, and every accuracy
-            number ships with its counter-evidence. Nothing here is asserted that the repo can’t
-            regenerate.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+      <PageHero
+        eyebrow="Research & methods"
+        title="We publish the stress tests, not just the wins."
+        line="Every accuracy number ships with its counter-evidence. Nothing here is claimed that the repo can't regenerate."
+        actions={
+          <>
             <a
               href={`${REPO}/docs/whitepaper.md`}
               className="glow-accent inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
@@ -80,9 +73,9 @@ export default function Research() {
             >
               How accurate is it?
             </a>
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       {/* reproduced results */}
       <section className="border-b border-border bg-surface-2/30">
@@ -111,7 +104,7 @@ keyway threats coverage   # the 27/50 coverage table`}</code>
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
           <a
             href={`${REPO}/docs/whitepaper.md`}
-            className="group block rounded-2xl border border-border bg-surface p-8 shadow-xs transition hover:border-border-strong hover:shadow-md sm:p-10"
+            className="lift group block rounded-2xl border border-border bg-surface p-8 shadow-xs hover:border-border-strong sm:p-10"
           >
             <div className="eyebrow">Whitepaper</div>
             <h2 className="mt-2 text-h1 font-semibold tracking-tight display">
@@ -143,7 +136,7 @@ keyway threats coverage   # the 27/50 coverage table`}</code>
               <a
                 key={note.n}
                 href={note.href}
-                className="group flex gap-4 rounded-xl border border-border bg-surface p-6 shadow-xs transition hover:border-border-strong hover:shadow-md"
+                className="lift group flex gap-4 rounded-xl border border-border bg-surface p-6 shadow-xs hover:border-border-strong"
               >
                 <span className="text-h2 font-semibold tabular-nums text-accent/40 transition group-hover:text-accent">
                   {note.n}

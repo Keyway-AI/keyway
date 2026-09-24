@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../api/client";
+import { agentInspect } from "../api/mock";
 import { severityColor } from "../lib/format";
 import type { AgentFinding } from "../api/types";
 
@@ -32,29 +32,25 @@ const AUDIENCE = "https://mcp.example/api";
 export function TokenInspector() {
   const [token, setToken] = useState(flawedSample);
   const [findings, setFindings] = useState<AgentFinding[] | null>(null);
-  const [busy, setBusy] = useState(false);
 
-  const inspect = useCallback(async (value: string) => {
+  // The analysis runs entirely in the browser (the same check `keyway agent
+  // inspect` runs), so it's synchronous and nothing leaves the page.
+  const inspect = useCallback((value: string) => {
     if (!value.trim()) {
       setFindings(null);
       return;
     }
-    setBusy(true);
-    try {
-      const res = await api.agentInspect({
-        token: value.trim(),
-        audience: AUDIENCE,
-        require_delegation: true,
-      });
-      setFindings(res.findings);
-    } finally {
-      setBusy(false);
-    }
+    const res = agentInspect({
+      token: value.trim(),
+      audience: AUDIENCE,
+      require_delegation: true,
+    });
+    setFindings(res.findings);
   }, []);
 
   // Analyze the sample on mount so the widget is alive immediately.
   useEffect(() => {
-    void inspect(token);
+    inspect(token);
     // run once
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -76,7 +72,10 @@ export function TokenInspector() {
 
       <textarea
         value={token}
-        onChange={(e) => setToken(e.target.value)}
+        onChange={(e) => {
+          setToken(e.target.value);
+          inspect(e.target.value);
+        }}
         spellCheck={false}
         rows={3}
         placeholder="Paste a JWT or agent token — header.payload.signature"
@@ -86,10 +85,9 @@ export function TokenInspector() {
       <div className="mt-2.5 flex items-center gap-2">
         <button
           onClick={() => inspect(token)}
-          disabled={busy || !token.trim()}
+          disabled={!token.trim()}
           className="glow-accent inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-md bg-accent px-4 text-caption font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.99] disabled:opacity-50"
         >
-          {busy && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />}
           Inspect token
         </button>
         <button

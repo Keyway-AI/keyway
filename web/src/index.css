@@ -236,3 +236,80 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-sheet-in { animation: none; }
 }
+
+/*
+ * ── Scroll-reveal ────────────────────────────────────────────────────────
+ * Content lifts and fades in as it enters the viewport (driven by <Reveal>,
+ * which toggles .reveal-in). One easing curve, one distance — used everywhere
+ * so the whole site breathes the same way. Honors reduced-motion.
+ */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/*
+ * ── Technical grid ground ────────────────────────────────────────────────
+ * A faint blueprint grid that fades out toward the edges. Sits under hero
+ * grounds to give an engineering texture without noise. Emerald-neutral.
+ */
+.grid-ground {
+  position: relative;
+  isolation: isolate;
+}
+.grid-ground::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-border) 60%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 60%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 72%);
+  mask-image: radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 72%);
+  opacity: 0.7;
+}
+.dark .grid-ground::after {
+  opacity: 0.45;
+}
+
+/* A card that lifts on hover — the standard interactive elevation. */
+.lift {
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease;
+}
+.lift:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lift:hover { transform: none; }
+}
+
+/* Slow drift for hero accent glows — barely-there parallax of light. */
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -14px, 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .drift { animation: drift 14s ease-in-out infinite; }
+}

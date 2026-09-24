@@ -9,16 +9,16 @@ import { LogoBadge } from "./Logo";
  */
 export function AppPreview() {
   const stats = [
-    { label: "Consumers", value: "47", hint: "auto-discovered", accent: "text-text" },
+    { label: "Consumers", value: "5", hint: "auto-discovered", accent: "text-text" },
     { label: "JWT coverage", value: "60%", hint: "21 / 35 threats", accent: "text-accent" },
     { label: "Agent auth", value: "40%", hint: "6 / 15 threats", accent: "text-medium" },
     { label: "Open gaps", value: "23", hint: "named + cited", accent: "text-high" },
   ];
   const findings = [
-    { sev: "critical", label: "Now accepts UNSIGNED tokens (alg=none)", svc: "mobile-gw" },
-    { sev: "high", label: "Won't pick up rotated signing keys", svc: "payments-api" },
-    { sev: "medium", label: "Caches signing keys 6× longer", svc: "orders-api" },
-    { sev: "low", label: "Audience list widened to include staging", svc: "search-svc" },
+    { sev: "critical", label: "Now accepts UNSIGNED tokens (alg=none)", svc: "ingressgateway" },
+    { sev: "high", label: "Won't pick up rotated signing keys", svc: "provider_name1" },
+    { sev: "medium", label: "Caches signing keys 6× longer", svc: "graphql" },
+    { sev: "low", label: "Audience widened to include staging", svc: "httpbin" },
   ];
   const sevColor: Record<string, string> = {
     critical: "bg-critical",
@@ -52,7 +52,7 @@ export function AppPreview() {
             <path d="M7 11V8a5 5 0 0 1 10 0v3" strokeLinecap="round" />
             <rect x="5" y="11" width="14" height="9" rx="2" />
           </svg>
-          app.keyway.dev
+          keyway.internal / app
         </div>
       </div>
       {/* body */}

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { MarketingShell } from "../components/MarketingChrome";
-import { LogoBadge } from "../components/Logo";
+import { MarketingShell, PageHero } from "../components/MarketingChrome";
+import { Reveal } from "../components/Reveal";
 
 const GITHUB = "https://github.com/Keyway-AI/keyway";
 
@@ -47,28 +47,28 @@ function MailIcon() {
 const channels: Channel[] = [
   {
     title: "Open an issue",
-    body: "Found a bug, a false positive, or a missing detection? File it on GitHub — that's where the work happens in the open.",
+    body: "Bugs, false positives, or a detection we're missing.",
     action: "Open an issue",
     href: `${GITHUB}/issues/new`,
     icon: IssueIcon,
   },
   {
     title: "Start a discussion",
-    body: "Questions, feature ideas, or want to talk through your auth setup? Discussions are the place for the long-form stuff.",
+    body: "Questions, ideas, or talk through your auth setup.",
     action: "Start a discussion",
     href: `${GITHUB}/discussions`,
     icon: ChatIcon,
   },
   {
     title: "Report a vulnerability",
-    body: "Security issues get a private disclosure path. Please don't file a public issue for anything exploitable — follow the security policy.",
+    body: "Private disclosure for anything exploitable.",
     action: "Security policy",
     href: `${GITHUB}/blob/main/SECURITY.md`,
     icon: ShieldIcon,
   },
   {
     title: "Email us",
-    body: "Prefer email — for partnerships, the managed cloud waitlist, or anything not suited to a public thread? Reach the maintainers directly.",
+    body: "Partnerships, the cloud waitlist, or anything private.",
     action: "hello@keyway.dev",
     href: "mailto:hello@keyway.dev?subject=Keyway",
     icon: MailIcon,
@@ -78,42 +78,31 @@ const channels: Channel[] = [
 export default function Contact() {
   return (
     <MarketingShell>
-      <section className="aurora px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-5xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <span className="mx-auto grid h-12 w-12 place-items-center">
-            <LogoBadge size={44} />
-          </span>
-          <span className="eyebrow mt-4 block">Contact</span>
-          <h1 className="display mt-2 text-[2.2rem] sm:text-[2.75rem]">Get in touch.</h1>
-          <p className="mx-auto mt-3 max-w-lg text-body-lg text-muted">
-            Keyway is built in the open. The fastest way to reach us — and to shape where it goes — is on GitHub. For anything private, email works too.
-          </p>
-        </div>
-
-        <div className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
-          {channels.map((c) => (
-            <a
-              key={c.title}
-              href={c.href}
-              className="group flex flex-col rounded-2xl border border-border bg-surface p-6 shadow-xs transition hover:border-border-strong hover:shadow-sm"
-            >
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-accent-soft text-accent">
-                <c.icon />
-              </span>
-              <h2 className="mt-4 text-[1.05rem] font-semibold tracking-tight">{c.title}</h2>
-              <p className="mt-2 flex-1 text-body text-muted">{c.body}</p>
-              <span className="mt-4 inline-flex items-center gap-1.5 text-body font-medium text-accent">
-                {c.action}
-                <span className="transition group-hover:translate-x-0.5">→</span>
-              </span>
-            </a>
+      <PageHero
+        eyebrow="Contact"
+        title="Get in touch."
+        line="Built in the open. Every channel below reaches a real maintainer — no sales team, no form to nowhere."
+      />
+      <section className="px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+          {channels.map((c, i) => (
+            <Reveal key={c.title} delay={(i % 2) * 80}>
+              <a
+                href={c.href}
+                className="lift group flex h-full flex-col rounded-2xl border border-border bg-surface p-6 shadow-xs"
+              >
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-accent-soft text-accent">
+                  <c.icon />
+                </span>
+                <h2 className="mt-4 text-[1.05rem] font-semibold tracking-tight">{c.title}</h2>
+                <p className="mt-2 flex-1 text-body text-muted">{c.body}</p>
+                <span className="mt-4 inline-flex items-center gap-1.5 text-body font-medium text-accent">
+                  {c.action}
+                  <span className="transition group-hover:translate-x-0.5">→</span>
+                </span>
+              </a>
+            </Reveal>
           ))}
-        </div>
-
-        <p className="mx-auto mt-10 max-w-lg text-center text-caption text-faint">
-          Keyway is open source under the MIT license. There is no sales team and no contact form to nowhere — every channel above reaches a real maintainer.
-        </p>
         </div>
       </section>
     </MarketingShell>

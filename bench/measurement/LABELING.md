@@ -17,11 +17,49 @@ python3 bench/measurement/make_labeling_packet.py \
     bench/measurement/out/labeling-worksheet.jsonl \
     bench/measurement/out/labeling-packet.csv
 
-# 3. a HUMAN fills the `human_label` column in a spreadsheet (taxonomy below)
+# 3. AI first pass: an independent LLM drafts a label per row from the RAW config
+#    (never from Keyway's output). Produces the AI-only label set (v1).
+export ANTHROPIC_API_KEY=...        # or `ant auth login`
+python3 bench/measurement/ai_label.py \
+    bench/measurement/out/labeling-packet.csv \
+    bench/measurement/out/labeling-packet-ai.csv
 
-# 4. compute the gold-standard numbers
-python3 bench/measurement/grade_labels.py bench/measurement/out/labeling-packet.csv
+# 4. a HUMAN fills the `human_label` column, using the AI draft + rationale as a
+#    reference (taxonomy below). This is the human-validated set (v2).
+
+# 5. grade BOTH sets and report their agreement (Cohen's kappa)
+python3 bench/measurement/grade_dual.py bench/measurement/out/labeling-packet-ai.csv
 ```
+
+(The older single-pass flow — skip step 3, have the human fill `human_label` on
+`labeling-packet.csv`, then `grade_labels.py` — still works.)
+
+## Two label sets: AI-only (v1) and human-validated (v2)
+
+Hand-labelling is the bottleneck for gate G1, and it does not scale to the G2
+corpus (10^3-10^4 rows). So we label twice and report both:
+
+- **v1 — AI-only.** `ai_label.py` sends each contested `(repo, field, value)` to an
+  LLM together with the **raw source config** and the taxonomy below, and records
+  `ai_label` + `ai_confidence` + `ai_rationale`. The labeller sees only the raw YAML
+  and which side found the value — **never Keyway's discovery output or its
+  reasoning** — so using these labels to grade Keyway's discovery is *not* circular,
+  exactly as the independent-parse proxy is not.
+- **v2 — human-validated.** A human fills `human_label`, using the AI draft and its
+  rationale as a starting point, and correcting it. This is the gold standard.
+
+`grade_dual.py` reports discovery precision/recall under each set and the
+**AI<->human agreement (raw + Cohen's kappa)**. The pair is the sharper result: a
+reproducible, scalable AI measurement, plus a human ground truth, plus a measured
+kappa that says how far the automated labeller can be trusted — which is what
+licenses running the AI pass alone over the full G2 corpus (with a human-validated
+subsample) once discovery is scaled.
+
+**Anchoring caveat (report this).** Seeing the AI draft can bias the human toward
+it, inflating kappa. For an honest agreement number, label a random subset
+**blind** (ignore / hide the `ai_label` column) and compute kappa on that subset;
+report it alongside the full-sample number. Two human annotators on that subset
+(a co-author) strengthens it further.
 
 ## What each row is
 

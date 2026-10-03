@@ -24,11 +24,19 @@ python3 bench/measurement/ai_label.py \
     bench/measurement/out/labeling-packet.csv \
     bench/measurement/out/labeling-packet-ai.csv
 
-# 4. a HUMAN fills the `human_label` column, using the AI draft + rationale as a
-#    reference (taxonomy below). This is the human-validated set (v2).
+# 4. build the human-ready workbook (dropdowns, a BLIND-first subset, the AI draft
+#    parked on the right as a reference)
+python3 bench/measurement/make_g1_xlsx.py \
+    bench/measurement/out/labeling-packet-ai.csv \
+    bench/measurement/out/g1-packet.xlsx
 
-# 5. grade BOTH sets and report their agreement (Cohen's kappa)
-python3 bench/measurement/grade_dual.py bench/measurement/out/labeling-packet-ai.csv
+# 5. a HUMAN fills it: first `human_label_blind` on the BLIND rows (without looking
+#    at the AI columns), then `human_label` on every row using the AI draft as a
+#    reference. Save the Label sheet back to CSV (e.g. labeling-packet-human.csv).
+
+# 6. grade BOTH sets and report their agreement (Cohen's kappa), incl. the honest
+#    un-anchored kappa from the blind subset
+python3 bench/measurement/grade_dual.py bench/measurement/out/labeling-packet-human.csv
 ```
 
 (The older single-pass flow — skip step 3, have the human fill `human_label` on

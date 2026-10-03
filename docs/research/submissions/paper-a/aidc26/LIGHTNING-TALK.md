@@ -8,12 +8,23 @@
 Non-archival, so this does **not** conflict with Paper A (Vision) under review at SSR,
 and it is a distinct talk from the Paper B (agent-auth) lightning talk already submitted.
 
-**Fit note (honest):** AIDC's theme is agentic cyber operations; this is a JWT-config
-measurement study. It belongs only on its agent-token framing: an agent carries an
-OAuth/MCP bearer token, and the configuration we measure is exactly the layer that
-decides how far that token reaches. The talk leads with that, not with web auth in
-general. **Confirm the CFP allows a second lightning talk from the same author**
-before submitting; if it allows only one, keep the Paper B talk (closer theme fit).
+**Fit note (honest, CFP checked 2026-10-04):** AIDC's theme is agentic cyber
+operations; this is a JWT-config measurement study. It belongs only on its
+agent-token framing: an agent carries an OAuth/MCP bearer token, and the
+configuration we measure is exactly the layer that decides how far that token
+reaches. The talk leads with that, not with web auth in general.
+- The CFP states **no per-author limit** on lightning talks, so a second one
+  alongside the Paper B talk is procedurally fine.
+- Lightning talks are **non-archival** ("not published by IEEE") and the CFP
+  explicitly welcomes "work-in-progress ideas and preliminary results," which is
+  what this is.
+- One caveat: the CFP prohibits "simultaneous submission of the same work to
+  multiple venues." That targets archival paper dual-submission; a non-archival
+  talk is generally outside it (the same basis the Paper B talk relied on), but the
+  content overlaps with Paper A (Vision) under review at SSR, so treat it as a
+  conscious, low-risk call rather than automatic.
+- Thematic fit is weaker than Paper B; if the organizers want only one talk from
+  us, keep Paper B.
 
 ---
 

@@ -150,7 +150,7 @@ type summary struct {
 // exampleRe matches source paths that are tutorial/sample/vendored copies rather
 // than a project's own deployment config — copying the docs is not a finding about
 // production, so the study excludes them from the denominator.
-var exampleRe = regexp.MustCompile(`(?i)example|sample|tutorial|demo|quickstart|getting.?started|/test|testdata|vendor|/docs?/`)
+var exampleRe = regexp.MustCompile(`(?i)example|sample|tutorial|demo|quickstart|getting.?started|/test|_test|testdata|test-data|fixture|golden|/e2e/|conformance|snapshot|vendor|/docs?/`)
 
 // configOf projects a discovered consumer onto the contract fields the dedup
 // package canonicalizes and compares.
@@ -255,7 +255,7 @@ func main() {
 	var jwt []model.Consumer
 	if *excludeExamples {
 		for _, c := range jwtAll {
-			if exampleRe.MatchString(provenanceSource(c)) {
+			if exampleRe.MatchString(provenancePath(c)) {
 				excluded++
 				continue
 			}
@@ -485,6 +485,23 @@ func provenanceSource(c model.Consumer) string {
 		for _, e := range entries {
 			if e.Locator != "" {
 				return filepath.Base(e.Locator)
+			}
+			if e.Source != "" {
+				return e.Source
+			}
+		}
+	}
+	return c.StableID
+}
+
+// provenancePath returns the FULL locator (not just the basename) so example/test
+// detection can match directory components like testdata/, /test/, or vendor/ — a
+// real deployment keeps those in the path, which filepath.Base would discard.
+func provenancePath(c model.Consumer) string {
+	for _, entries := range c.Provenance {
+		for _, e := range entries {
+			if e.Locator != "" {
+				return e.Locator
 			}
 			if e.Source != "" {
 				return e.Source

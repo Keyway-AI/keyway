@@ -12,10 +12,18 @@ replaces the self-authored benchmark as the accuracy claim.
 go run ./bench/measurement --path bench/measurement/corpus --per-repo
 python3 bench/measurement/validate.py bench/measurement/corpus bench/measurement/out
 
-# 2. build the labelling packet (focuses on the contested cases + a calibration sample)
-python3 bench/measurement/make_labeling_packet.py \
+# 2. build the labelling packet. Two designs:
+#   (a) GOLD STANDARD (recommended): a stratified random sample across the whole
+#       value population, so the labels give population precision/recall with CIs
+#       that scale with the corpus. Use this for a full-research submission.
+python3 bench/measurement/make_g1_sample.py \
     bench/measurement/out/labeling-worksheet.jsonl \
-    bench/measurement/out/labeling-packet.csv
+    bench/measurement/out/labeling-packet.csv --target 400
+#   (b) contested-only (error analysis): just the disagreements + a calibration
+#       sample. Cheaper, but NOT a population estimate.
+# python3 bench/measurement/make_labeling_packet.py \
+#     bench/measurement/out/labeling-worksheet.jsonl \
+#     bench/measurement/out/labeling-packet.csv
 
 # 3. AI first pass: an independent LLM drafts a label per row from the RAW config
 #    (never from Keyway's output). Produces the AI-only label set (v1).

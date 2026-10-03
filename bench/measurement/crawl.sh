@@ -27,11 +27,13 @@ declare -A seen repo_count
 # Each query targets a distinct, real auth-config shape. All have a text term
 # (code search requires one) plus a YAML qualifier.
 queries=(
-  '"kind: RequestAuthentication" language:YAML'   # Istio JWT validation
-  '"jwt_authn" extension:yaml'                      # Envoy JWT filter
-  '"request.auth.claims" language:YAML'            # Istio claim-based authz
-  '"remote_jwks" extension:yaml'                    # Envoy remote JWKS provider
+  '"kind: RequestAuthentication" language:YAML'      # Istio JWT validation (RequestAuthentication)
+  '"jwtRules" language:YAML'                          # Istio RA jwtRules field (catches templated/edge RA)
+  '"request.auth.claims" language:YAML'              # Istio claim-based authz (AuthorizationPolicy when)
   '"kind: AuthorizationPolicy" "when" language:YAML' # Istio authz conditions
+  '"jwt_authn" language:YAML'                         # Envoy JWT filter (.yaml AND .yml; was extension:yaml)
+  '"remote_jwks" language:YAML'                       # Envoy remote JWKS provider (.yaml AND .yml)
+  '"local_jwks" language:YAML'                        # Envoy inline (local) JWKS provider
 )
 
 b64d() { python3 -c 'import sys,base64; sys.stdout.buffer.write(base64.b64decode(sys.stdin.read()))'; }

@@ -1,4 +1,4 @@
-% Prevalence figure (preliminary, n=102 distinct JWT-validating configs).
+% Prevalence figure (n=530 distinct JWT-validating configs, scaled corpus).
 % Real values with Wilson 95% CIs (asymmetric). Requires pgfplots in the preamble
 % (the wrappers add it). \input this inside the Results section.
 \begin{figure}[t]
@@ -17,19 +17,21 @@
 % asymmetric explicit errors:  += (0, upper)  -= (0, lower)
 \addplot+[error bars/.cd, y dir=both, y explicit]
 coordinates {
-  (P1,42.2)  += (0,9.7)  -= (0,9.2)
-  (P2,85.3)  += (0,5.6)  -= (0,8.2)
-  (P3,100.0) += (0,0.0)  -= (0,3.6)
-  (P4,5.9)   += (0,6.3)  -= (0,3.2)
-  (P5,0.0)   += (0,3.6)  -= (0,0.0)
+  (P1,53.4)  += (0,4.2)  -= (0,4.3)
+  (P2,80.9)  += (0,3.2)  -= (0,3.5)
+  (P3,100.0) += (0,0.0)  -= (0,0.7)
+  (P4,13.2)  += (0,3.2)  -= (0,2.6)
+  (P5,0.0)   += (0,0.7)  -= (0,0.0)
 };
 \end{axis}
 \end{tikzpicture}
-\caption{Prevalence of cited verification weaknesses across 102 distinct
+\caption{Prevalence of cited verification weaknesses across 530 distinct
 JWT-validating configurations, with Wilson 95\% confidence intervals.
 P1 unbound audience; P2 no required claims; P3 no algorithm pinning \emph{in
 configuration} (library-default caveat, \S\ref{sec:results}); P4 multi-issuer
-(descriptive); P5 clock skew $>5$\,min. \textbf{Preliminary} (small $N$, no human
-labels); see \S\ref{sec:limitations}.}
+(descriptive); P5 clock skew $>5$\,min (now read from Envoy
+\texttt{clock\_skew\_seconds}; the widest observed is 60\,s). An independently
+validated extractor; a hand-labelled gold standard is still pending
+(\S\ref{sec:limitations}).}
 \label{fig:prevalence}
 \end{figure}

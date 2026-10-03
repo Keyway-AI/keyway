@@ -24,16 +24,40 @@ MAX_PAGES="${MAX_PAGES:-1}"
 MAX_PER_REPO="${MAX_PER_REPO:-5}"
 declare -A seen repo_count
 
-# Each query targets a distinct, real auth-config shape. All have a text term
-# (code search requires one) plus a YAML qualifier.
+# Code search returns at most ~1000 results per query. The two highest-volume
+# shapes (Istio RequestAuthentication, Envoy jwt_authn) are therefore PARTITIONED
+# by file size into non-overlapping buckets, each under the cap, so the union
+# captures far more than one flat query can. The rest add distinct field- and
+# claim-level shapes, all within what the discoverers parse (Istio RA /
+# AuthorizationPolicy, Envoy jwt_authn). Every query has a text term (code search
+# requires one) plus language:YAML. Add size buckets to any shape that saturates.
 queries=(
-  '"kind: RequestAuthentication" language:YAML'      # Istio JWT validation (RequestAuthentication)
-  '"jwtRules" language:YAML'                          # Istio RA jwtRules field (catches templated/edge RA)
-  '"request.auth.claims" language:YAML'              # Istio claim-based authz (AuthorizationPolicy when)
-  '"kind: AuthorizationPolicy" "when" language:YAML' # Istio authz conditions
-  '"jwt_authn" language:YAML'                         # Envoy JWT filter (.yaml AND .yml; was extension:yaml)
-  '"remote_jwks" language:YAML'                       # Envoy remote JWKS provider (.yaml AND .yml)
+  # -- Istio RequestAuthentication (total ~3072). Buckets calibrated to the real
+  #    size distribution so each is a small, fully-retrievable window. The genuine
+  #    per-service configs are <=10KB (~1329); files >10KB are mostly install
+  #    bundles / must-gather dumps that --dedup + --exclude-examples strip. --
+  '"kind: RequestAuthentication" language:YAML size:<600'
+  '"kind: RequestAuthentication" language:YAML size:600..1800'
+  '"kind: RequestAuthentication" language:YAML size:1800..3000'
+  '"kind: RequestAuthentication" language:YAML size:3000..5000'
+  '"kind: RequestAuthentication" language:YAML size:5000..10000'
+  '"kind: RequestAuthentication" language:YAML size:>10000'
+  '"jwtRules" language:YAML'                          # RA field; catches templated/edge RA
+  # -- Istio AuthorizationPolicy: JWT claim conditions (request.auth.* family) --
+  '"request.auth.claims" language:YAML'
+  '"request.auth.audiences" language:YAML'
+  '"request.auth.presenter" language:YAML'
+  '"request.auth.principals" language:YAML'
+  '"kind: AuthorizationPolicy" "when" language:YAML'
+  # -- Envoy jwt_authn (total ~1208), size-partitioned + provider/field variants --
+  '"jwt_authn" language:YAML size:<800'
+  '"jwt_authn" language:YAML size:800..2500'
+  '"jwt_authn" language:YAML size:2500..10000'
+  '"jwt_authn" language:YAML size:>10000'
+  '"remote_jwks" language:YAML'                       # Envoy remote JWKS provider
   '"local_jwks" language:YAML'                        # Envoy inline (local) JWKS provider
+  '"JwtAuthentication" language:YAML'                 # Envoy jwt_authn typed_config @type
+  '"payload_in_metadata" language:YAML'               # Envoy jwt_authn payload field
 )
 
 b64d() { python3 -c 'import sys,base64; sys.stdout.buffer.write(base64.b64decode(sys.stdin.read()))'; }

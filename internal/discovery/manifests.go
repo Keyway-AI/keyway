@@ -1,14 +1,10 @@
 package discovery
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 // WalkYAML invokes fn for each YAML document found under the given paths. A path
@@ -51,33 +47,43 @@ func walkDir(root string, fn func(path string, doc []byte) error) error {
 }
 
 func splitDocs(path string, fn func(path string, doc []byte) error) error {
-	f, err := os.Open(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("discovery: open %s: %w", path, err)
 	}
-	defer f.Close()
-
-	dec := yaml.NewDecoder(f)
-	for {
-		var node yaml.Node
-		derr := dec.Decode(&node)
-		if derr == io.EOF {
-			return nil
-		}
-		if derr != nil {
-			return fmt.Errorf("discovery: decode %s: %w", path, derr)
-		}
-		var buf bytes.Buffer
-		enc := yaml.NewEncoder(&buf)
-		if err := enc.Encode(&node); err != nil {
-			return fmt.Errorf("discovery: re-encode %s: %w", path, err)
-		}
-		_ = enc.Close()
-		if strings.TrimSpace(buf.String()) == "" {
+	// Split into documents textually (on `---`) rather than with a streaming YAML
+	// decoder: the decoder aborts the whole stream on the first undecodable
+	// document, so one Helm-templated or malformed doc used to drop every
+	// RequestAuthentication/AuthorizationPolicy after it (and, via WalkDir,
+	// abort the rest of the repo). Each document is handed to fn independently;
+	// fn tolerates the ones it cannot parse.
+	for _, doc := range splitYAMLDocuments(data) {
+		if strings.TrimSpace(string(doc)) == "" {
 			continue
 		}
-		if err := fn(path, buf.Bytes()); err != nil {
+		if err := fn(path, doc); err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+// splitYAMLDocuments splits a multi-document YAML stream into individual documents
+// on `---` separator lines (and `...` end markers), so a single malformed or
+// templated document does not prevent the others from being read.
+func splitYAMLDocuments(data []byte) [][]byte {
+	lines := strings.Split(strings.ReplaceAll(string(data), "\r\n", "\n"), "\n")
+	var docs [][]byte
+	var cur []string
+	flush := func() { docs = append(docs, []byte(strings.Join(cur, "\n"))); cur = nil }
+	for _, ln := range lines {
+		t := strings.TrimRight(ln, " \t")
+		if t == "---" || strings.HasPrefix(t, "--- ") || t == "..." {
+			flush()
+			continue
+		}
+		cur = append(cur, ln)
+	}
+	flush()
+	return docs
 }

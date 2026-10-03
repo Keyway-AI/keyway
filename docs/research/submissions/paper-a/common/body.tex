@@ -24,17 +24,19 @@ single change (a rotated key, a widened audience, a dropped claim) silently turn
 valid users away or starts admitting tokens that should be refused. We call this
 configuration a service's implicit \emph{authorization contract}, and we think it
 should be measured directly rather than assumed. We give a method that derives the
-contract from deployment configuration and run it over 428 public repositories. In a
-first sample of 102 JWT-validating configurations, none pinned a signing algorithm
-in configuration (100\%, leaving it to the verifying library's default), 85.3\%
-required no claims, and 42.2\% left the token audience unbound, all with Wilson
-95\% confidence intervals. Because a measurement is only as good as its extractor,
-we validate it two ways and state each method's limits: a kind-aware oracle for
-recall (issuers 89.6\%, audiences 99.0\%), and a negative control for precision that
-plants values a correct tool must ignore. We release the tool, the corpus manifest,
-and the analysis. These numbers are preliminary and from a small sample; the paper
-sets out the agenda a full study needs: scale, drift over time, and the line between
-what configuration reveals and what only runtime can.
+contract from deployment configuration and run it over 2{,}718 public repositories.
+In a sample of 530 distinct JWT-validating configurations, none pinned a signing
+algorithm in configuration (100\%, leaving it to the verifying library's default),
+80.9\% required no claims, and 53.4\% left the token audience unbound, all with
+Wilson 95\% confidence intervals. Because a measurement is only as good as its
+extractor, we validate it three ways and state each method's limits: a kind-aware
+oracle for recall (issuers 96.0\%, audiences 98.2\%), a negative control for
+precision that plants values a correct tool must ignore, and a held-out split,
+labelled by an independent model that never sees the extractor's output, that finds
+no over-attribution. We release the tool, the corpus manifest, and the analysis.
+A hand-labelled gold standard is still pending, so these numbers are not yet final;
+the paper sets out the agenda a full study needs: scale, drift over time, and the
+line between what configuration reveals and what only runtime can.
 \draftonly{hand-labelled validation and scaled-corpus results before a full-paper
 submission; this Vision draft leads with the agenda.}
 \end{abstract}
@@ -70,11 +72,11 @@ toward measuring it.
 (i) A way of treating the authorization contract as something you can derive,
 version, and measure, and a method to derive it from heterogeneous deployment
 configuration with per-field provenance (\S\ref{sec:method}).
-(ii) A preliminary measurement of how common concrete, RFC-cited weaknesses are
-across 428 public repositories, with confidence intervals (\S\ref{sec:results}).
+(ii) A measurement of how common concrete, RFC-cited weaknesses are
+across 2{,}718 public repositories, with confidence intervals (\S\ref{sec:results}).
 (iii) A validation methodology that is honest about its own limits: a kind-aware
-oracle for recall and a non-circular negative control for precision, each with its
-failure mode stated (\S\ref{sec:validation}).
+oracle for recall, a non-circular negative control for precision, and a held-out
+over-attribution split, each with its failure mode stated (\S\ref{sec:validation}).
 (iv) A released instrument, corpus manifest, and analysis (\S\ref{sec:artifact}),
 and a research agenda (scale, drift, and the static/runtime frontier,
 \S\ref{sec:vision}) that a full study completes.
@@ -114,11 +116,13 @@ limit monorepo dominance, and analyse \emph{per repository} so a
 \texttt{RequestAuthentication} and its \texttt{AuthorizationPolicy} (usually in
 separate files) are resolved together while distinct repositories remain isolated.
 Two cleaning steps address representativeness: we exclude tutorial/vendored copies
-by path, and we deduplicate identical configurations (a canonical sample pasted
-across repositories counts once). The preliminary corpus is 603 files across 428
-public repositories, yielding 102 distinct JWT-validating configurations after
-cleaning. \gate{A full study will scale the corpus toward $10^3$--$10^4$ services
-and report the exact $N$ with confidence intervals and a selection-bias analysis.}
+by path (matched against the full locator, so \texttt{testdata/}, \texttt{vendor/},
+and \texttt{/e2e/} components are caught, not only basenames), and we deduplicate
+identical configurations (a canonical sample pasted across repositories counts
+once). The corpus is 5{,}214 files across 2{,}718 public repositories, yielding 778
+JWT-validating configurations, or 530 after deduplication. \gate{A full study will
+push the corpus further toward $10^4$ services, add OIDC/MCP sources, and report a
+selection-bias analysis against the public-configuration population.}
 
 \section{Validation methodology}\label{sec:validation}
 Measurement is only as good as the extractor. We validate discovery two ways and
@@ -130,12 +134,15 @@ discovery captured, per repository. The independent parser also
 \emph{over-declares}: it scrapes \texttt{issuer:} keys and claim-like strings from
 non-auth resources (a ConfigMap, an annotation). We therefore measure recall only
 against values in \emph{genuine} auth resources (RequestAuthentication /
-AuthorizationPolicy / Envoy JWT). Adjudicated recall is issuers 89.6\%, audiences
-99.0\%, and claims 82.1\% (scoped to repositories where a JWT consumer exists;
+AuthorizationPolicy / Envoy JWT). Adjudicated recall is issuers 96.0\%, audiences
+98.2\%, and claims 86.0\% (scoped to repositories where a JWT consumer exists;
 claims declared in repositories whose RequestAuthentication is absent from the
-corpus have no consumer to attach to). The adjudication removed 17 parser
-over-declarations, which both raises the honest recall and demonstrates the proxy
-oracle is itself imperfect.
+corpus have no consumer to attach to). The adjudication removed 106 parser
+over-declarations (65 issuers, 27 audiences, 14 claims), which both raises the
+honest recall and demonstrates the proxy oracle is itself imperfect. The issuer
+figure rose from an earlier 89.6\% once a document-splitting bug was fixed: a single
+templated or malformed YAML document had been aborting the rest of its file, so the
+earlier recall was depressed by the extractor, not by the corpus.
 
 \noindent\textbf{Precision (non-circular negative control).} An independent-parse
 oracle cannot honestly measure precision: it reads the same fields as the
@@ -146,24 +153,52 @@ issuer, an \texttt{issuer:}/claim in a non-auth ConfigMap, a claim behind a
 non-matching AuthorizationPolicy selector (the real attribution risk), and strings
 in annotations. Result: 4 planted, 0 leaked, with real values still captured.
 
-\noindent\textbf{Gold standard.} Both above are automated proxies.
-\gate{The definitive precision and recall await a hand-labelled stratified sample,
-with each captured value adjudicated as real, correctly attributed, or spurious.}
+\noindent\textbf{Over-attribution (held-out split).} To measure how often discovery
+\emph{adds} a value that is not really there, we take every captured/declared
+disagreement, label each with an independent model that reads only the raw
+configuration and never the extractor's output (so the grading is non-circular),
+and split the labelled set 70/30 by repository so no repository informs both sides.
+On the held-out test split, precision is 100\% and over-attribution is 0.0\% (0 of 6
+captured-only values are spurious or mis-attributed); on the full labelled set,
+precision 100\% and over-attribution 0.0\%. This split is what caught, and then
+confirmed the fix for, an Envoy test-fixture leak and a claim mis-attribution during
+development.
 
-\section{Preliminary results}\label{sec:results}
-\emph{These numbers are preliminary (small N, no human labels) and are not to be
-cited as final; they are reported to demonstrate the instrument and to bound the
-work remaining.}
+\noindent\textbf{Gold standard.} All three above are automated or model-assisted
+proxies. \gate{The definitive precision and recall await a hand-labelled stratified
+sample: the independent-model labels above are the first-pass draft, and a human
+adjudicates each captured value as real, correctly attributed, or spurious to yield
+the gold standard and an inter-rater agreement figure.}
 
-\noindent\textbf{Prevalence.} Over 102 distinct JWT-validating configurations
+\section{Results}\label{sec:results}
+\emph{These numbers are from the scaled corpus and an independently validated
+extractor, but a hand-labelled gold standard is still pending, so they are reported
+to demonstrate the instrument and bound the work remaining, not as final figures.}
+
+\noindent\textbf{Prevalence.} Over 530 distinct JWT-validating configurations
 (Wilson 95\% CIs): no algorithm pinning \emph{in configuration} 100\%
-[96.4, 100]; no required claims 85.3\% [77.1, 90.9]; unbound audience 42.2\%
-[33.0, 51.9]. The algorithm-pinning figure reflects reliance on the verifying
-\emph{library's default}, which configuration does not restate. This is a
-static-vs-runtime gap, not a 100\% vulnerability rate; we report it as
-``not pinned in config.''
-\gate{We will re-run these over the scaled, hand-labelled corpus and add a
-co-occurrence analysis.}
+[99.3, 100]; no required claims 80.9\% [77.4, 84.1]; unbound audience 53.4\%
+[49.1, 57.6]; multi-issuer trust 13.2\% [10.6, 16.4] (descriptive, not a weakness);
+clock skew $>5$\,min 0.0\% [0.0, 0.7]. The algorithm-pinning figure reflects
+reliance on the verifying \emph{library's default}, which configuration does not
+restate. This is a static-vs-runtime gap, not a 100\% vulnerability rate; we report
+it as ``not pinned in config.'' The clock-skew figure is now read directly from
+Envoy \texttt{clock\_skew\_seconds} rather than assumed: of the configurations that
+set it the widest is 60\,s, so the 0.0\% above the 5-minute threshold is measured,
+not merely unobserved. The earlier draft's 42.2\% unbound-audience figure, over a
+102-configuration pilot, rises to 53.4\% on this larger and more representative
+corpus; the direction and the majority finding are unchanged.
+
+\noindent\textbf{Co-occurrence.} Weaknesses travel together. No-required-claims and
+no-algorithm-pinning co-occur in 80.9\% of configurations; unbound-audience with
+no-algorithm-pinning in 53.4\%; unbound-audience with no-required-claims in 43.8\%
+(lift $\approx$1.0, i.e. roughly independent rather than mutually reinforcing).
+
+\noindent\textbf{Static/runtime frontier.} Four of the five check types are
+conclusive from configuration alone; only algorithm pinning carries the
+library-default caveat. Of 1{,}312 weakness flags raised, 782 (60\%) are
+static-conclusive and 530 carry that caveat, quantifying how much of the contract a
+purely static reading can settle.
 
 \input{../common/fig-prevalence}
 
@@ -177,8 +212,8 @@ the full study.}
 \section{Limitations and threats to validity}\label{sec:limitations}
 \textbf{Static discovery sees configuration, not the running verifier;} where true
 behaviour diverges from config and library defaults, only live probing (out of
-scope here) would catch it. \textbf{Templating:} $\approx$17\% of corpus files are
-Helm-templated and $\approx$2\% carry kustomize/variable markers, so roughly one in
+scope here) would catch it. \textbf{Templating:} $\approx$13\% of corpus files are
+Helm-templated and $\approx$8\% carry kustomize/variable markers, so roughly one in
 five configurations is under-resolved without rendering. \textbf{Selection bias:}
 public configuration skews to samples, demos, and OSS and is not representative of
 private enterprise deployments; this must be stated, not hidden. \textbf{Proxy
@@ -207,15 +242,15 @@ targets API shape, not auth verification.
 in depth by a separate systematization.
 
 \section{A research agenda (vision)}\label{sec:vision}
-Beyond the present preliminary measurement, we see a program: (i) scale to a
-representative corpus and report prevalence with tight intervals and a
-hand-validated extractor; (ii) characterise \emph{drift} longitudinally: do auth
-contracts widen more than they narrow, and are widenings tied to reviewable
-events?; (iii) quantify the static-vs-runtime frontier: what fraction of
-weaknesses are decidable from configuration versus require probing; and
-(iv) extend the same instrument to the agent/MCP frontier. This paper contributes
-the method, the validated instrument, and the honest baseline that make the
-program tractable.
+Beyond the present measurement, we see a program: (i) push from the current
+2{,}718-repository corpus toward a fully representative one, with a hand-validated
+extractor and an explicit selection-bias analysis; (ii) characterise \emph{drift}
+longitudinally: do auth contracts widen more than they narrow, and are widenings
+tied to reviewable events?; (iii) deepen the static-vs-runtime frontier, which we
+begin to quantify here (60\% of flags static-conclusive), by pairing it with live
+probing for the rest; and (iv) extend the same instrument to the agent/MCP
+frontier. This paper contributes the method, the validated instrument, and the
+honest baseline that make the program tractable.
 
 \section{Conclusion}
 Authorization correctness is a property of what is running, not of what is written,

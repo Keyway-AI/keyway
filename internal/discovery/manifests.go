@@ -47,6 +47,9 @@ func walkDir(root string, fn func(path string, doc []byte) error) error {
 }
 
 func splitDocs(path string, fn func(path string, doc []byte) error) error {
+	// #nosec G304 -- path is a discovery root the caller configured (via WalkYAML)
+	// or a file enumerated beneath it; reading those config files is this tool's
+	// entire purpose, not attacker-controlled input.
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("discovery: open %s: %w", path, err)

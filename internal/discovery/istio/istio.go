@@ -177,7 +177,7 @@ func (d *Discoverer) assemble(scope discovery.Scope, ras []raWithLoc, aps []apWi
 	nsWideSource := map[string]string{}
 	nsAllClaims := map[string][]string{} // namespace -> claims (any AP)
 	nsAllSource := map[string]string{}
-	nsWideAud := map[string][]string{}   // namespace -> audiences (selector-less APs)
+	nsWideAud := map[string][]string{} // namespace -> audiences (selector-less APs)
 	nsWideAudSrc := map[string]string{}
 	nsAllAud := map[string][]string{} // namespace -> audiences (any AP)
 	nsAllAudSrc := map[string]string{}

@@ -97,6 +97,7 @@ var checks = []check{
 
 type record struct {
 	Source         string          `json:"source"`
+	Discoverer     string          `json:"discoverer"`
 	StableID       string          `json:"stable_id"`
 	Service        string          `json:"service"`
 	Issuers        []string        `json:"issuers"`
@@ -292,7 +293,7 @@ func main() {
 			}
 		}
 		records = append(records, record{
-			Source: provenanceSource(c), StableID: c.StableID, Service: c.Name,
+			Source: provenanceSource(c), Discoverer: discovererOf(c), StableID: c.StableID, Service: c.Name,
 			Issuers: c.Expects.Issuers, Audiences: c.Expects.Audiences,
 			Algorithms: c.Expects.Algorithms, RequiredClaims: c.Expects.RequiredClaims,
 			ClockSkewSec: c.Expects.ClockSkewSec, Flags: flags,
@@ -477,6 +478,22 @@ func wilson(k, n int) (lo, hi float64) {
 		hi = 1
 	}
 	return lo, hi
+}
+
+// discovererOf returns which source adapter produced the consumer (istio, envoy,
+// oidc, ...), taken from the provenance tag prefix (e.g. "istio:RequestAuthentication").
+func discovererOf(c model.Consumer) string {
+	for _, entries := range c.Provenance {
+		for _, e := range entries {
+			if e.Source != "" {
+				if i := strings.IndexByte(e.Source, ':'); i > 0 {
+					return e.Source[:i]
+				}
+				return e.Source
+			}
+		}
+	}
+	return "other"
 }
 
 func provenanceSource(c model.Consumer) string {

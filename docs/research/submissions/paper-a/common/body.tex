@@ -163,6 +163,29 @@ absences a stricter profile would forbid; P4 and P5 are reported for completenes
 These are the quantities Table~\ref{tab:prevalence} measures.
 
 \section{Deriving authorization contracts}\label{sec:method}
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[font=\footnotesize,
+  box/.style={draw,rounded corners,align=center,inner sep=4pt,
+              minimum height=8mm,text width=20mm}]
+\node[box] (a) at (0,0)    {Mesh/proxy\\config (GitHub)};
+\node[box] (b) at (3.2,0)  {Source\\discoverers};
+\node[box] (c) at (6.4,0)  {Authorization\\contract\\(per consumer)};
+\node[box] (d) at (9.6,0)  {Prevalence\\checks (P1--P5)};
+\node[box] (e) at (6.4,-1.5){Validation\\harness};
+\draw[->] (a)--(b) node[midway,above]{parse};
+\draw[->] (b)--(c) node[midway,above]{join};
+\draw[->] (c)--(d) node[midway,above]{flag};
+\draw[->] (c)--(e);
+\end{tikzpicture}
+\caption{Pipeline. Source-specific discoverers parse heterogeneous mesh and proxy
+configuration, the join (\S\ref{sec:method}) resolves the checks split across
+resources into one authorization contract per consumer, and the prevalence checks
+and the validation harness (\S\ref{sec:validation}) both read that contract.}
+\label{fig:pipeline}
+\end{figure*}
+
 We derive one contract per \emph{consumer} (\S\ref{sec:background}) from the
 configuration that governs it. Source-specific \emph{discoverers} parse each format
 (Istio \texttt{RequestAuthentication} and \texttt{AuthorizationPolicy}, Envoy
@@ -387,6 +410,57 @@ Pair & Both & Lift \\
 P2 $\wedge$ P3 (no claims, no algorithm)      & 80.9\% & 1.00 \\
 P1 $\wedge$ P3 (unbound aud., no algorithm)   & 53.4\% & 1.00 \\
 P1 $\wedge$ P2 (unbound aud., no claims)      & 43.8\% & 1.01 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{By source.} The two dominant sources differ
+(Table~\ref{tab:bysource}). Istio and Envoy consumers leave the audience unbound at
+similar rates (55.7\% vs 47.7\%) and pin no algorithm universally, but they diverge
+on required claims: every Envoy consumer appears to require none, against 73.2\% for
+Istio. We flag this gap honestly as partly a measurement artifact. Envoy commonly
+enforces claims in a separate RBAC filter that the \texttt{jwt\_authn} contract does
+not carry, so the Envoy P2 figure is an upper bound on missing-claim prevalence,
+whereas Istio's claim checks live in an AuthorizationPolicy we do resolve.
+
+\begin{table}[t]
+\centering\small
+\caption{Prevalence by source adapter over the 530 configurations. The Envoy P2
+figure is an upper bound: claims may be enforced in a separate RBAC filter we do not
+parse.}
+\label{tab:bysource}
+\begin{tabular}{@{}lrccccc@{}}
+\toprule
+Source & $n$ & P1 & P2 & P3 & P4 & P5 \\
+\midrule
+Istio & 377 & 55.7\% & 73.2\% & 100\% & 15.9\% & 0\% \\
+Envoy & 153 & 47.7\% & 100\%  & 100\% & 6.5\%  & 0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Sensitivity to cleaning.} Both cleaning steps, excluding examples
+and deduplication, \emph{lower} the estimates (Table~\ref{tab:sensitivity}): the raw
+corpus reports unbound audience at 68.5\% and no-required-claims at 85.0\%, and each
+step removes demonstrative or copy-pasted configurations that skew toward the very
+weaknesses we count. The reported figures, with both steps applied, are therefore
+the conservative end of the range, and the qualitative finding, a majority unbound
+audience and a large majority with no required claims, holds across all four
+combinations; P3 is 100\% throughout.
+
+\begin{table}[t]
+\centering\small
+\caption{Sensitivity of the headline prevalence to the two cleaning steps. Both
+lower the estimates, so the reported figures (first row) are conservative.}
+\label{tab:sensitivity}
+\begin{tabular}{@{}lrccc@{}}
+\toprule
+Cleaning applied & $N$ & P1 & P2 & P3 \\
+\midrule
+examples excluded + dedup (reported) & 530 & 53.4\% & 80.9\% & 100\% \\
+examples excluded only & 775 & 61.8\% & 83.6\% & 100\% \\
+dedup only & 647 & 54.1\% & 79.9\% & 100\% \\
+neither & 1{,}192 & 68.5\% & 85.0\% & 100\% \\
 \bottomrule
 \end{tabular}
 \end{table}

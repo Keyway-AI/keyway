@@ -1,0 +1,28 @@
+% SACMAT 2027 submission wrapper - Systematization of Knowledge (SoK) track.
+% Open in Overleaf with the ACM primary article template (acmart, sigconf).
+% CFP (confirmed 2026-10): ACM 'sigconf', double-blind (anonymized), SoK track up to
+%   12 pp excl. up to 2 pp bibliography/appendices. HotCRP https://sacmat27.hotcrp.com/
+%   (New SoK submission). Cycle 1 submit 2026-10-31 (07:59 EDT), notify 2026-12-21.
+% This is the expanded 12 pp SoK; the WAITI 6 pp version lives in common/body.tex.
+% Camera-ready authors: Archit Sharma, Garima Mann (Nometria Inc).
+\documentclass[sigconf,anonymous,review]{acmart}
+\settopmatter{printacmref=false}
+\setcopyright{none}
+\usepackage{booktabs}
+
+\title{SoK: Authorization for Autonomous Agents}
+
+\author{Anonymous Author(s)}
+\affiliation{\institution{Submitted for double-blind review}\country{}}
+
+\begin{document}
+% acmart requires the abstract before \maketitle; emit it here and tell the shared
+% body to skip its own copy.
+\input{abstract}
+\gdef\keywayabstractdone{}
+\maketitle
+\input{body}
+
+% \bibliographystyle{ACM-Reference-Format}
+\bibliography{../common/refs}
+\end{document}

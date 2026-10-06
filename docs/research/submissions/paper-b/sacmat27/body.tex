@@ -1,0 +1,348 @@
+% Shared body for Paper B: "SoK: Authorization for Autonomous Agents".
+% Class-agnostic: the per-venue main.tex sets class/title/authors and provides the
+% bibliography. IEEEtran/llncs place \begin{abstract} after \maketitle, which is how
+% the wrappers input this file. Unfinished empirical results are wrapped in \gate{}.
+\ifdefined\ifsubmission\else\expandafter\newif\csname ifsubmission\endcsname\submissiontrue\fi
+\providecommand{\gate}[1]{\ifsubmission #1\else \textbf{[PENDING: #1]}\fi}
+\providecommand{\draftonly}[1]{\ifsubmission\else \textbf{[NOTE: #1]}\fi}
+\providecommand{\yes}{\ensuremath{\surd}}
+\providecommand{\no}{\ensuremath{\times}}
+\emergencystretch=3em
+
+% Abstract in abstract.tex; acmart needs it before \maketitle (emitted by the wrapper),
+% so the body only emits it when the wrapper has not.
+\ifdefined\keywayabstractdone\else\input{abstract}\fi
+
+\section{Introduction}
+When an agent calls a tool or an MCP server on a user's behalf, a bearer token
+travels with the request. The failure modes are OAuth failure modes, but with
+sharper consequences, because the caller is autonomous and can be steered by
+untrusted input such as a retrieved document or a tool description~\cite{agentauth2023indirectpi}.
+A token not bound to the resource it is presented to can be replayed against, or
+forwarded through, a different server (a confused deputy); an on-behalf-of (OBO)
+token with no verifiable delegation chain makes accountability impossible; an
+omnibus scope such as \texttt{admin:*} hands an injected agent the keys to
+everything; and a non-expiring credential never stops being useful to whoever
+obtains it.
+
+A large and fast-moving body of research now studies agent and MCP security. As our
+survey (\S\ref{sec:related}) shows, it is dense on \emph{model-level} attacks
+(prompt-injection-driven escalation and tool poisoning) and it proposes many
+\emph{individual} defense mechanisms (privilege controllers, delegation protocols,
+identity architectures). What it does not do is systematize the \emph{authorization}
+layer itself: no surveyed work sorts agent-authorization threats by whether a
+defender can test them before deployment, maps each threat to the specific normative
+clause it violates, or names the line between what can be enforced statically at the
+trust boundary and what can only be enforced at runtime. The two authorization
+properties that matter most for token safety, audience binding and the
+confused-deputy / dynamic-client-registration pair, are treated across 44 works
+as specification obligations to cite rather than as properties to verify
+(\S\ref{sec:related}).
+
+\noindent\textbf{Contributions.}
+(i) We give a source-grounded threat model of fifteen agent-authorization threats in
+six categories, each with its broken invariant, the conditions under which it is
+exploitable, a mitigation, and its normative source (\S\ref{sec:background},
+\S\ref{sec:tax}).
+(ii) We systematize this space along three axes no prior work combines: testability,
+normative provenance, and the static/runtime enforcement line (\S\ref{sec:syst}).
+(iii) We survey 44 research works on agent authorization and make the coverage gap
+precise: audience binding and confused-deputy are the under-formalized seam
+(\S\ref{sec:related}).
+(iv) We argue which authorization properties a standard or a pre-deployment tool
+could mandate, and release an open-source analyzer for the statically decidable
+subset (\S\ref{sec:syst}).
+
+\section{Background}\label{sec:background}
+\noindent\textbf{Tokens and claims.} An OAuth~2.0 access token authorizes a client to
+call a resource on a user's behalf; in agent deployments it is usually a JSON Web
+Token (JWT), a signed set of claims. The claims that govern authorization are the
+issuer (\texttt{iss}), the intended audience (\texttt{aud}, the resource the token is
+\emph{for}), the granted \texttt{scope}, the expiry (\texttt{exp}), and, for
+delegation, the authorized party (\texttt{azp}, naming the client) and the actor
+(\texttt{act}, naming who is acting). A verifier must check the signature against the
+issuer's keys, that \texttt{aud} names itself, that the algorithm is on an
+allow-list, and that required claims hold (RFC~8725). RFC~9068 profiles JWT access
+tokens and makes audience and issuer validation mandatory for that profile; RFC~8707
+(resource indicators) lets a client request a token bound to a specific resource.
+
+\noindent\textbf{Delegation and the \texttt{act}/\texttt{azp} claims.} OAuth token
+exchange (RFC~8693) issues a delegated token carrying an \texttt{act} claim that
+names the acting party and a \texttt{may\_act} claim stating who is \emph{permitted}
+to act for the subject. A single \texttt{act} claim records one hop; a chain
+(user~$\rightarrow$~agent~$\rightarrow$~sub-agent) requires \emph{nested}
+\texttt{act} claims, and transitive delegation is only verifiable if each exchange
+enforces \texttt{may\_act} and the verifier walks the full nested chain. \texttt{azp}
+names the client that obtained the token but does not by itself establish a
+delegation chain: it identifies the immediate party, not the sequence of
+authorizations behind it. This is why \texttt{azp}/\texttt{act} alone are necessary
+but not sufficient: without enforced \texttt{may\_act} and nested-chain validation,
+``who authorized this?'' remains unanswerable across more than one hop.
+
+\noindent\textbf{MCP, identity, and the confused deputy.} The Model Context Protocol
+standardizes how an agent discovers and calls tools; its authorization specification
+inherits OAuth and \emph{prohibits} passing a client's token through to an upstream
+API. Dynamic client registration (DCR, RFC~7591) lets clients register at runtime,
+which an MCP proxy may expose. Workload-identity substrates (WIMSE; SPIFFE/SPIRE)
+would give each agent instance a verifiable, short-lived identity distinct from the
+human's, but are rarely deployed. The confused-deputy problem (CWE-441), where a more
+privileged party misuses its authority on behalf of a less privileged one, is the
+classical frame for token passthrough and consent-flow abuse.
+
+\section{A threat model for agent authorization}\label{sec:tax}
+We organize the space into six categories. Table~\ref{tab:tax} lists fifteen threats
+with the invariant that must hold, a one-line mitigation, and whether a single-token
+or server-manifest check can decide the threat before deployment. We then give, per
+category, the exploit condition and the defense.
+
+\begin{table*}[t]
+\centering\footnotesize
+\caption{Agent-authorization threats by category, with the invariant that must hold,
+a mitigation, the normative source, and whether the threat is \emph{statically}
+decidable from a single token or server manifest before deployment (\yes) or is
+irreducibly runtime (\no). Sev.: severity.}
+\label{tab:tax}
+\begin{tabular}{@{}llp{4.1cm}p{4.3cm}lc@{}}
+\toprule
+ID & Sev. & Broken invariant (exploit) & Mitigation & Source & Static \\
+\midrule
+\multicolumn{6}{@{}l}{\emph{Audience binding}}\\
+MCP-01 & crit & token accepted with wrong/any audience (passthrough, replay) & verify \texttt{aud} names this resource; reject forwarded tokens & RFC 8707/9728; MCP~\cite{rfc8707,rfc9728,mcpauth} & \yes \\
+MCP-02 & high & token carries no resource indicator (unbound audience) & request resource-bound tokens; require \texttt{aud} & RFC 8707~\cite{rfc8707} & \yes \\
+\multicolumn{6}{@{}l}{\emph{Delegation}}\\
+DEL-01 & high & missing or forged \texttt{act} claim (no accountable actor) & require a signed \texttt{act} claim on OBO tokens & RFC 8693~\cite{rfc8693} & \yes \\
+DEL-02 & high & unverifiable nested delegation chain (transitive-trust abuse) & validate the full nested \texttt{act} chain & RFC 8693~\cite{rfc8693} & \yes \\
+DEL-03 & high & \texttt{may\_act} not enforced on exchange & enforce \texttt{may\_act} at the token endpoint & RFC 8693~\cite{rfc8693} & \no \\
+DEL-04 & med  & impersonation where delegation was required & issue delegated (not impersonated) tokens & RFC 8693~\cite{rfc8693} & \no \\
+\multicolumn{6}{@{}l}{\emph{Scope}}\\
+SCOPE-01 & high & over-scoped agent credential (\texttt{admin:*}) & least-privilege scopes per task & RFC 9700; OWASP~\cite{rfc9700,owaspagentic} & \yes \\
+SCOPE-02 & high & non-expiring / long-lived token & short \texttt{exp}; rotation & RFC 8725~\cite{rfc8725} & \yes \\
+SCOPE-03 & high & agent reuses the human's root credential & distinct agent credential & OWASP~\cite{owaspagentic} & \no \\
+\multicolumn{6}{@{}l}{\emph{Agent identity}}\\
+AID-01 & high & session used as authentication & bind to a verifiable workload identity & WIMSE/SPIFFE~\cite{wimse,spiffe} & \no \\
+AID-02 & med  & no distinct workload/agent identity & issue per-agent SVID/credential & WIMSE/SPIFFE~\cite{wimse,spiffe} & \no \\
+\multicolumn{6}{@{}l}{\emph{Confused deputy}}\\
+CD-01 & crit & proxy acts on a client's behalf without per-client consent & per-client consent; exact \texttt{redirect\_uri} match & CWE-441; MCP~\cite{cwe441,mcpauth} & \no \\
+CD-02 & high & dynamic client registration abuse & vet/limit DCR; bind registrations & RFC 7591~\cite{rfc7591} & \no \\
+\multicolumn{6}{@{}l}{\emph{Agency}}\\
+AGT-01 & crit & prompt-injection-driven privilege escalation & per-action authorization; human-in-loop & OWASP~\cite{owaspllm,owaspagentic} & \no \\
+AGT-02 & high & tool poisoning / rug-pull via tool metadata & vet tool descriptions; pin versions & OWASP~\cite{owaspagentic} & \no \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\noindent\textbf{Audience binding (MCP-01/02).} \emph{Exploit:} if a verifier accepts
+a token whose \texttt{aud} does not name it, or a client forwards its token to an
+upstream API, an attacker who obtains a token for one server replays or passes it
+through to another~\cite{agentauth2025agenticjwt,agentauth2026breakingprotocol}.
+\emph{Defense:} bind tokens to a resource (RFC~8707) and verify \texttt{aud}; the MCP
+specification prohibits passthrough. Both are decidable from the token and the
+server's declared identity.
+
+\noindent\textbf{Delegation (DEL-01..04).} \emph{Exploit:} without a verifiable
+\texttt{act} chain an agent's action cannot be attributed to the user who authorized
+it, and a sub-agent can exceed what was delegated~\cite{agentauth2026boundedagents,agentauth2026aidguard}.
+\emph{Defense:} carry and validate a nested \texttt{act} chain (static, DEL-01/02);
+enforce \texttt{may\_act} on exchange and issue delegated rather than impersonated
+tokens (runtime, DEL-03/04)~\cite{rfc8693,agentauth2025agenticjwt,agentauth2026aip}.
+
+\noindent\textbf{Scope (SCOPE-01..03).} \emph{Exploit:} an over-broad or
+non-expiring credential, or reuse of the human's credential, gives an injected agent
+durable, excessive authority~\cite{agentauth2025privmgmtmcp,agentauth2025progent}.
+\emph{Defense:} least-privilege, expiring, agent-specific credentials. The scope and
+expiry a token \emph{carries} are statically checkable (SCOPE-01/02); whether the
+agent reuses the human's credential is a runtime property (SCOPE-03).
+
+\noindent\textbf{Agent identity (AID-01/02).} \emph{Exploit:} treating a session as
+authentication, or giving the agent no distinct identity, makes revocation and
+attribution impossible~\cite{agentauth2026aiidentity,agentauth2025saga}.
+\emph{Defense:} a verifiable workload identity per agent (WIMSE, SPIFFE/SPIRE)~\cite{wimse,spiffe,agentauth2026ehv};
+runtime, because it needs a deployed identity substrate.
+
+\noindent\textbf{Confused deputy (CD-01/02).} \emph{Exploit:} an OAuth proxy that
+reuses consent across clients, or an abused dynamic registration, lets one party act
+with another's authority~\cite{agentauth2026breakingprotocol,agentauth2025gluecode}.
+\emph{Defense:} per-client consent, exact \texttt{redirect\_uri} matching, and vetted
+registration, which are properties of a live consent flow and therefore runtime.
+
+\noindent\textbf{Agency (AGT-01/02).} \emph{Exploit:} injected input drives the agent
+to escalate privilege or call a poisoned tool~\cite{agentauth2023indirectpi,agentauth2025mcptox,agentauth2026unicodetag}.
+\emph{Defense:} per-action authorization or a human in the loop, and vetted tool
+descriptions~\cite{agentauth2025progent,agentauth2026trustdesc}; runtime, because the
+decision depends on the executing context.
+
+\section{Systematizing the space}\label{sec:syst}
+Our systematization rests on three axes that, together, no prior work applies to
+agent authorization (\S\ref{sec:related}).
+
+\noindent\textbf{(1) Pre-deployment testability.} A threat is \emph{statically
+decidable} when a defender can reproduce it from a single token, the issuer's key
+set, and the server's declared tool contract, \emph{without running the agent}. By
+this criterion six of the fifteen threats are statically decidable: audience binding
+(MCP-01/02), the \texttt{act}-chain delegation checks (DEL-01/02), and scope and
+expiry (SCOPE-01/02). Each is a property of claims a token carries or of a server's
+declared identity, so a defender can mint the adversarial token an attacker would and
+confirm the verifier rejects it, as a check that runs on every build. The remaining
+nine depend on a live consent flow (CD-01/02), server-side enforcement or a
+human-in-the-loop (DEL-03/04, SCOPE-03, AGT-01/02), or a deployed workload-identity
+substrate (AID-01/02), and cannot be settled from a token.
+
+\noindent\textbf{(2) Normative provenance.} Each threat maps to the clause it
+violates: audience binding to RFC~8707 and the MCP passthrough prohibition;
+delegation to RFC~8693; scope and expiry to RFC~9700 and RFC~8725; registration to
+RFC~7591; confused deputy to CWE-441; agency to the OWASP LLM and Agentic
+Top-10s~\cite{owaspllm,owaspagentic}. This lets a practitioner trace a defense to the
+authority that mandates it, a mapping the surveyed literature does not provide.
+
+\noindent\textbf{(3) The static/runtime enforcement line.} The defenses in the
+literature scatter across a line they never name: \emph{static} enforcement at the
+trust boundary (control/data-flow extraction~\cite{agentauth2025camel}, capability
+attestation, contract checks on tokens and key sets) versus \emph{runtime}
+enforcement during execution (monotonic privilege confinement~\cite{agentauth2025progent},
+pre-action authorization~\cite{agentauth2026preaction}, mandatory access
+control~\cite{agentauth2026mac}, out-of-band policy~\cite{agentauth2026angels}).
+Drawing the line explicitly reframes several ``runtime-only'' defenses as
+compensating controls for threats a pre-deployment contract check could have
+excluded: if audience binding and scope are verified statically, a runtime
+controller has strictly less to contain.
+
+\noindent\textbf{An instrument for the static subset.} We release an open-source
+analyzer that decodes a presented token and reports cited findings for the six
+statically decidable threats (audience binding, \texttt{act}-chain delegation,
+scope, and expiry) against a policy. It is stateless, makes no network calls, and
+runs in CI or beside the agent, so a team red-teams its own authorization before
+shipping. The taxonomy names the other nine as out of static scope, which is itself
+the result: it says what a pre-deployment tool, or a tightened standard, can and
+cannot be expected to guarantee.
+
+\section{Related work}\label{sec:related}
+We surveyed 44 research works on authorization, delegation, identity, and token
+security for agents and MCP (2023--2026); all arXiv identifiers were verified to
+exist. They divide into \emph{threat taxonomies} and \emph{point mechanisms}, and
+neither systematizes authorization by our three axes.
+
+\noindent\textbf{Taxonomies and surveys.} MCP security surveys and SoKs organize by
+attacker type, lifecycle phase, defense placement, or ecosystem
+component~\cite{agentauth2025mcplandscape,agentauth2025sokmcp,agentauth2026mcp38,agentauth2026mcpdpt,agentauth2026sokmultiagent};
+protocol-level analyses dissect the MCP specification and its trust
+assumptions~\cite{agentauth2026breakingprotocol,agentauth2026mcpdesign}. These name
+confused-deputy and passthrough as risks but do not sort threats by testability or
+bind them to normative clauses.
+
+\noindent\textbf{Point mechanisms.} Delegation protocols bind actions to user intent
+and bound sub-agent authority~\cite{agentauth2025agenticjwt,agentauth2026aip,agentauth2026boundedagents,agentauth2026aidguard,agentauth2026sudp};
+privilege and access-control frameworks enforce least privilege and confinement at
+runtime~\cite{agentauth2025progent,agentauth2026preaction,agentauth2026mac,agentauth2024isolategpt,agentauth2025saga};
+identity work applies WIMSE/SPIFFE to agents~\cite{agentauth2026aiidentity,agentauth2026ehv,agentauth2026ldp};
+and by-design and detection defenses target prompt injection and tool
+poisoning~\cite{agentauth2025camel,agentauth2024agentdojo,agentauth2025mcptox,agentauth2026trustdesc,agentauth2026noboxmcp}.
+Each is a single point on the static/runtime line; none draws the line.
+
+\noindent\textbf{The coverage gap.} Scoring every work on seven threat categories
+(Table~\ref{tab:matrix}) makes the gap visible: two columns are thin. Audience
+binding is a central contribution in essentially one research
+work (Agentic JWT~\cite{agentauth2025agenticjwt}) plus one enterprise
+framework~\cite{agentauth2025enterprisemcp}, and confused-deputy / registration
+appears only as a named taxonomy entry, almost never as a verified or enforced
+property. Prompt injection and tool poisoning, by contrast, are densely covered. The
+field has thoroughly characterized the model-level attacks and under-formalized the
+token- and consent-level authorization guarantees, the seam this SoK occupies.
+
+\begin{table*}[t]
+\centering\footnotesize
+\caption{Coverage of the seven agent-authorization threat categories across
+representative works. \yes: a central contribution; $\circ$: partially addressed;
+blank: not addressed. AudBind, audience binding and passthrough; OBO, on-behalf-of
+delegation; Scope, scope minimization; ConfDep, confused deputy and dynamic
+registration; WID, workload/agent identity; PI, prompt-injection escalation; Tool,
+tool poisoning. Two columns, AudBind and ConfDep, are thin.}
+\label{tab:matrix}
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+Work & AudBind & OBO & Scope & ConfDep & WID & PI & Tool \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Taxonomies and surveys}}\\
+MCP Landscape~\cite{agentauth2025mcplandscape}      & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & \yes & \yes \\
+SoK MCP~\cite{agentauth2025sokmcp}                  & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & \yes & \yes \\
+MCP-38~\cite{agentauth2026mcp38}                    & $\circ$ & $\circ$ & $\circ$ & \yes    & $\circ$ & \yes & \yes \\
+Enterprise MCP~\cite{agentauth2025enterprisemcp}    & \yes    & \yes    & \yes    & \yes    & $\circ$ & \yes & \yes \\
+Breaking the Protocol~\cite{agentauth2026breakingprotocol} & $\circ$ & & & $\circ$ & $\circ$ & \yes & \yes \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Delegation and identity mechanisms}}\\
+Agentic JWT~\cite{agentauth2025agenticjwt}          & \yes    & \yes    & \yes    & $\circ$ & \yes    & $\circ$ & \\
+AIP~\cite{agentauth2026aip}                         & $\circ$ & \yes    & $\circ$ & $\circ$ & \yes    & & \\
+Bounded Agents~\cite{agentauth2026boundedagents}    & $\circ$ & \yes    & \yes    & $\circ$ & $\circ$ & $\circ$ & \\
+AID-Guard~\cite{agentauth2026aidguard}              & $\circ$ & \yes    & \yes    & $\circ$ & $\circ$ & $\circ$ & \\
+SAGA~\cite{agentauth2025saga}                       & $\circ$ & \yes    & \yes    & $\circ$ & \yes    & $\circ$ & \\
+AI Identity~\cite{agentauth2026aiidentity}          & $\circ$ & \yes    & $\circ$ & $\circ$ & \yes    & & \\
+aiAuthZ~\cite{agentauth2026aiauthz}                 & \yes    & $\circ$ & $\circ$ & $\circ$ & \yes    & & \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Privilege / runtime control}}\\
+Progent~\cite{agentauth2025progent}                 & & & \yes & & & \yes & $\circ$ \\
+Pre-Action Authz~\cite{agentauth2026preaction}      & $\circ$ & $\circ$ & \yes & $\circ$ & $\circ$ & \yes & \\
+MAC framework~\cite{agentauth2026mac}               & & $\circ$ & \yes & $\circ$ & & \yes & $\circ$ \\
+IsolateGPT~\cite{agentauth2024isolategpt}           & & & \yes & $\circ$ & $\circ$ & \yes & $\circ$ \\
+If Agents Were Angels~\cite{agentauth2026angels}    & $\circ$ & $\circ$ & \yes & $\circ$ & $\circ$ & \yes & $\circ$ \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Model-level attacks and defenses}}\\
+Indirect PI~\cite{agentauth2023indirectpi}          & & & & & & \yes & $\circ$ \\
+CaMeL~\cite{agentauth2025camel}                     & & & \yes & $\circ$ & & \yes & $\circ$ \\
+MCPTox~\cite{agentauth2025mcptox}                   & & & $\circ$ & & & \yes & \yes \\
+No-Box MCP~\cite{agentauth2026noboxmcp}             & & & & & & \yes & \yes \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{Discussion: what a standard could mandate}\label{sec:disc}
+The testability axis has a direct standardization reading. The six statically
+decidable threats are exactly the ones a profile could make mandatory-to-verify and a
+conformance test could check: an MCP or OAuth profile that \emph{requires} resource
+indicators (RFC~8707), rejects passthrough, mandates nested \texttt{act} validation,
+and caps scope and lifetime would move these threats from ``deployer's
+responsibility, usually missed'' to ``checked at the boundary.'' The nine runtime
+threats cannot be closed by a static profile and instead mark where the ecosystem
+still needs deployed consent, delegation enforcement, and workload identity.
+
+\section{Threats to validity}
+The MCP specification is fast-moving; this systematization is a dated snapshot. The
+static/runtime line depends on token and manifest availability; a deployment that
+hides relevant state reduces what any static check can conclude. Our survey covers
+research indexed by 2026-10; most agent-authorization work is recent and not yet
+peer-reviewed, which we mark. \gate{A prevalence measurement of the statically
+checkable weaknesses across public MCP deployments is future work, with a
+hand-validated sample and coordinated disclosure.}
+
+\section*{Ethics considerations}
+The systematization uses only public specifications, advisories, and CVEs. The
+accompanying analyzer runs on tokens the operator already holds and sends nothing
+anywhere; we probe no third-party agents or servers and use no real user tokens. Any
+future measurement will characterize population prevalence, not single deployments,
+and will follow coordinated disclosure for identifiable high-severity findings. No
+personal data or human subjects are involved.
+
+\section*{Open science}
+We release the static analyzer and a machine-readable threat taxonomy (each threat
+with its invariant and normative sources) under an open licence, so the
+systematization is inspectable and the statically checkable subset is reproducible.
+\gate{A DOI-pinned artifact will accompany the camera-ready version.}
+
+\section{Conclusion}
+Agent authorization is a high-stakes surface the research literature has studied
+around rather than through. We systematize it by pre-deployment testability, by
+normative provenance, and by the static-versus-runtime enforcement line; we show that
+six of fifteen threats are contract-verifiable before an agent runs and nine are
+irreducibly runtime; and we argue this line should guide what a pre-deployment tool
+checks and what a standard makes mandatory to verify.
+
+\section*{LLM Usage Statement}
+LLMs were used for editorial purposes in this manuscript, and all outputs were
+inspected by the authors to ensure accuracy and originality. An LLM-assisted process
+additionally supported the literature survey of \S\ref{sec:related}: candidate works
+were gathered with model assistance and each was then verified by the authors to
+exist, with titles and author lists confirmed against the arXiv API on 2026-10-06;
+works that could not be verified were excluded, and one paper that its own authors had
+formally withdrawn was identified this way and removed. The authors are responsible
+for the selection of works, the coverage judgments in the systematization, and every
+claim in the paper. One reproducibility limitation applies: the assisting models are
+not openly available, so the survey's search recall cannot be reproduced exactly,
+although every cited work is independently verifiable by its arXiv identifier.

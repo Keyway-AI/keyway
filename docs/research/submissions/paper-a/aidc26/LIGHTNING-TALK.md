@@ -32,30 +32,31 @@ reaches. The talk leads with that, not with web auth in general.
 
 ---
 
-## Title
+## Title  *(revised 2026-10-06 for the expanded paper; small change from the first submission)*
 
-**Where Agent Tokens Land: Measuring Authorization Configuration in the Wild**
+**Where Agent Tokens Land: Measuring JWT Authorization Contracts at Scale**
 
-## Abstract  *(paste into the form, 193 words)*
+## Abstract  *(paste into the form, 196 words)*
 
 An autonomous agent calls tools and MCP servers with a bearer token, and whether that
 token is accepted is decided by configuration, not code: which issuers a service
-trusts, which audience it binds to, which algorithm it allows, and which claims it
-requires. Those settings are scattered across service meshes, proxies, and identity
-providers, and rarely written in one place. When an attacker steers an agent through
-untrusted input, these are the settings that decide how far the agent's token reaches.
+trusts, which audience it binds, which algorithm it allows, and which claims it
+requires. These checks are spread across service meshes and proxies and rarely
+written in one place, so when an attacker steers an agent through untrusted input,
+they decide how far the agent's token reaches.
 
-We derived this configuration from 2,718 public repositories and measured it across
-530 distinct JWT-validating services. The results are stark. No service pinned a
-signing algorithm in configuration, leaving it to a library default. 80.9% required
-no claim beyond issuer and audience. 53.4% left the token audience unbound, so a token
-minted for one service can be replayed against another, which is agent token
-passthrough at population scale.
+We derived this authorization contract from 2,718 public repositories and measured it
+across 530 JWT-validating services. No service pins a signing algorithm in
+configuration. Four in five require no claim beyond issuer and audience. A majority
+bind no audience, so a token minted for one service is, as declared, accepted at
+another, which is token passthrough at population scale. These figures are
+conservative: removing examples and duplicates lowers them, and the finding holds
+across every cleaning choice.
 
-This talk walks the method and the numbers, with Wilson confidence intervals and an
-honest account of what configuration reveals and what only a live runtime can.
-Takeaway: the layer that governs an agent's authority is measurable today, and most
-of it is wide open.
+This talk walks the method, the numbers with confidence intervals, and the line
+between what configuration reveals and what only a live runtime can. Takeaway: the
+layer that governs an agent's authority is measurable today, and most of it is wide
+open.
 
 ---
 

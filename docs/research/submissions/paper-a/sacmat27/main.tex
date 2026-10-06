@@ -1,0 +1,32 @@
+% SACMAT 2027 submission wrapper (ACM Symposium on Access Control Models and
+% Technologies) — Main Research Track. Open in Overleaf with the ACM primary
+% article template (acmart, sigconf).
+% CFP (confirmed 2026-10): ACM 'sigconf', double-blind (anonymized), Main Research
+%   Track <=10 pp body excl. up to 2 pp bibliography/appendices. HotCRP
+%   https://sacmat27.hotcrp.com/ . Cycle 1 submit 2026-10-30, notify 2026-12-21.
+% Camera-ready authors: Archit Sharma, Garima Mann (Nometria Inc).
+\documentclass[sigconf,anonymous,review]{acmart}
+\usepackage{pgfplots}\pgfplotsset{compat=1.18}
+\settopmatter{printacmref=false}
+\setcopyright{none}
+\usepackage{booktabs}
+
+\title{Authorization Contracts in the Wild: Measuring JWT Verification
+Configuration at Scale}
+
+% anonymous class option hides authors for review. Camera-ready:
+%   Archit Sharma, Garima Mann (Nometria Inc).
+\author{Anonymous Author(s)}
+\affiliation{\institution{Submitted for double-blind review}\country{}}
+
+\begin{document}
+% acmart requires the abstract before \maketitle; emit it here and tell the shared
+% body to skip its own copy.
+\input{../common/abstract}
+\gdef\keywayabstractdone{}
+\maketitle
+\input{../common/body}
+
+% \bibliographystyle{ACM-Reference-Format}
+\bibliography{../common/refs}
+\end{document}

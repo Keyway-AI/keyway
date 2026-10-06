@@ -73,7 +73,7 @@ is reproducible from public sources (\S\ref{sec:artifact}).
 \section{Background}\label{sec:background}
 
 \noindent\textbf{JWT verification.} A JSON Web Token is a signed statement of
-claims: a header naming the signing algorithm, a payload of claims (notably
+claims: a header naming the signing algorithm, a payload of claims (including
 \texttt{iss}, the issuer; \texttt{aud}, the intended audience; \texttt{exp}, the
 expiry), and a signature. To accept a token, a verifier must (1) fetch the issuer's
 public keys, in practice from a JSON Web Key Set (JWKS) endpoint, and verify the
@@ -139,8 +139,8 @@ separate layer we do not measure.
 \section{Deriving authorization contracts}\label{sec:method}
 We derive one contract per \emph{consumer} (\S\ref{sec:background}) from the
 configuration that governs it. Source-specific \emph{discoverers} parse each format
--- Istio \texttt{RequestAuthentication} and \texttt{AuthorizationPolicy}, Envoy
-\texttt{jwt\_authn}, and OIDC/Keycloak registries -- into a common contract of
+(Istio \texttt{RequestAuthentication} and \texttt{AuthorizationPolicy}, Envoy
+\texttt{jwt\_authn}, and OIDC/Keycloak registries) into a common contract of
 issuers, audiences, algorithms, required claims, and JWKS behaviour.
 
 Deriving a contract is not a one-resource read, because the checks are split across
@@ -155,8 +155,8 @@ that consumer (the common edge-gateway pattern). The same join resolves audience
 declared in an \texttt{AuthorizationPolicy} condition on
 \texttt{request.auth.audiences} rather than in the \texttt{RequestAuthentication}.
 
-Every extracted field records \emph{provenance} -- the source kind, the file
-locator, and a confidence -- so each measurement is attributable to a line of
+Every extracted field records \emph{provenance}: the source kind, the file
+locator, and a confidence. Each measurement is therefore attributable to a line of
 configuration and a human can check it (we use this in \S\ref{sec:validation}).
 A library-defaults database records what a verifier does when configuration is
 silent, kept separate from what configuration states so the two are never conflated.
@@ -182,9 +182,9 @@ push the corpus further toward $10^4$ services, add OIDC/MCP sources, and report
 selection-bias analysis against the public-configuration population.}
 
 \section{Validation methodology}\label{sec:validation}
-Measurement is only as good as the extractor. We validate discovery three ways --
-for recall, for precision, and for over-attribution -- and are explicit about what
-each can and cannot establish.
+Measurement is only as good as the extractor. We validate discovery three ways, for
+recall, for precision, and for over-attribution, and are explicit about what each
+can and cannot establish.
 
 \noindent\textbf{Recall (kind-aware independent parse).} An independent YAML parse
 of each repository yields the declared issuers/audiences/claims; we compare to what
@@ -224,8 +224,8 @@ development.
 
 \noindent\textbf{Gold standard.} All three above are automated or model-assisted
 proxies. For a population-level ground truth we draw a stratified random sample of
-401 \mbox{(repo, field, value)} rows across the corpus -- powered for a $\pm$1.8\%
-precision and $\pm$2.4\% recall confidence interval -- and have each adjudicated by
+401 \mbox{(repo, field, value)} rows across the corpus, powered for a $\pm$1.8\%
+precision and $\pm$2.4\% recall confidence interval, and have each adjudicated by
 hand as real, correctly attributed, or spurious; a model drafts a first-pass label
 that the human confirms or corrects, and a blind subset gives an un-anchored
 inter-annotator agreement (Cohen's $\kappa$). \gate{We report the hand-validated

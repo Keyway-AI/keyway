@@ -11,7 +11,7 @@
 
 \begin{abstract}
 An autonomous agent calls tools and Model Context Protocol (MCP) servers while
-carrying a bearer token -- an OAuth~2.0 access token or an MCP authorization token --
+carrying a bearer token (an OAuth~2.0 access token or an MCP authorization token)
 on each request. Because the agent is driven by untrusted input, its authorization
 layer is part of the attack surface: a token not bound to the server it is sent to
 can be replayed or passed through, an over-broad scope hands an injected agent far
@@ -20,12 +20,12 @@ chain leaves ``who authorized this?'' unanswerable. A fast-growing research
 literature studies agent security, but it concentrates on model-level attacks
 (prompt injection, tool poisoning) and proposes individual mechanisms; it does not
 systematize the authorization layer. We survey 44 research works and show that two
-authorization properties -- audience binding and confused-deputy / dynamic client
-registration -- are treated as mere specification obligations rather than as
+authorization properties, audience binding and confused-deputy / dynamic client
+registration, are treated as mere specification obligations rather than as
 properties anyone tests or enforces. We then systematize agent authorization along
-three axes no prior work combines: (i) by \emph{pre-deployment testability} -- which
-threats are decidable from a token, a key set, and a declared tool contract before
-the agent runs; (ii) by \emph{normative provenance} -- a threat-to-clause mapping to
+three axes no prior work combines: (i) by \emph{pre-deployment testability}, meaning
+which threats are decidable from a token, a key set, and a declared tool contract
+before the agent runs; (ii) by \emph{normative provenance}, a threat-to-clause mapping to
 the OAuth RFCs, the MCP authorization specification, OWASP, and CWE; and (iii) by the
 \emph{static-versus-runtime enforcement line}. Across fifteen threats in six
 categories, we find six are statically contract-verifiable and nine are irreducibly
@@ -46,16 +46,16 @@ everything; and a non-expiring credential never stops being useful to whoever
 obtains it.
 
 A large and fast-moving body of research now studies agent and MCP security. As our
-survey (\S\ref{sec:related}) shows, it is dense on \emph{model-level} attacks --
-prompt-injection-driven escalation and tool poisoning -- and it proposes many
+survey (\S\ref{sec:related}) shows, it is dense on \emph{model-level} attacks
+(prompt-injection-driven escalation and tool poisoning) and it proposes many
 \emph{individual} defense mechanisms (privilege controllers, delegation protocols,
 identity architectures). What it does not do is systematize the \emph{authorization}
 layer itself: no surveyed work sorts agent-authorization threats by whether a
 defender can test them before deployment, maps each threat to the specific normative
 clause it violates, or names the line between what can be enforced statically at the
-trust boundary and what can only be enforced at runtime. Two authorization
-properties that matter most for token safety -- audience binding and the
-confused-deputy / dynamic-client-registration pair -- are, across 44 works, treated
+trust boundary and what can only be enforced at runtime. The two authorization
+properties that matter most for token safety, audience binding and the
+confused-deputy / dynamic-client-registration pair, are treated across 44 works
 as specification obligations to cite rather than as properties to verify
 (\S\ref{sec:related}).
 
@@ -64,7 +64,7 @@ as specification obligations to cite rather than as properties to verify
 six categories, each with its broken invariant, the conditions under which it is
 exploitable, a mitigation, and its normative source (\S\ref{sec:background},
 \S\ref{sec:tax}).
-(ii) We systematize this space along three axes no prior work combines -- testability,
+(ii) We systematize this space along three axes no prior work combines: testability,
 normative provenance, and the static/runtime enforcement line (\S\ref{sec:syst}).
 (iii) We survey 44 research works on agent authorization and make the coverage gap
 precise: audience binding and confused-deputy are the under-formalized seam
@@ -78,8 +78,8 @@ subset (\S\ref{sec:syst}).
 call a resource on a user's behalf; in agent deployments it is usually a JSON Web
 Token (JWT), a signed set of claims. The claims that govern authorization are the
 issuer (\texttt{iss}), the intended audience (\texttt{aud}, the resource the token is
-\emph{for}), the granted \texttt{scope}, the expiry (\texttt{exp}), and -- for
-delegation -- the authorized party (\texttt{azp}, naming the client) and the actor
+\emph{for}), the granted \texttt{scope}, the expiry (\texttt{exp}), and, for
+delegation, the authorized party (\texttt{azp}, naming the client) and the actor
 (\texttt{act}, naming who is acting). A verifier must check the signature against the
 issuer's keys, that \texttt{aud} names itself, that the algorithm is on an
 allow-list, and that required claims hold (RFC~8725). RFC~9068 profiles JWT access
@@ -96,7 +96,7 @@ enforces \texttt{may\_act} and the verifier walks the full nested chain. \texttt
 names the client that obtained the token but does not by itself establish a
 delegation chain: it identifies the immediate party, not the sequence of
 authorizations behind it. This is why \texttt{azp}/\texttt{act} alone are necessary
-but not sufficient -- without enforced \texttt{may\_act} and nested-chain validation,
+but not sufficient: without enforced \texttt{may\_act} and nested-chain validation,
 ``who authorized this?'' remains unanswerable across more than one hop.
 
 \noindent\textbf{MCP, identity, and the confused deputy.} The Model Context Protocol
@@ -105,8 +105,8 @@ inherits OAuth and \emph{prohibits} passing a client's token through to an upstr
 API. Dynamic client registration (DCR, RFC~7591) lets clients register at runtime,
 which an MCP proxy may expose. Workload-identity substrates (WIMSE; SPIFFE/SPIRE)
 would give each agent instance a verifiable, short-lived identity distinct from the
-human's, but are rarely deployed. The confused-deputy problem (CWE-441) -- a more
-privileged party misusing its authority on behalf of a less privileged one -- is the
+human's, but are rarely deployed. The confused-deputy problem (CWE-441), where a more
+privileged party misuses its authority on behalf of a less privileged one, is the
 classical frame for token passthrough and consent-flow abuse.
 
 \section{A threat model for agent authorization}\label{sec:tax}
@@ -183,7 +183,7 @@ runtime, because it needs a deployed identity substrate.
 reuses consent across clients, or an abused dynamic registration, lets one party act
 with another's authority~\cite{agentauth2026breakingprotocol,agentauth2025gluecode}.
 \emph{Defense:} per-client consent, exact \texttt{redirect\_uri} matching, and vetted
-registration -- properties of a live consent flow, hence runtime.
+registration, which are properties of a live consent flow and therefore runtime.
 
 \noindent\textbf{Agency (AGT-01/02).} \emph{Exploit:} injected input drives the agent
 to escalate privilege or call a poisoned tool~\cite{agentauth2023indirectpi,agentauth2025mcptox,agentauth2026unicodetag}.
@@ -212,7 +212,7 @@ violates: audience binding to RFC~8707 and the MCP passthrough prohibition;
 delegation to RFC~8693; scope and expiry to RFC~9700 and RFC~8725; registration to
 RFC~7591; confused deputy to CWE-441; agency to the OWASP LLM and Agentic
 Top-10s~\cite{owaspllm,owaspagentic}. This lets a practitioner trace a defense to the
-authority that mandates it -- a mapping the surveyed literature does not provide.
+authority that mandates it, a mapping the surveyed literature does not provide.
 
 \noindent\textbf{(3) The static/runtime enforcement line.} The defenses in the
 literature scatter across a line they never name: \emph{static} enforcement at the
@@ -228,8 +228,8 @@ controller has strictly less to contain.
 
 \noindent\textbf{An instrument for the static subset.} We release an open-source
 analyzer that decodes a presented token and reports cited findings for the six
-statically decidable threats -- audience binding, \texttt{act}-chain delegation,
-scope, and expiry -- against a policy. It is stateless, makes no network calls, and
+statically decidable threats (audience binding, \texttt{act}-chain delegation,
+scope, and expiry) against a policy. It is stateless, makes no network calls, and
 runs in CI or beside the agent, so a team red-teams its own authorization before
 shipping. The taxonomy names the other nine as out of static scope, which is itself
 the result: it says what a pre-deployment tool, or a tightened standard, can and
@@ -265,7 +265,7 @@ enterprise framework~\cite{agentauth2025enterprisemcp}, and confused-deputy /
 registration appears only as a named taxonomy entry, almost never as a verified or
 enforced property. Prompt injection and tool poisoning, by contrast, are densely
 covered. The field has thoroughly characterized the model-level attacks and
-under-formalized the token- and consent-level authorization guarantees -- the seam
+under-formalized the token- and consent-level authorization guarantees, the seam
 this SoK occupies.
 
 \section{Discussion: what a standard could mandate}\label{sec:disc}

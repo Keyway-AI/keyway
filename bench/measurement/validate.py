@@ -25,6 +25,12 @@ import yaml  # PyYAML
 CORPUS = sys.argv[1] if len(sys.argv) > 1 else "bench/measurement/corpus"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "bench/measurement/out"
 CLAIM_RE = re.compile(r"request\.auth\.claims\[([^\]]+)\]")
+# Mirror the Go measurement's --exclude-examples so the proxy and discovery compare
+# on the same population (the crawler flattens a path into the filename with '_',
+# so match those forms, e.g. '..._testdata_...'). Drops tutorial/fixture/test copies.
+EXAMPLE_RE = re.compile(
+    r"(?i)example|sample|tutorial|demo|quickstart|getting.?started|_test|testdata|"
+    r"test-data|fixture|golden|conformance|snapshot|vendor|_docs?_|/docs?/")
 
 
 def norm_claim(x):
@@ -109,7 +115,11 @@ def load_captured(out_dir):
 
 
 def main():
-    files = sorted(glob.glob(os.path.join(CORPUS, "*.yaml")) + glob.glob(os.path.join(CORPUS, "*.yml")))
+    all_files = sorted(glob.glob(os.path.join(CORPUS, "*.yaml")) + glob.glob(os.path.join(CORPUS, "*.yml")))
+    files = [f for f in all_files if not EXAMPLE_RE.search(os.path.basename(f))]
+    skipped = len(all_files) - len(files)
+    print(f"corpus files: {len(all_files)}; after --exclude-examples parity: {len(files)} "
+          f"({skipped} example/fixture/test files skipped to match discovery)")
     captured = load_captured(OUT)
 
     # Independent parse, unioned per repo — the same unit as per-repo discovery.

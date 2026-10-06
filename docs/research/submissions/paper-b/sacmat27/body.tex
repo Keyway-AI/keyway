@@ -9,29 +9,9 @@
 \providecommand{\no}{\ensuremath{\times}}
 \emergencystretch=3em
 
-\begin{abstract}
-An autonomous agent calls tools and Model Context Protocol (MCP) servers while
-carrying a bearer token (an OAuth~2.0 access token or an MCP authorization token)
-on each request. Because the agent is driven by untrusted input, its authorization
-layer is part of the attack surface: a token not bound to the server it is sent to
-can be replayed or passed through, an over-broad scope hands an injected agent far
-more than any task needs, and an on-behalf-of token with no verifiable delegation
-chain leaves ``who authorized this?'' unanswerable. A fast-growing research
-literature studies agent security, but it concentrates on model-level attacks
-(prompt injection, tool poisoning) and proposes individual mechanisms; it does not
-systematize the authorization layer. We survey 44 research works and show that two
-authorization properties, audience binding and confused-deputy / dynamic client
-registration, are treated as mere specification obligations rather than as
-properties anyone tests or enforces. We then systematize agent authorization along
-three axes no prior work combines: (i) by \emph{pre-deployment testability}, meaning
-which threats are decidable from a token, a key set, and a declared tool contract
-before the agent runs; (ii) by \emph{normative provenance}, a threat-to-clause mapping to
-the OAuth RFCs, the MCP authorization specification, OWASP, and CWE; and (iii) by the
-\emph{static-versus-runtime enforcement line}. Across fifteen threats in six
-categories, we find six are statically contract-verifiable and nine are irreducibly
-runtime, and we argue this line should guide both tooling and standardization.
-\draftonly{a prevalence measurement across public MCP deployments is future work.}
-\end{abstract}
+% Abstract in abstract.tex; acmart needs it before \maketitle (emitted by the wrapper),
+% so the body only emits it when the wrapper has not.
+\ifdefined\keywayabstractdone\else\input{abstract}\fi
 
 \section{Introduction}
 When an agent calls a tool or an MCP server on a user's behalf, a bearer token
@@ -258,15 +238,60 @@ and by-design and detection defenses target prompt injection and tool
 poisoning~\cite{agentauth2025camel,agentauth2024agentdojo,agentauth2025mcptox,agentauth2026trustdesc,agentauth2026noboxmcp}.
 Each is a single point on the static/runtime line; none draws the line.
 
-\noindent\textbf{The coverage gap.} Scoring every work on seven threat categories,
-two columns are visibly thin: audience binding is a central contribution in
-essentially one research work (Agentic JWT~\cite{agentauth2025agenticjwt}) plus one
-enterprise framework~\cite{agentauth2025enterprisemcp}, and confused-deputy /
-registration appears only as a named taxonomy entry, almost never as a verified or
-enforced property. Prompt injection and tool poisoning, by contrast, are densely
-covered. The field has thoroughly characterized the model-level attacks and
-under-formalized the token- and consent-level authorization guarantees, the seam
-this SoK occupies.
+\noindent\textbf{The coverage gap.} Scoring every work on seven threat categories
+(Table~\ref{tab:matrix}) makes the gap visible: two columns are thin. Audience
+binding is a central contribution in essentially one research
+work (Agentic JWT~\cite{agentauth2025agenticjwt}) plus one enterprise
+framework~\cite{agentauth2025enterprisemcp}, and confused-deputy / registration
+appears only as a named taxonomy entry, almost never as a verified or enforced
+property. Prompt injection and tool poisoning, by contrast, are densely covered. The
+field has thoroughly characterized the model-level attacks and under-formalized the
+token- and consent-level authorization guarantees, the seam this SoK occupies.
+
+\begin{table*}[t]
+\centering\footnotesize
+\caption{Coverage of the seven agent-authorization threat categories across
+representative works. \yes: a central contribution; $\circ$: partially addressed;
+blank: not addressed. AudBind, audience binding and passthrough; OBO, on-behalf-of
+delegation; Scope, scope minimization; ConfDep, confused deputy and dynamic
+registration; WID, workload/agent identity; PI, prompt-injection escalation; Tool,
+tool poisoning. Two columns, AudBind and ConfDep, are thin.}
+\label{tab:matrix}
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+Work & AudBind & OBO & Scope & ConfDep & WID & PI & Tool \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Taxonomies and surveys}}\\
+MCP Landscape~\cite{agentauth2025mcplandscape}      & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & \yes & \yes \\
+SoK MCP~\cite{agentauth2025sokmcp}                  & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & \yes & \yes \\
+MCP-38~\cite{agentauth2026mcp38}                    & $\circ$ & $\circ$ & $\circ$ & \yes    & $\circ$ & \yes & \yes \\
+Enterprise MCP~\cite{agentauth2025enterprisemcp}    & \yes    & \yes    & \yes    & \yes    & $\circ$ & \yes & \yes \\
+Breaking the Protocol~\cite{agentauth2026breakingprotocol} & $\circ$ & & & $\circ$ & $\circ$ & \yes & \yes \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Delegation and identity mechanisms}}\\
+Agentic JWT~\cite{agentauth2025agenticjwt}          & \yes    & \yes    & \yes    & $\circ$ & \yes    & $\circ$ & \\
+AIP~\cite{agentauth2026aip}                         & $\circ$ & \yes    & $\circ$ & $\circ$ & \yes    & & \\
+Bounded Agents~\cite{agentauth2026boundedagents}    & $\circ$ & \yes    & \yes    & $\circ$ & $\circ$ & $\circ$ & \\
+AID-Guard~\cite{agentauth2026aidguard}              & $\circ$ & \yes    & \yes    & $\circ$ & $\circ$ & $\circ$ & \\
+SAGA~\cite{agentauth2025saga}                       & $\circ$ & \yes    & \yes    & $\circ$ & \yes    & $\circ$ & \\
+AI Identity~\cite{agentauth2026aiidentity}          & $\circ$ & \yes    & $\circ$ & $\circ$ & \yes    & & \\
+aiAuthZ~\cite{agentauth2026aiauthz}                 & \yes    & $\circ$ & $\circ$ & $\circ$ & \yes    & & \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Privilege / runtime control}}\\
+Progent~\cite{agentauth2025progent}                 & & & \yes & & & \yes & $\circ$ \\
+Pre-Action Authz~\cite{agentauth2026preaction}      & $\circ$ & $\circ$ & \yes & $\circ$ & $\circ$ & \yes & \\
+MAC framework~\cite{agentauth2026mac}               & & $\circ$ & \yes & $\circ$ & & \yes & $\circ$ \\
+IsolateGPT~\cite{agentauth2024isolategpt}           & & & \yes & $\circ$ & $\circ$ & \yes & $\circ$ \\
+If Agents Were Angels~\cite{agentauth2026angels}    & $\circ$ & $\circ$ & \yes & $\circ$ & $\circ$ & \yes & $\circ$ \\
+\midrule
+\multicolumn{8}{@{}l}{\emph{Model-level attacks and defenses}}\\
+Indirect PI~\cite{agentauth2023indirectpi}          & & & & & & \yes & $\circ$ \\
+CaMeL~\cite{agentauth2025camel}                     & & & \yes & $\circ$ & & \yes & $\circ$ \\
+MCPTox~\cite{agentauth2025mcptox}                   & & & $\circ$ & & & \yes & \yes \\
+No-Box MCP~\cite{agentauth2026noboxmcp}             & & & & & & \yes & \yes \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \section{Discussion: what a standard could mandate}\label{sec:disc}
 The testability axis has a direct standardization reading. The six statically

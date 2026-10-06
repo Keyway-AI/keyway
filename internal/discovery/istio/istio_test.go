@@ -72,3 +72,70 @@ spec:
 	assert.Contains(t, cs[0].Expects.RequiredClaims, "realm_access",
 		"a selector-less policy's nested claim must apply to the workload (top-level segment)")
 }
+
+// TestAudienceBoundViaAuthorizationPolicy guards the P1 fix: an audience can be
+// bound in an AuthorizationPolicy when-condition on request.auth.audiences rather
+// than in the RequestAuthentication jwtRule (the edge-RA / per-service-policy
+// gateway pattern). Without attributing it, the consumer looks audience-unbound
+// and is falsely counted as P1-unbound-audience.
+func TestAudienceBoundViaAuthorizationPolicy(t *testing.T) {
+	dir := t.TempDir()
+	manifest := `apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata: { name: api, namespace: prod }
+spec:
+  selector: { matchLabels: { app: api } }
+  jwtRules:
+  - issuer: "https://issuer.example.com"
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: require-aud, namespace: prod }
+spec:
+  selector: { matchLabels: { app: api } }
+  rules:
+  - when:
+    - key: request.auth.audiences
+      values: ["api.example.com"]
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "stack.yaml"), []byte(manifest), 0o644))
+
+	cs, err := New().Discover(context.Background(), discovery.Scope{ConfigPaths: []string{dir}})
+	require.NoError(t, err)
+	require.Len(t, cs, 1)
+	assert.Equal(t, []string{"api.example.com"}, cs[0].Expects.Audiences,
+		"audience bound via an AuthorizationPolicy when-condition must attach to the consumer")
+	require.NotEmpty(t, cs[0].Provenance["expects.audiences"],
+		"the AP-sourced audience must carry provenance")
+}
+
+// TestAudienceNegationNotBound ensures a notValues condition (which excludes an
+// audience) is never read as binding one — that would under-report P1.
+func TestAudienceNegationNotBound(t *testing.T) {
+	dir := t.TempDir()
+	manifest := `apiVersion: security.istio.io/v1
+kind: RequestAuthentication
+metadata: { name: api, namespace: prod }
+spec:
+  selector: { matchLabels: { app: api } }
+  jwtRules:
+  - issuer: "https://issuer.example.com"
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata: { name: deny-aud, namespace: prod }
+spec:
+  selector: { matchLabels: { app: api } }
+  rules:
+  - when:
+    - key: request.auth.audiences
+      notValues: ["evil.example.com"]
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "stack.yaml"), []byte(manifest), 0o644))
+
+	cs, err := New().Discover(context.Background(), discovery.Scope{ConfigPaths: []string{dir}})
+	require.NoError(t, err)
+	require.Len(t, cs, 1)
+	assert.Empty(t, cs[0].Expects.Audiences,
+		"a notValues (negation) condition must not be read as an audience binding")
+}

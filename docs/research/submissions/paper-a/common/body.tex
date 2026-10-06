@@ -296,23 +296,72 @@ only; we do not probe third-party live endpoints and handle no real tokens;
 identifiable high-severity findings follow responsible disclosure.
 
 \section{Related work}\label{sec:related}
-\textbf{JWT/OIDC attacks.} Individual verification flaws (\texttt{alg=none}, RS/HS
-key confusion, \texttt{jku}/\texttt{kid} injection) are well
-documented~\cite{mclean2015jwt,portswigger-jwt}, and OAuth itself has been formally
-analysed~\cite{fett2016oauth}. These establish \emph{which} misconfigurations
-matter; our contribution is a different one: a \emph{population-scale} view of the
-derived contract and its drift, grounded in the same normative
-sources~\cite{rfc8725,rfc8707,rfc9728,rfc8693}.
-\textbf{IaC/config scanners} (Checkov, KICS, Semgrep~\cite{checkov,kics,semgrep})
-pattern-match rules over configuration; we instead \emph{derive} an
-attributable auth contract and measure its properties, and our negative control
-targets exactly the precision failure pattern-matching is prone to.
-\textbf{Contract testing} (Pact~\cite{pact}) borrows the ``contract'' framing but
-targets API shape, not auth verification.
-\textbf{Measurement studies} of misconfiguration are our methodological template
-(pre-registered inclusion, confidence intervals, released artifacts).
-\textbf{Agent authorization}~\cite{owaspllm} is a related, fast-moving area treated
-in depth by a separate systematization.
+\noindent\textbf{In-the-wild web-authentication and SSO measurement.} The closest
+line of work measures deployed authentication. Early studies inspect a small set of
+sites by hand and show that SSO and OAuth failures are driven by deployment and
+implementation choices rather than protocol flaws~\cite{authzmeas2012wangsignmein,authzmeas2012sunoauth}.
+Later work makes this a population measurement: SSOScan automatically tests a fixed
+catalog of five SSO vulnerabilities across the top 20{,}000 sites and finds that over
+20\% of Facebook-SSO sites carry a serious flaw~\cite{authzmeas2014ssoscan}, and
+subsequent studies measure sign-off and session handling, dual-window SSO, and SSO
+adoption across the Tranco list~\cite{authzmeas2018singlesignoff,authzmeas2022distinct,authzmeas2023ssomonitor};
+the OpenID Connect attack classes are systematized by Mainka et al.~\cite{authzmeas2017soksso}.
+SSOScan is our closest methodological ancestor: automated detection of a fixed
+weakness catalog over a crawled population. We keep that ambition but change the
+object and the vantage point. We read the declared verification contract out of
+static mesh and proxy configuration rather than driving a runtime login flow, which
+reaches services no crawler can log into and separates what a service declares from
+what it enforces.
+
+\noindent\textbf{Large-scale misconfiguration measurement.} Our methodology follows
+a well-established template: crawl a population, report the prevalence of a concrete
+weakness, and quantify uncertainty. Studies of the HTTPS certificate ecosystem and
+of Heartbleed turn repeated scans into a structured prevalence
+picture~\cite{authzmeas2013httpsecosystem,authzmeas2014heartbleed}; the email-delivery
+study measures adoption of \emph{declared} security policies (SPF, DKIM, DMARC)
+across more than 700{,}000 servers~\cite{authzmeas2015emaildelivery}; and studies of
+HTTPS adoption, Content Security Policy, CORS, and S3 buckets measure how a declared
+per-service policy is set or fails at scale~\cite{authzmeas2017httpsadoption,authzmeas2016csp,authzmeas2018cors,authzmeas2018s3buckets}.
+We adopt this template, including confidence intervals and a replication-style
+validation of recall and precision, and apply it to a surface none of these touch,
+the JWT authorization contract.
+
+\noindent\textbf{IaC and configuration security.} Repository-mining studies quantify
+security weaknesses in declarative infrastructure code: the Seven Sins study derives
+smells from 1{,}726 scripts and counts occurrences across hundreds of
+repositories~\cite{authzmeas2019sevensins}, replicated at larger scale and across
+technologies~\cite{authzmeas2021iacreplication,authzmeas2022glitch}, and Kubernetes
+security practice is systematized separately~\cite{authzmeas2020k8scommandments}.
+Practitioner scanners (Checkov, KICS, Terrascan, Semgrep) and policy-as-code
+engines~\cite{authzmeas2024checkov,authzmeas2024kics,authzmeas2024terrascan,authzmeas2024semgrep,authzmeas2024opa}
+apply rule sets to individual files. These target generic hygiene (hard-coded
+secrets, weak crypto) and check rules per file; we instead normalize heterogeneous
+mesh and proxy configuration into one typed authorization contract per service and
+measure its properties, and our negative control targets the attribution errors that
+per-file pattern-matching is prone to.
+
+\noindent\textbf{Formal analysis and config-as-contract.} A body of formal and
+attack analysis establishes \emph{which} issuer, audience, algorithm, and endpoint
+behaviours are load-bearing, for SAML, OAuth, and OpenID
+Connect~\cite{authzmeas2008samlsso,authzmeas2012websanalysis,authzmeas2016oauthformal,authzmeas2017oidcformal};
+the concrete JWT weaknesses we count (\texttt{alg=none}, RS/HS key confusion) are
+documented by practitioners~\cite{authzmeas2015jwtlibs,authzmeas2024portswiggerjwt}
+and codified in RFC~8725~\cite{rfc8725}. We cite these for the properties and then
+measure how often deployments violate them rather than re-arguing relevance. The
+idea of deriving a policy model from static configuration has a precedent in Batfish,
+which parses heterogeneous device configuration into a vendor-independent model and
+checks properties over it~\cite{authzmeas2015batfish}, and in ABAC policy
+mining~\cite{authzmeas2015abacmining}; consumer-driven contract testing (Pact) shares
+the ``contract'' framing~\cite{authzmeas2024pact}. None recovers a JWT authorization
+contract or measures one across a population.
+
+\noindent\textbf{Agent and MCP authorization.} Indirect prompt injection makes
+token-scoped, verifiable authorization necessary for autonomous
+agents~\cite{authzmeas2023promptinjection}, and recent measurements of live remote
+MCP servers report widespread missing authentication and OAuth
+flaws~\cite{authzmeas2026mcpauthmeas,authzmeas2026mcpexposed}. These show the same
+population-measurement method reaching the agent frontier, where the declared-versus-effective
+contract framing of this paper is the natural lens to carry forward.
 
 \section{Future work}\label{sec:future}
 Three extensions follow directly. (i) Pairing the static reading with live probing

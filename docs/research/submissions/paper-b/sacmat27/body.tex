@@ -227,6 +227,27 @@ most densely studied in the literature (\S\ref{sec:related}), which is part of o
 point: the field has concentrated on the model-level attacks and under-formalized the
 token-level guarantees.
 
+\noindent\textbf{A worked scenario.} Consider a travel-planning agent that books
+flights through an MCP server, which in turn calls an airline API. The user
+authenticates once; the agent then receives an access token and acts autonomously.
+Three failures from Table~\ref{tab:tax} compose. If the booking server forwards the
+user's token to the airline API rather than exchanging it (MCP-01), and the airline
+shares the issuer, a malicious or compromised airline endpoint replays the user's
+token against any resource that issuer serves. If the token carries scope
+\texttt{travel:*} rather than \texttt{flights:book} (SCOPE-01), a prompt injected
+through a hotel-review page the agent reads can drive it to cancel bookings or read
+the user's itinerary history, because the token already permits it. And if the
+delegated token carries no \texttt{act} claim (DEL-01), neither the airline nor an
+auditor can later establish that the agent, rather than the user directly, issued the
+request. Each of these three is visible in the token and the server's declared
+contract \emph{before the agent runs}: a defender mints a token with the wrong
+audience, an over-broad scope, and a missing \texttt{act}, and confirms the verifier
+rejects each. The consent flow that let the airline register as a client in the first
+place (CD-02) and the prompt injection that triggered the misuse (AGT-01) are not
+visible this way; they need a live consent flow and a running agent. The same
+scenario therefore straddles the line, and the line tells the team which half to gate
+in CI and which half needs a runtime control.
+
 \section{Systematizing the space}\label{sec:syst}
 Our systematization rests on three axes that, together, no prior work applies to
 agent authorization (\S\ref{sec:related}).
@@ -402,9 +423,55 @@ decidable threats are exactly the ones a profile could make mandatory-to-verify 
 conformance test could check: an MCP or OAuth profile that \emph{requires} resource
 indicators (RFC~8707), rejects passthrough, mandates nested \texttt{act} validation,
 and caps scope and lifetime would move these threats from ``deployer's
-responsibility, usually missed'' to ``checked at the boundary.'' The nine runtime
-threats cannot be closed by a static profile and instead mark where the ecosystem
-still needs deployed consent, delegation enforcement, and workload identity.
+responsibility, usually missed'' to ``checked at the boundary.''
+Table~\ref{tab:conformance} makes this concrete: for each statically decidable threat
+it states the clause a profile would cite, the requirement it would impose, and the
+conformance test that would decide it. Every test is a token minted to violate the
+requirement together with the expected rejection, so the profile ships with its own
+executable check rather than prose a deployer interprets. This is the sense in which
+the static subset is not only analyzable but \emph{standardizable}: a requirement a
+conformance suite can adjudicate from inputs the deployer already holds.
+
+\begin{table}[t]
+\centering\footnotesize
+\caption{A conformance profile for the statically decidable subset. Each row is a
+requirement a profile could mandate and a test a suite could run from a token, a key
+set, and a declared contract, with no running agent.}
+\label{tab:conformance}
+\begin{tabular}{@{}llp{3.3cm}@{}}
+\toprule
+Threat & Clause & Conformance test \\
+\midrule
+MCP-01/02 & RFC~8707 & Mint a token whose \texttt{aud} names another resource; the
+verifier must reject it. \\
+DEL-01/02 & RFC~8693 & Present a delegated token with a missing or malformed
+\texttt{act} chain; the verifier must reject it. \\
+SCOPE-01 & RFC~9700 & Present a token whose scope exceeds the tool's declared need;
+the contract check must flag it. \\
+SCOPE-02 & RFC~8725 & Present a token past its \texttt{exp} or beyond a capped
+lifetime; the verifier must reject it. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{A research agenda for the runtime nine.} The nine runtime threats
+cannot be closed by a static profile and instead name where the ecosystem still lacks
+deployable mechanism. They are not uniformly open: each needs a different substrate,
+and sorting them this way turns the taxonomy's right-hand column into an agenda.
+Confused deputy and over-broad registration (CD-01/02) need a consent record that is
+auditable after the fact, so that which client obtained which grant is reconstructable
+rather than trusted. Delegation enforcement and impersonation (DEL-03/04) need a
+runtime that honors a \texttt{may\_act} constraint and distinguishes delegation from
+impersonation at the point of use, not only at mint time. Credential reuse (SCOPE-03)
+needs sender-constrained tokens so a leaked bearer token is not freely replayable.
+Agent and workload identity (AID-01/02) need a deployed attestation substrate such as
+SPIFFE/SPIRE~\cite{agentauth2026ldp} so an agent presents a distinct, verifiable
+principal. And the agency threats (AGT-01/02) need a trusted mediation boundary that
+survives a prompt-injected plan, which the control- and data-flow
+work~\cite{agentauth2025camel} approaches but does not yet reduce to a standard.
+Framing these as the complement of the static subset is the practical payoff of the
+line: it says precisely which problems a tightened token standard retires and which
+remain genuinely open for mechanism research.
 
 \section{Threats to validity}
 The MCP specification is fast-moving; this systematization is a dated snapshot. The

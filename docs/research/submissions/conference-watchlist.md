@@ -13,11 +13,20 @@ evidence. Speakers named; Keyway may be named.
 
 ## Submitted / in flight
 
-| Event | Deadline | Target | Talk | Status |
-|---|---|---|---|---|
-| CNCF Co-located EU 2027 — Agentics Day | Oct 18 2026 | Agentics Day: MCP + Agents | Talk B | ⏳ submitting via Sessionize |
-| CNCF Co-located EU 2027 — KeycloakCon | Oct 18 2026 | KeycloakCon | Talk A | ⏳ submitting via Sessionize |
-| CNCF Co-located EU 2027 — OSS SecurityCon | Oct 18 2026 | Open Source SecurityCon | Talk X | ⏳ submitting via Sessionize |
+All three submitted via Sessionize on 2026-10-14 (notifications 2026-12-14). Speaker:
+Archit Sharma, Founder at Nometria (solo). Can be withdrawn/edited until Oct 18.
+
+| Event | Deadline | Target | Talk | Title | Topic tag | Status |
+|---|---|---|---|---|---|---|
+| CNCF Co-located EU 2027 | Oct 18 2026 | Agentics Day: MCP + Agents | Talk B | The Agent Is a Bearer Token: Authorization Failures Hiding in MCP | Security + Trust + Reliability | ✅ submitted |
+| CNCF Co-located EU 2027 | Oct 18 2026 | KeycloakCon | Talk A | Your Tokens Are Fine. Your Validators Aren't. | Keycloak Security Best Practices | ✅ submitted |
+| CNCF Co-located EU 2027 | Oct 18 2026 | Open Source SecurityCon | Talk X | Measuring the Authorization Layer: From JWT Config to Agent Tokens | Supply Chain + Application Security | ✅ submitted |
+
+**Profile note:** submitting updated the Sessionize speaker profile globally — tagline
+is now "Founder at Nometria" and the bio is the Keyway/authorization one. This also
+applies to the 3 pre-existing talks on this CFP (agent tool permissions drift, LLM
+guardrails fail-open, detector selection). The **Company Website** on the profile
+still points to credwise.co.in (left as-is; no Nometria URL on hand to replace it).
 
 ---
 

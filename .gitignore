@@ -61,4 +61,7 @@ roc.svg
 
 # Measurement-study pilot outputs (regenerate with `make measure`)
 /bench/measurement/out/
+/bench/measurement/out-val/
 /bench/measurement/corpus/
+__pycache__/
+*.pyc

@@ -1,0 +1,22 @@
+\begin{abstract}
+An autonomous agent calls tools and Model Context Protocol (MCP) servers while
+carrying a bearer token (an OAuth~2.0 access token or an MCP authorization token)
+on each request. Because the agent is driven by untrusted input, its authorization
+layer is part of the attack surface: a token not bound to the server it is sent to
+can be replayed or passed through, an over-broad scope hands an injected agent far
+more than any task needs, and an on-behalf-of token with no verifiable delegation
+chain leaves ``who authorized this?'' unanswerable. A fast-growing research
+literature studies agent security, but it concentrates on model-level attacks
+(prompt injection, tool poisoning) and proposes individual mechanisms; it does not
+systematize the authorization layer. We survey 44 research works and show that two
+authorization properties, audience binding and confused-deputy / dynamic client
+registration, are treated as mere specification obligations rather than as
+properties anyone tests or enforces. We then systematize agent authorization along
+three axes no prior work combines: (i) by \emph{pre-deployment testability}, meaning
+which threats are decidable from a token, a key set, and a declared tool contract
+before the agent runs; (ii) by \emph{normative provenance}, a threat-to-clause mapping to
+the OAuth RFCs, the MCP authorization specification, OWASP, and CWE; and (iii) by the
+\emph{static-versus-runtime enforcement line}. Across fifteen threats in six
+categories, we find six are statically contract-verifiable and nine are irreducibly
+runtime, and we argue this line should guide both tooling and standardization.
+\end{abstract}

@@ -61,3 +61,307 @@
 
 @misc{cwe441, title={CWE-441: Unintended Proxy or Intermediary (Confused Deputy)}, author={{MITRE}}, year={2024},
   note={\url{https://cwe.mitre.org/data/definitions/441.html}}}
+
+
+% ---- Agent-authorization research literature (survey, verified 2026-10-06) ----
+% Paper B (SoK: Authorization for Autonomous Agents) -- research literature.
+% All entries verified to exist via the arXiv API (export.arxiv.org) on 2026-10-06.
+% Peer-review status noted per entry: accepted/published venues use @inproceedings/@article;
+% everything else is an arXiv preprint or technical report (@misc) -- treat as not-yet-peer-reviewed.
+% Verify access dates before camera-ready.
+
+% ===================================================================
+% Theme A -- MCP security landscape, taxonomies, SoKs
+% ===================================================================
+
+@misc{agentauth2025mcplandscape,
+  title={Model Context Protocol (MCP): Landscape, Security Threats, and Future Research Directions},
+  author={Hou, Xinyi and Zhao, Yanjie and Wang, Shenao and Wang, Haoyu},
+  year={2025}, eprint={2503.23278}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint; widely cited. \url{https://arxiv.org/abs/2503.23278}}}
+
+@misc{agentauth2025sokmcp,
+  title={Systematization of Knowledge: Security and Safety in the Model Context Protocol Ecosystem},
+  author={Gaire, Shiva and Gyawali, Srijan and Mishra, Saroj and Niroula, Suman and Thakur, Dilip and Yadav, Umesh},
+  year={2025}, eprint={2512.08290}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2512.08290}}}
+
+@article{agentauth2025mcpxkit,
+  title={MCPXKIT: The Unified Toolkit for Analyzing Model Context Protocol Security},
+  author={Guo, Yongjian and Liu, Puzhuo and Ma, Wanlun and Deng, Zehang and Zhu, Xiaogang and Di, Peng and Xiao, Xi and Wen, Sheng},
+  journal={IEEE Transactions on Dependable and Secure Computing (TDSC)}, year={2025},
+  note={Accepted; also arXiv:2508.12538. \url{https://arxiv.org/abs/2508.12538}}}
+
+@misc{agentauth2026mcp38,
+  title={MCP-38: A Comprehensive Threat Taxonomy for Model Context Protocol Systems (v1.0)},
+  author={Shen, Yi Ting and Toyoda, Kentaroh and Leung, Alex},
+  year={2026}, eprint={2603.18063}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2603.18063}}}
+
+@misc{agentauth2026mcpdpt,
+  title={MCP-DPT: A Defense-Placement Taxonomy and Coverage Analysis for Model Context Protocol Security},
+  author={Rostamzadeh, Mehrdad and Narula, Sidhant and Birhan, Nahom and Ghasemigol, Mohammad and Takabi, Daniel},
+  year={2026}, eprint={2604.07551}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2604.07551}}}
+
+@misc{agentauth2025enterprisemcp,
+  title={Enterprise-Grade Security for the Model Context Protocol (MCP): Frameworks and Mitigation Strategies},
+  author={Narajala, Vineeth Sai and Habler, Idan},
+  year={2025}, eprint={2504.08623}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2504.08623}}}
+
+% ===================================================================
+% Theme B -- MCP protocol-level flaws: audience/origin binding, confused deputy, passthrough
+% ===================================================================
+
+@misc{agentauth2026breakingprotocol,
+  title={Breaking the Protocol: Security Analysis of the Model Context Protocol Specification and Prompt Injection Vulnerabilities in Tool-Integrated LLM Agents},
+  author={Maloyan, Narek and Namiot, Dmitry},
+  year={2026}, eprint={2601.17549}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2601.17549}}}
+
+@misc{agentauth2026mcpdesign,
+  title={From Tool Orchestration to Code Execution: A Study of MCP Design Choices},
+  author={Felendler, Yuval and Gandhi, Parth A. and Habler, Idan and Elovici, Yuval and Shabtai, Asaf},
+  year={2026}, eprint={2602.15945}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2602.15945}}}
+
+@misc{agentauth2025mcpsecbench,
+  title={MCPSecBench: A Systematic Security Benchmark and Playground for Testing Model Context Protocols},
+  author={Yang, Yixuan and Gao, Cuifeng and Wu, Daoyuan and Chen, Yufan and Li, Yingjiu and Wang, Shuai},
+  year={2025}, eprint={2508.13220}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={Technical report, Lingnan University. \url{https://arxiv.org/abs/2508.13220}}}
+
+% ===================================================================
+% Theme C -- On-behalf-of delegation, act/azp claims, delegated-authorization protocols
+% ===================================================================
+
+@misc{agentauth2025agenticjwt,
+  title={Agentic JWT: A Secure Delegation Protocol for Autonomous AI Agents},
+  author={Goswami, Abhishek},
+  year={2025}, eprint={2509.13597}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2509.13597}}}
+
+@misc{agentauth2026aip,
+  title={AIP: Agent Identity Protocol for Verifiable Delegation Across MCP and A2A},
+  author={Prakash, Sunil},
+  year={2026}, eprint={2603.24775}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2603.24775}}}
+
+@misc{agentauth2026boundedagents,
+  title={Bounded Agents: Delegation Security for Multi-Agent AI Systems},
+  author={Muruaga, Xabier},
+  year={2026}, eprint={2608.15888}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2608.15888}}}
+
+@misc{agentauth2026aidguard,
+  title={AID-Guard: Stateful Authorization for Delegated Agent Effects},
+  author={Tong, Yingzhe and Dai, Leyu and Guo, Songhui},
+  year={2026}, eprint={2608.21159}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2608.21159}}}
+
+@misc{agentauth2026sudp,
+  title={SUDP: Secret-Use Delegation Protocol for Agentic Systems},
+  author={Yu, Xiaohang and Geng, Hejia and Zeng, Xinmeng and Knottenbelt, William},
+  year={2026}, eprint={2604.24920}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2604.24920}}}
+
+@misc{agentauth2026residualauth,
+  title={ResidualAuth: What Authorization State Must Language Agents Preserve under Revocable Delegation?},
+  author={Choi, Moonwon and Jeong, Seokho and Choi, Sian and Lee, Seunggeun},
+  year={2026}, eprint={2609.08062}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2609.08062}}}
+
+@misc{agentauth2026delegationwithouttrust,
+  title={Delegation Without Trust: An Empirical Gap Analysis of Identity, Authorization, and Runtime Governance in Multi-Agent LLM Systems},
+  author={Dantuluri, Panduranga Sai Varma and Sundi, Jyotirmoy},
+  year={2026}, eprint={2609.00267}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2609.00267}}}
+
+% ===================================================================
+% Theme D -- Runtime / pre-action authorization & privilege (scope) control
+% ===================================================================
+
+@misc{agentauth2025progent,
+  title={Progent: Securing AI Agents with Privilege Control},
+  author={Shi, Tianneng and He, Jingxuan and Wang, Zhun and Li, Hongwei and Wu, Linyu and Guo, Wenbo and Song, Dawn},
+  year={2025}, eprint={2504.11703}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint; widely cited. \url{https://arxiv.org/abs/2504.11703}}}
+
+@misc{agentauth2026preaction,
+  title={Before the Tool Call: Deterministic Pre-Action Authorization for Autonomous AI Agents},
+  author={Uchibeke, Uchi},
+  year={2026}, eprint={2603.20953}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2603.20953}}}
+
+@misc{agentauth2026runtimeauthz,
+  title={Runtime Authorization for Resources Acquired by AI Agents},
+  author={Zhu, Genliang and Wang, Chu},
+  year={2026}, eprint={2609.14744}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2609.14744}}}
+
+@misc{agentauth2026aiauthz,
+  title={aiAuthZ: Off-Host, Identity-Bound Authorization for AI Agents},
+  author={Kodathala, Sai Varun},
+  year={2026}, eprint={2607.05518}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={Technical report. \url{https://arxiv.org/abs/2607.05518}}}
+
+@misc{agentauth2026angels,
+  title={If Agents Were Angels, No Governance Would Be Necessary: Out-of-Band Policy Enforcement at a Trusted Tool Boundary},
+  author={Millstone, Marc and Akidau, Tyler and Br{\"u}derl, Johannes and Pekker, Marat},
+  year={2026}, eprint={2608.27646}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2608.27646}}}
+
+@misc{agentauth2026mac,
+  title={Taming Various Privilege Escalation in LLM-Based Agent Systems: A Mandatory Access Control Framework},
+  author={Ji, Zimo and Wu, Daoyuan and Jiang, Wenyuan and Ma, Pingchuan and Li, Zongjie and Gao, Yudong and Wang, Shuai and Li, Yingjiu},
+  year={2026}, eprint={2601.11893}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2601.11893}}}
+
+@misc{agentauth2025privmgmtmcp,
+  title={We Urgently Need Privilege Management in MCP: A Measurement of API Usage in MCP Ecosystems},
+  author={Li, Zhihao and Li, Kun and Ma, Boyang and Xu, Minghui and Zhang, Yue and Cheng, Xiuzhen},
+  year={2025}, eprint={2507.06250}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2507.06250}}}
+
+@inproceedings{agentauth2024isolategpt,
+  title={IsolateGPT: An Execution Isolation Architecture for LLM-Based Agentic Systems},
+  author={Wu, Yuhao and Roesner, Franziska and Kohno, Tadayoshi and Zhang, Ning and Iqbal, Umar},
+  booktitle={Proceedings of the Network and Distributed System Security (NDSS) Symposium}, year={2025},
+  note={Also arXiv:2403.04960. \url{https://arxiv.org/abs/2403.04960}}}
+
+@misc{agentauth2025saga,
+  title={SAGA: A Security Architecture for Governing AI Agentic Systems},
+  author={Syros, Georgios and Suri, Anshuman and Ginesin, Jacob and Nita-Rotaru, Cristina and Oprea, Alina},
+  year={2025}, eprint={2504.21034}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2504.21034}}}
+
+% ===================================================================
+% Theme E -- Workload / agent identity (WIMSE/SPIFFE, non-human identity)
+% ===================================================================
+
+@misc{agentauth2026aiidentity,
+  title={AI Identity: Standards, Gaps, and Research Directions for AI Agents},
+  author={Otsuka, Takumi and Toyoda, Kentaroh and Leung, Alex},
+  year={2026}, eprint={2604.23280}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2604.23280}}}
+
+@misc{agentauth2026ehv,
+  title={Ethical Hyper-Velocity (EHV): A Hardware-Rooted Zero-Trust Runtime Enforcement Architecture for Agentic AI Systems},
+  author={Sharma, Riddhi Mohan},
+  year={2026}, eprint={2605.17909}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint; integrates SPIFFE/SPIRE. \url{https://arxiv.org/abs/2605.17909}}}
+
+@misc{agentauth2026ldp,
+  title={LDP: An Identity-Aware Protocol for Multi-Agent LLM Systems},
+  author={Prakash, Sunil},
+  year={2026}, eprint={2603.08852}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2603.08852}}}
+
+% ===================================================================
+% Theme F -- Prompt-injection-driven privilege escalation & by-design defenses
+% ===================================================================
+
+@inproceedings{agentauth2023indirectpi,
+  title={Not What You've Signed Up For: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection},
+  author={Greshake, Kai and Abdelnabi, Sahar and Mishra, Shailesh and Endres, Christoph and Holz, Thorsten and Fritz, Mario},
+  booktitle={Proceedings of the 16th ACM Workshop on Artificial Intelligence and Security (AISec)}, year={2023},
+  note={Also arXiv:2302.12173. \url{https://arxiv.org/abs/2302.12173}}}
+
+@inproceedings{agentauth2025camel,
+  title={Defeating Prompt Injections by Design},
+  author={Debenedetti, Edoardo and Shumailov, Ilia and Fan, Tianqi and Hayes, Jamie and Carlini, Nicholas and Fabian, Daniel and Kern, Christoph and Shi, Chongyang and Terzis, Andreas and Tram{\`e}r, Florian},
+  booktitle={IEEE Conference on Secure and Trustworthy Machine Learning (SaTML)}, year={2026},
+  note={CaMeL; also arXiv:2503.18813. \url{https://arxiv.org/abs/2503.18813}}}
+
+@inproceedings{agentauth2024agentdojo,
+  title={AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents},
+  author={Debenedetti, Edoardo and Zhang, Jie and Balunovi{\'c}, Mislav and Beurer-Kellner, Luca and Fischer, Marc and Tram{\`e}r, Florian},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track}, year={2024},
+  note={Also arXiv:2406.13352. \url{https://arxiv.org/abs/2406.13352}}}
+
+@misc{agentauth2026contextroot,
+  title={When Context Gets Root: Privilege Escalation in LLM Harnesses},
+  author={He, Xingbang and Chen, Yuanwei and Qian, Yi and Wei, Haiyang and Chen, Ligeng and Fu, Zenan and Wang, Linzhang and Wu, Hao and Mao, Bing},
+  year={2026}, eprint={2608.27299}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2608.27299}}}
+
+@misc{agentauth2026pitaxonomy,
+  title={The Landscape of Prompt Injection Threats in LLM Agents: From Taxonomy to Analysis},
+  author={Wang, Peiran and Li, Xinfeng and Xiang, Chong and Zhang, Jinghuai and Li, Ying and Zhang, Lixia and Wang, Xiaofeng and Tian, Yuan},
+  year={2026}, eprint={2602.10453}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2602.10453}}}
+
+% ===================================================================
+% Theme G -- Tool poisoning (malicious / concealed tool descriptions)
+% ===================================================================
+
+@misc{agentauth2025mcptox,
+  title={MCPTox: A Benchmark for Tool Poisoning Attack on Real-World MCP Servers},
+  author={Wang, Zhiqiang and Gao, Yichao and Wang, Yanting and Liu, Suyuan and Sun, Haifeng and Cheng, Haoran and Shi, Guanquan and Du, Haohua and Li, Xiangyang},
+  year={2025}, eprint={2508.14925}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2508.14925}}}
+
+@misc{agentauth2026trustdesc,
+  title={TRUSTDESC: Preventing Tool Poisoning in LLM Applications via Trusted Description Generation},
+  author={Ye, Hengkai and Zhang, Zhechang and Jia, Jinyuan and Hu, Hong},
+  year={2026}, eprint={2604.07536}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2604.07536}}}
+
+@misc{agentauth2026unicodetag,
+  title={Unicode TAG-Block Concealment of Tool-Metadata Payloads in the Model Context Protocol: An Approval-View Fidelity Gap Across Three Independent Server Implementations},
+  author={Rashidi, Mohammadreza},
+  year={2026}, eprint={2607.05744}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2607.05744}}}
+
+@misc{agentauth2026noboxmcp,
+  title={No-Box Vulnerability Analysis: Description-only Detection of Indirect Prompt Injection Vulnerabilities in MCP Servers},
+  author={Zhang, Zehua and Hu, Jie and Hegde, Pratham and Gabani, Aditya Maheshbhai and Nath, Souradip and Liu, Yibo and Liu, Siyu and Chen, Hongkai and Wang, Hulin and Lyu, Zhuoer and Zhu, Chang and Handa, Divij and Shoshitaishvili, Yan and Bao, Tiffany and Wang, Ruoyu and Doup{\'e}, Adam},
+  year={2026}, eprint={2609.10854}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2609.10854}}}
+
+@misc{agentauth2026codingassistants,
+  title={Prompt Injection Attacks on Agentic Coding Assistants: A Systematic Analysis of Vulnerabilities in Skills, Tools, and Protocol Ecosystems},
+  author={Maloyan, Narek and Namiot, Dmitry},
+  year={2026}, eprint={2601.17548}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2601.17548}}}
+
+% ===================================================================
+% Theme H -- Multi-agent / interoperability protocol security (A2A + MCP)
+% ===================================================================
+
+@misc{agentauth2025interopsurvey,
+  title={A Survey of Agent Interoperability Protocols: Model Context Protocol (MCP), Agent Communication Protocol (ACP), Agent-to-Agent Protocol (A2A), and Agent Network Protocol (ANP)},
+  author={Ehtesham, Abul and Singh, Aditi and Gupta, Gaurav Kumar and Kumar, Saket},
+  year={2025}, eprint={2505.02279}, archivePrefix={arXiv}, primaryClass={cs.MA},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2505.02279}}}
+
+@misc{agentauth2025gluecode,
+  title={From Glue-Code to Protocols: A Critical Analysis of A2A and MCP Integration for Scalable Agent Systems},
+  author={Li, Qiaomu and Xie, Ying},
+  year={2025}, eprint={2505.03864}, archivePrefix={arXiv}, primaryClass={cs.SE},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2505.03864}}}
+
+@misc{agentauth2025commsurvey,
+  title={A Survey of LLM-Driven AI Agent Communication: Protocols, Security Risks, and Defense Countermeasures},
+  author={Kong, Dezhang and Lin, Shi and Xu, Zhenhua and Wang, Zhebo and Li, Minghao and Li, Yufeng and Zhang, Yilun and Peng, Hujin and Chen, Xiang and Sha, Zeyang and Li, Yuyuan and Lin, Changting and Wang, Xun and Liu, Xuan and Zhang, Ningyu and Chen, Chaochao and Wu, Chunming and Khan, Muhammad Khurram and Han, Meng},
+  year={2025}, eprint={2506.19676}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2506.19676}}}
+
+@misc{agentauth2025multiagentchallenges,
+  title={Open Challenges in Multi-Agent Security: Towards Secure Systems of Interacting AI Agents},
+  author={Schroeder de Witt, Christian and Krawiecka, Klaudia and Krawczuk, Igor and others},
+  year={2025}, eprint={2505.02077}, archivePrefix={arXiv}, primaryClass={cs.MA},
+  note={arXiv preprint (24 authors). \url{https://arxiv.org/abs/2505.02077}}}
+
+@misc{agentauth2026sokmultiagent,
+  title={SoK: When Safe Agents Fail Together: The Security of Multi-Agent LLM Systems},
+  author={Yang, Rui and Xu, Junjie and Liu, Zhengyu and Fendley, Neil and Hong, Yang and Li, Ziyang and Cao, Yinzhi},
+  year={2026}, eprint={2609.00595}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2609.00595}}}
+
+@misc{agentauth2025protocolcompare,
+  title={Security Analysis of Agentic AI Communication Protocols: A Comparative Evaluation},
+  author={Louck, Yedidel and Stulman, Ariel and Dvir, Amit},
+  year={2025}, eprint={2511.03841}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint. \url{https://arxiv.org/abs/2511.03841}}}

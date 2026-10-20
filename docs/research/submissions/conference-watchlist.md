@@ -30,6 +30,30 @@ still points to credwise.co.in (left as-is; no Nometria URL on hand to replace i
 
 ---
 
+## Pending results & deadlines (verified 2026-10-20). All AoE = UTC-12.
+
+**Trek:** Archit off-grid ~Oct 16–25 (limited phone access).
+
+| Date | Item | Type |
+|---|---|---|
+| Oct 19 (AoE ≈ Oct 20 17:30 IST) | WAITI #20 (Paper B SoK) acceptance notification | result |
+| Oct 23 | AIDC paper #43 notification | result |
+| Oct 25 | AIDC lightning talks (A + B) notification | result |
+| **Oct 27 (AoE)** | **WAITI #20 camera-ready** (if accepted) | deadline |
+| Oct 30 | AIDC #43 final paper (if accepted) | deadline |
+| Oct 31, 07:59 EDT | SACMAT SoK cycle-1 submission (fallback) | deadline |
+| Oct 31 | SACMAT #13 (Paper A) edit window closes | deadline |
+| Nov 2 | AIDC final lightning abstract (if accepted) | deadline |
+
+- WAITI dates per https://waiti-workshop.github.io/dates/ — site states all deadlines
+  are 11:59 PM AoE (UTC-12). Submission was Oct 12 (done); camera-ready Oct 27.
+- AIDC dates per https://aidcworkshop.github.io/ — notifications pushed from Oct 16 to
+  Oct 23 (paper) / Oct 25 (lightning); finals Oct 30 / Nov 2. Workshop Dec 7, LA (ACSAC).
+- SACMAT SoK fallback (paper-b/sacmat27) is submission-ready; submit by Oct 31 if WAITI
+  + AIDC reject. See [[ssr-reject-resubmit]].
+
+---
+
 ## Watch list — CFP not open yet (re-check on the "check" date)
 
 | Event | Dates / Location | Expected CFP window | Check on | Best talk | Angle to tailor |

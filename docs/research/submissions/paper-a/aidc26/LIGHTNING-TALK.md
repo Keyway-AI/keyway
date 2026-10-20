@@ -2,10 +2,13 @@
 
 **Status: ☑ SUBMITTED 2026-10-04** via the Google Form ("Your response has been
 recorded"). Presenter Archit Sharma, Nometria Inc; answered "not a published work."
-Non-archival; notification 2026-10-16, final abstract due 2026-10-30.
+Non-archival; notification 2026-10-25 (updated by AIDC from 2026-10-16),
+final lightning-talk abstract due 2026-11-02.
 
 **Track:** Lightning talk (5-minute in-person). Non-archival presentation slot.
-**Deadline:** 2026-10-08 (AoE). **Notification:** 2026-10-16. **Final abstract:** 2026-10-30.
+**Deadline:** 2026-10-08 (AoE). **Notification:** 2026-10-25 (AIDC pushed this back from
+2026-10-16). **Final abstract:** 2026-11-02. (AIDC *paper* track, incl. #43: notify
+2026-10-23, final paper 2026-10-30. Workshop 2026-12-07, LA, with ACSAC.)
 **Submit via:** the Lightning Talk form linked from <https://aidcworkshop.github.io/>
 (Google Form: title + abstract, max 200 words). No bio or paper required.
 

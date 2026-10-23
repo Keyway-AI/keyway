@@ -174,6 +174,31 @@ py-authlib    harness:ENC-02:non_base64url            401     pass    0ms
 py-authlib    harness:MCP-01:resource_passthrough     401     pass    0ms
 py-authlib    harness:MCP-02:unbound_audience         401     pass    0ms
 py-authlib    harness:DEL-02:sibling_resource         401     pass    0ms
+envoy-jwt-au  harness:CONTROL:valid_token             200     pass    0ms
+envoy-jwt-au  harness:SIG-01:alg_none                 401     pass    0ms
+envoy-jwt-au  harness:SIG-03:empty_signature_rs256    401     pass    0ms
+envoy-jwt-au  harness:SIG-02:tampered_signature       401     pass    0ms
+envoy-jwt-au  harness:ALG-01:alg_confusion_rs_hs      401     pass    0ms
+envoy-jwt-au  harness:ALG-03:alg_none_variant_none    401     pass    0ms
+envoy-jwt-au  harness:ALG-03:alg_none_variant_none    401     pass    0ms
+envoy-jwt-au  harness:ALG-03:alg_none_variant_none    401     pass    0ms
+envoy-jwt-au  harness:ALG-03:alg_none_variant_none    401     pass    0ms
+envoy-jwt-au  harness:ALG-04:psychic_signature_es256  401     pass    0ms
+envoy-jwt-au  harness:HDR-03:embedded_jwk             401     pass    0ms
+envoy-jwt-au  harness:HDR-01:jku_injection            401     pass    0ms
+envoy-jwt-au  harness:HDR-02:x5u_injection            401     pass    0ms
+envoy-jwt-au  harness:HDR-05:kid_path_traversal       401     pass    0ms
+envoy-jwt-au  harness:CLM-01:expired                  401     pass    0ms
+envoy-jwt-au  harness:CLM-02:not_yet_valid            401     pass    0ms
+envoy-jwt-au  harness:CLM-03:wrong_issuer             401     pass    0ms
+envoy-jwt-au  harness:CLM-04:wrong_audience           403     pass    0ms
+envoy-jwt-au  harness:CLM-06:aud_array_confusion      403     pass    0ms
+envoy-jwt-au  harness:CLM-08:missing_exp              200     FAIL    0ms
+envoy-jwt-au  harness:ENC-01:extra_segments           401     pass    0ms
+envoy-jwt-au  harness:ENC-02:non_base64url            401     pass    0ms
+envoy-jwt-au  harness:MCP-01:resource_passthrough     403     pass    0ms
+envoy-jwt-au  harness:MCP-02:unbound_audience         403     pass    0ms
+envoy-jwt-au  harness:DEL-02:sibling_resource         403     pass    0ms
 py-jose       harness:CONTROL:valid_token             200     pass    0ms
 py-jose       harness:SIG-01:alg_none                 401     pass    0ms
 py-jose       harness:SIG-03:empty_signature_rs256    401     pass    0ms
@@ -200,4 +225,4 @@ py-jose       harness:MCP-01:resource_passthrough     401     pass    0ms
 py-jose       harness:MCP-02:unbound_audience         200     FAIL    0ms
 py-jose       harness:DEL-02:sibling_resource         401     pass    0ms
 
-200 probe(s), 5 finding(s) at 11:06PM
+225 probe(s), 6 finding(s) at 11:25PM

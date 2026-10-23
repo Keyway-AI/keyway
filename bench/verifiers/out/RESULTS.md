@@ -48,6 +48,19 @@ Every other adversarial token (alg confusion, `alg:none` variants, psychic ES256
 tampered/empty signature, `kid`/`jku`/`x5u` injection, wrong issuer/audience, expired,
 not-yet-valid, aud-array confusion, extra-segment) was rejected by all 8.
 
+### Addendum — Envoy jwt_authn as a 9th target (proxy class)
+
+Added Envoy `jwt_authn` (the reference proxy validator, as used by Istio/service
+meshes) once its image was available. Clean 9-target run, all 9 controls accepted:
+
+- **Envoy jwt_authn also accepts a token with no `exp`** (CLM-08 / SCOPE-02).
+
+So across **9 verifiers, 6 accept a token they should reject**: missing `exp` **4/9**
+(go-jose, jsonwebtoken, panva/jose, **Envoy**), unbound audience **1/9** (python-jose),
+malformed **1/9** (jwx). Clean: golang-jwt, PyJWT, Authlib. The paper currently reports
+the 8-library result; fold Envoy in (8 to 9, 5/8 to 6/9) if the proxy data point is
+wanted — it strengthens the finding with a production proxy, not only libraries.
+
 ## Honest notes (for the paper and reviewers)
 
 - **Config is each library's standard "validate an access token" usage** (signature +

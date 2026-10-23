@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
+	"net/http"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -12,6 +15,7 @@ import (
 
 	"github.com/Keyway-AI/keyway/internal/discovery"
 	"github.com/Keyway-AI/keyway/internal/issuer/generic"
+	"github.com/Keyway-AI/keyway/internal/issuer/localkeys"
 	"github.com/Keyway-AI/keyway/internal/model"
 	"github.com/Keyway-AI/keyway/internal/probe"
 	"github.com/Keyway-AI/keyway/internal/store/open"
@@ -32,6 +36,8 @@ func newProbeCmd() *cobra.Command {
 	cmd.Flags().StringSlice("path", nil, "manifest files/directories to discover consumers from (else uses latest snapshot)")
 	cmd.Flags().String("consumers", "", "JSON file of model.Consumer targets to probe directly (for staging verifiers not discovered from infra; see bench/verifiers/)")
 	cmd.Flags().String("issuer-url", "", "issuer URL to mint synthetic tokens with (Keyway-operated key)")
+	cmd.Flags().String("issuer-key", "", "JSON file of persisted keys to mint with (localkeys.Export format), so the harness shares one key with a standalone JWKS server; else a fresh key is generated")
+	cmd.Flags().String("serve-jwks", "", "also serve the issuer's JWKS + OIDC discovery at this address (e.g. :8099) so real verifier targets can validate signatures against the same key the harness mints with")
 	cmd.Flags().StringSlice("namespace", nil, "Kubernetes namespaces to scan")
 	cmd.Flags().String("kube-context", "", "cluster name used in StableIDs")
 	return cmd
@@ -56,13 +62,27 @@ func runProbe(cmd *cobra.Command, _ []string) error {
 	if issuerURL == "" {
 		issuerURL = firstIssuer(consumers)
 	}
-	iss, err := generic.New(generic.Options{Name: "keyway", IssuerURL: issuerURL})
+	genOpts := generic.Options{Name: "keyway", IssuerURL: issuerURL}
+	if kf, _ := cmd.Flags().GetString("issuer-key"); kf != "" {
+		keys, kerr := loadIssuerKeys(kf)
+		if kerr != nil {
+			return kerr
+		}
+		genOpts.ImportKeys = keys
+	}
+	iss, err := generic.New(genOpts)
 	if err != nil {
 		return err
 	}
 	issModel, err := iss.Describe(ctx)
 	if err != nil {
 		return err
+	}
+
+	if addr, _ := cmd.Flags().GetString("serve-jwks"); addr != "" {
+		if serr := serveIssuerJWKS(cmd, addr, issuerURL, iss); serr != nil {
+			return serr
+		}
 	}
 
 	allow, _ := cmd.Flags().GetStringSlice("allow")
@@ -131,6 +151,48 @@ func loadConsumers(cmd *cobra.Command) ([]model.Consumer, error) {
 		return nil, nil
 	}
 	return v.Consumers, nil
+}
+
+// loadIssuerKeys reads a localkeys.Export JSON file (array of PersistedKey) so the
+// harness mints with a key shared with a standalone JWKS server.
+func loadIssuerKeys(path string) ([]localkeys.PersistedKey, error) {
+	raw, err := os.ReadFile(path) // #nosec G304 -- operator-supplied eval key file
+	if err != nil {
+		return nil, fmt.Errorf("read issuer-key: %w", err)
+	}
+	var keys []localkeys.PersistedKey
+	if err := json.Unmarshal(raw, &keys); err != nil {
+		return nil, fmt.Errorf("parse issuer-key %s: %w", path, err)
+	}
+	return keys, nil
+}
+
+// serveIssuerJWKS starts a background HTTP server exposing the harness issuer's public
+// JWKS and OIDC discovery, so real verifier targets can validate the signatures of the
+// tokens the harness mints (both use the same in-process key). Staging/eval only.
+func serveIssuerJWKS(cmd *cobra.Command, addr, issuerURL string, iss *generic.Adapter) error {
+	ks := iss.KeySet()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/.well-known/jwks.json", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(ks.JWKS())
+	})
+	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"issuer":                                issuerURL,
+			"jwks_uri":                              strings.TrimRight(issuerURL, "/") + "/.well-known/jwks.json",
+			"id_token_signing_alg_values_supported": []string{"RS256"},
+		})
+	})
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("serve-jwks: %w", err)
+	}
+	srv := &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	go func() { _ = srv.Serve(ln) }()
+	fmt.Fprintf(cmd.ErrOrStderr(), "serving issuer JWKS at http://%s/.well-known/jwks.json (issuer=%s)\n", addr, issuerURL)
+	return nil
 }
 
 // loadConsumerManifest reads staging verifier targets from a JSON file. The file is

@@ -1,0 +1,6 @@
+# build artifacts & deps (reproducible via run-eval.sh / go build / npm i / uv pip)
+out/*
+!out/.gitkeep
+!out/results.txt
+!out/RESULTS.md
+targets/*/node_modules/

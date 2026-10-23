@@ -66,8 +66,9 @@ before production and only three need a human or the model (\S\ref{sec:syst}).
 precise: audience binding and confused-deputy are the under-formalized seam
 (\S\ref{sec:related}).
 (iv) We argue which authorization properties a standard or a pre-deployment tool
-could mandate, and release an open-source analyzer for the token-static
-subset (\S\ref{sec:syst}).
+could mandate, release an open-source analyzer for the token-static subset
+(\S\ref{sec:syst}), and evaluate it against eight reference verifiers, five of which
+accept a token they should reject (\S\ref{sec:eval}).
 
 \section{Background}\label{sec:background}
 \noindent\textbf{Tokens and claims.} An OAuth~2.0 access token authorizes a client to
@@ -387,6 +388,56 @@ server, and the three human-or-model threats a runtime control. Naming that boun
 is itself the result: it states what a pre-deployment token check, and separately a
 conformance suite and a tightened standard, can and cannot guarantee.
 
+\section{Evaluation: do real verifiers reject the tokens?}\label{sec:eval}
+The server-dynamic claim is testable, so we tested it. We stood up eight independent
+verifiers spanning three ecosystems and eight widely-used libraries, Go (golang-jwt
+with keyfunc, lestrrat-go/jwx, go-jose), Node (jsonwebtoken with jwks-rsa, panva/jose),
+and Python (PyJWT, Authlib, python-jose), each configured to its standard access-token
+validation: verify the RS256 signature against a test issuer's JWKS, require the issuer
+and the audience, and require expiry where the library offers an option for it. A
+correct resource server must reject every adversarial token. We minted the token-static
+corpus of \S\ref{sec:syst} bound to each verifier, fired it as a bearer token, and
+recorded acceptances. The generator and the verifiers share no code, so this is an
+independent test, not the generator checking its own analyzer.
+
+Every verifier accepted the valid control, confirming it trusts the issuer. \textbf{Five
+of the eight then accepted a token they should have rejected} (Table~\ref{tab:eval}).
+Three, go-jose, jsonwebtoken, and panva/jose, accepted a token carrying no \texttt{exp}:
+their standard API offers no way to \emph{require} expiry, so a token that never expires
+passes, against RFC~8725. One, python-jose, accepted a token with no bound audience even
+though the expected audience was supplied, which is the unbound-audience passthrough of
+\S\ref{sec:tax}; we reproduced it outside the harness. One accepted a structurally
+malformed token. Every other attack, algorithm confusion and the \texttt{alg:none}
+family, tampered and empty signatures, \texttt{kid}/\texttt{jku}/\texttt{x5u} injection,
+wrong issuer or audience, expired and not-yet-valid, was rejected by all eight. These are
+defaults, not exotic bugs, which is the systematization's point made concrete: the
+token-level weaknesses are the common case. The run is also the mode-\textsf{S}
+conformance test of \S\ref{sec:syst} in practice, separating the verifiers that enforce
+the token-static invariants from those that do not.
+
+\begin{table}[t]
+\centering\footnotesize
+\caption{Eight reference verifiers against the token-static corpus, standard validation
+config. A token accepted is a token a correct resource server must reject. Three accept
+a token with no \texttt{exp} (SCOPE-02); one accepts an unbound audience (MCP-01/02
+passthrough); one accepts a malformed token.}
+\label{tab:eval}
+\begin{tabular}{@{}llc@{}}
+\toprule
+Verifier (library) & Ecosystem & Accepted \\
+\midrule
+golang-jwt + keyfunc & Go & --- \\
+lestrrat-go/jwx      & Go & malformed token \\
+go-jose/go-jose      & Go & no-\texttt{exp} token \\
+jsonwebtoken + jwks-rsa & Node & no-\texttt{exp} token \\
+jose (panva)         & Node & no-\texttt{exp} token \\
+PyJWT                & Python & --- \\
+Authlib              & Python & --- \\
+python-jose          & Python & unbound audience \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Related work}\label{sec:related}
 We surveyed 44 research works on authorization, delegation, identity, and token
 security for agents and MCP, published 2023--2026 and gathered by keyword and
@@ -581,12 +632,11 @@ is a judgment on the weakest harness per threat; a few threats sit near a bounda
 in staging), which we mark rather than hide. Our survey covers
 research indexed by 2026-10; most agent-authorization work is recent and not yet
 peer-reviewed, which we mark. The coverage gap of \S\ref{sec:related} is a claim about
-the research literature, substantiated by our survey coding, and is distinct from a
-claim about deployed systems. \gate{Whether the statically checkable weaknesses are
-prevalent in the wild is a separate empirical question: a prevalence measurement over a
-corpus of public MCP server manifests and token configurations, with a hand-validated
-stratified sample, reported inter-rater agreement on the labels, and coordinated
-disclosure for identifiable high-severity findings, is future work.}
+the research literature; our evaluation (\S\ref{sec:eval}) gives direct evidence that
+the token-static weaknesses occur in widely-used verifier libraries, not only on paper.
+\gate{A broader prevalence measurement over a corpus of public MCP server deployments,
+with a hand-validated stratified sample, reported inter-rater agreement, and coordinated
+disclosure for identifiable high-severity findings, remains future work.}
 
 \section*{Ethics considerations}
 The systematization uses only public specifications, advisories, and CVEs. The
@@ -597,9 +647,10 @@ and will follow coordinated disclosure for identifiable high-severity findings. 
 personal data or human subjects are involved.
 
 \section*{Open science}
-We release the static analyzer and a machine-readable threat taxonomy (each threat
-with its invariant and normative sources) under an open licence, so the
-systematization is inspectable and the statically checkable subset is reproducible.
+We release the static analyzer, a machine-readable threat taxonomy (each threat with
+its invariant and normative sources), and the evaluation harness with its
+eight-verifier target set and raw results, under an open licence, so both the
+systematization and the evaluation of \S\ref{sec:eval} are reproducible.
 \gate{A DOI-pinned artifact will accompany the camera-ready version.}
 
 \section{Conclusion}
@@ -608,9 +659,11 @@ around rather than through. We systematize it by pre-deployment testability, by
 normative provenance, and by a three-way enforcement spectrum; we show that twelve of
 fifteen threats are testable before production, six from a token alone and six against
 a staging server with no human or model in the loop, and only three need a live human
-approver or the model itself; and we argue this cut should guide what a pre-deployment
-tool checks, what a conformance suite exercises, and what a standard makes mandatory to
-verify.
+approver or the model itself; we evaluate the token-static subset against eight
+reference verifiers and find five accept a token they should reject, so the weaknesses
+are defaults rather than corner cases; and we argue this cut should guide what a
+pre-deployment tool checks, what a conformance suite exercises, and what a standard
+makes mandatory to verify.
 
 \section*{LLM Usage Statement}
 LLMs were used for editorial purposes in this manuscript, and all outputs were

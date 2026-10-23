@@ -19,6 +19,9 @@ the OAuth RFCs, the MCP authorization specification, OWASP, and CWE; and (iii) b
 \emph{three-way enforcement spectrum}, token-static vs.\ server-dynamic vs.\ needing a
 human or the model. Across fifteen threats in six categories, we find twelve are
 testable before production, six from a token alone and six against a staging server
-with no human or model in the loop, and only three need a human or the model; we argue
-this cut should guide both tooling and standardization.
+with no human or model in the loop, and only three need a human or the model. We
+evaluate the token-static subset against eight independent verifiers across three
+ecosystems and find five accept a token they should reject, a no-expiry token (three
+libraries) or an unbound-audience token (one), so the weaknesses are defaults, not
+corner cases. We argue this cut should guide both tooling and standardization.
 \end{abstract}

@@ -405,15 +405,19 @@ specifically~\cite{agentauth2026pitaxonomy,agentauth2026codingassistants}. Each
 is one point on the static/runtime line; none draws the line, and the densest coverage
 is on the model-level attacks rather than the token-level guarantees.
 
-\noindent\textbf{The coverage gap.} Scoring every work on seven threat categories
-(Table~\ref{tab:matrix}) makes the gap visible: two columns are thin. Audience
-binding is a central contribution in essentially one research
-work (Agentic JWT~\cite{agentauth2025agenticjwt}) plus one enterprise
-framework~\cite{agentauth2025enterprisemcp}, and confused-deputy / registration
-appears only as a named taxonomy entry, almost never as a verified or enforced
-property. Prompt injection and tool poisoning, by contrast, are densely covered. The
-field has thoroughly characterized the model-level attacks and under-formalized the
-token- and consent-level authorization guarantees, the seam this SoK occupies.
+\noindent\textbf{The coverage gap, quantified.} Scoring the representative works on
+seven threat categories (Table~\ref{tab:matrix}) makes the gap numeric rather than
+impressionistic: of the twenty-one works scored, prompt injection is a central
+contribution in fourteen, but audience binding is central in only three (Agentic
+JWT~\cite{agentauth2025agenticjwt}, aiAuthZ~\cite{agentauth2026aiauthz}, and one
+enterprise framework~\cite{agentauth2025enterprisemcp}) and confused-deputy / dynamic
+registration in only two~\cite{agentauth2026mcp38,agentauth2025enterprisemcp}, where it
+figures mostly as a named taxonomy entry rather than a verified or enforced property.
+The field has thoroughly characterized the model-level attacks and under-formalized the
+token- and consent-level authorization guarantees, the seam this SoK occupies. This
+gap is a claim about the \emph{literature}, evidenced by the survey's own coding;
+whether the corresponding weaknesses are also prevalent in deployed servers is a
+separate, empirical question we scope below.
 
 \begin{table*}[t]
 \centering\footnotesize
@@ -516,14 +520,18 @@ Framing these as the complement of the static subset is the practical payoff of 
 line: it says precisely which problems a tightened token standard retires and which
 remain genuinely open for mechanism research.
 
-\section{Threats to validity}
+\section{Threats to validity}\label{sec:validity}
 The MCP specification is fast-moving; this systematization is a dated snapshot. The
 static/runtime line depends on token and manifest availability; a deployment that
 hides relevant state reduces what any static check can conclude. Our survey covers
 research indexed by 2026-10; most agent-authorization work is recent and not yet
-peer-reviewed, which we mark. \gate{A prevalence measurement of the statically
-checkable weaknesses across public MCP deployments is future work, with a
-hand-validated sample and coordinated disclosure.}
+peer-reviewed, which we mark. The coverage gap of \S\ref{sec:related} is a claim about
+the research literature, substantiated by our survey coding, and is distinct from a
+claim about deployed systems. \gate{Whether the statically checkable weaknesses are
+prevalent in the wild is a separate empirical question: a prevalence measurement over a
+corpus of public MCP server manifests and token configurations, with a hand-validated
+stratified sample, reported inter-rater agreement on the labels, and coordinated
+disclosure for identifiable high-severity findings, is future work.}
 
 \section*{Ethics considerations}
 The systematization uses only public specifications, advisories, and CVEs. The
@@ -559,3 +567,35 @@ for the selection of works, the coverage judgments in the systematization, and e
 claim in the paper. One reproducibility limitation applies: the assisting models are
 not openly available, so the survey's search recall cannot be reproduced exactly,
 although every cited work is independently verifiable by its arXiv identifier.
+
+\appendix
+\section{Worked token-inspection examples}\label{app:examples}
+Because the mode-one checks are definitional, their verdicts are deterministic rather
+than learned. Table~\ref{tab:examples} gives illustrative adversarial tokens (claims
+abridged) and the analyzer's token-inspection verdict against a fixed policy that
+requires the audience \texttt{api.pay}, a \texttt{scope} within the allow-list
+\{\texttt{files:read}\}, an \texttt{exp} within fifteen minutes, and a well-formed
+\texttt{act} claim on any token that asserts delegation. The examples demonstrate what
+the analyzer \emph{verifies} and, in the last row, what it does not: a passing
+token-inspection verdict does not attest that the deployed verifier enforces the same
+constraints, which is conformance testing (\S\ref{sec:syst}). This is a demonstration
+of the checks, not an empirical evaluation; measuring how often real deployments carry
+such tokens is the prevalence study scoped in \S\ref{sec:validity}.
+
+\begin{table}[h]
+\centering\footnotesize
+\caption{Illustrative token-inspection verdicts against the fixed policy of
+\S\ref{app:examples}. Verdicts are deterministic because the checks are definitional.}
+\label{tab:examples}
+\begin{tabular}{@{}llp{3.3cm}@{}}
+\toprule
+ID & Token (abridged) & Verdict \\
+\midrule
+A1 & \texttt{aud}=api.other & FAIL MCP-02: \texttt{aud} names another resource \\
+A2 & \texttt{scope}=admin:* & FAIL SCOPE-01: scope exceeds declared need \\
+A3 & no \texttt{exp} & FAIL SCOPE-02: no lifetime bound \\
+A4 & \texttt{act} absent, asserts OBO & FAIL DEL-01: delegation hygiene, \texttt{act} missing \\
+A5 & all constraints met & PASS inspection; does not attest server enforcement \\
+\bottomrule
+\end{tabular}
+\end{table}

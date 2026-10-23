@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"text/tabwriter"
 	"time"
 
@@ -28,6 +30,7 @@ func newProbeCmd() *cobra.Command {
 	cmd.Flags().Bool("i-know-this-is-production", false, "override the staging-only guard (dangerous)")
 	cmd.Flags().StringSlice("allow", nil, "host substrings the probe engine may target (staging allowlist)")
 	cmd.Flags().StringSlice("path", nil, "manifest files/directories to discover consumers from (else uses latest snapshot)")
+	cmd.Flags().String("consumers", "", "JSON file of model.Consumer targets to probe directly (for staging verifiers not discovered from infra; see bench/verifiers/)")
 	cmd.Flags().String("issuer-url", "", "issuer URL to mint synthetic tokens with (Keyway-operated key)")
 	cmd.Flags().StringSlice("namespace", nil, "Kubernetes namespaces to scan")
 	cmd.Flags().String("kube-context", "", "cluster name used in StableIDs")
@@ -106,6 +109,9 @@ func runProbe(cmd *cobra.Command, _ []string) error {
 
 func loadConsumers(cmd *cobra.Command) ([]model.Consumer, error) {
 	paths, _ := cmd.Flags().GetStringSlice("path")
+	if manifest, _ := cmd.Flags().GetString("consumers"); manifest != "" {
+		return loadConsumerManifest(manifest)
+	}
 	if len(paths) > 0 {
 		scope := buildScope(cmd)
 		return discovery.Run(context.Background(), scope, defaultDiscoverers()...)
@@ -125,6 +131,28 @@ func loadConsumers(cmd *cobra.Command) ([]model.Consumer, error) {
 		return nil, nil
 	}
 	return v.Consumers, nil
+}
+
+// loadConsumerManifest reads staging verifier targets from a JSON file. The file is
+// either a JSON array of model.Consumer or an object with a "consumers" array. This is
+// the path for probing reference verifiers (MCP servers, OAuth middleware) that have no
+// Istio/Envoy/k8s config to discover. See bench/verifiers/ for the format and examples.
+func loadConsumerManifest(path string) ([]model.Consumer, error) {
+	raw, err := os.ReadFile(path) // #nosec G304 -- operator-supplied staging target manifest
+	if err != nil {
+		return nil, fmt.Errorf("read consumers manifest: %w", err)
+	}
+	var arr []model.Consumer
+	if err := json.Unmarshal(raw, &arr); err == nil && len(arr) > 0 {
+		return arr, nil
+	}
+	var wrapped struct {
+		Consumers []model.Consumer `json:"consumers"`
+	}
+	if err := json.Unmarshal(raw, &wrapped); err != nil {
+		return nil, fmt.Errorf("parse consumers manifest %s: %w", path, err)
+	}
+	return wrapped.Consumers, nil
 }
 
 func printProbeResults(cmd *cobra.Command, results []model.ProbeResult, outcomes []probe.ConsumerOutcome) {

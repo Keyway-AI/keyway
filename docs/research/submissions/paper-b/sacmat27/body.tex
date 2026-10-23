@@ -166,18 +166,28 @@ property to enforce rather than a specification clause to cite (\S\ref{sec:relat
 on-behalf-of (OBO) token should carry an \texttt{act} claim naming the acting party
 (RFC~8693). A single \texttt{act} records one hop; a chain
 user~$\rightarrow$~agent~$\rightarrow$~sub-agent needs \emph{nested} \texttt{act}
-claims, and the chain is trustworthy only if every exchange along it enforced the
-\texttt{may\_act} claim that states who may act for the subject. The exploit: with a
-missing or forged \texttt{act} (DEL-01) an action cannot be attributed, and with an
-unverified chain (DEL-02) a sub-agent silently exceeds what was delegated, a
-transitive-trust escalation. Two of the four are statically checkable: a verifier
-confirms an \texttt{act} claim is present and the nested chain is well-formed from the
-token alone. The other two are runtime: whether the token endpoint \emph{enforced}
+claims. A caveat governs what any inspection of them can conclude. RFC~8693 defines
+the \texttt{act} claim, including its nested prior actors, as \emph{informational}; it
+is a record of identity, not an authorization input, and must not on its own drive an
+access-control decision. A signed \texttt{act} history therefore shows \emph{who}
+acted but does not prove that each hop was \emph{authorized}; that holds only if every
+token exchange along the chain enforced the \texttt{may\_act} claim at issuance. The
+exploit: with a missing or malformed \texttt{act} (DEL-01) an action cannot be
+attributed, and with a chain whose \texttt{may\_act} was never enforced (DEL-02) a
+sub-agent silently exceeds what was delegated, a transitive-trust escalation. What a
+presented token settles is thus a hygiene property: a verifier confirms from the token
+alone that a required \texttt{act} claim is present and the nested chain is
+well-formed, and rejects a token that asserts delegation but carries none. Confirming
+that the chain was \emph{authorized} is an extension resting on an explicit trust
+assumption, that the issuer enforced \texttt{may\_act}, and cannot be read off the
+token. The remaining two are plainly runtime: whether the token endpoint enforced
 \texttt{may\_act} on each exchange (DEL-03), and whether a delegated rather than an
-impersonated token was issued (DEL-04), are properties of the issuing flow, not of
-the presented token. Delegation protocols that bind each action to user intent and
-bound a sub-agent's authority target this
-category~\cite{agentauth2025agenticjwt,agentauth2026aip,agentauth2026boundedagents,agentauth2026aidguard}.
+impersonated token was issued (DEL-04), are properties of the issuing flow, not of the
+presented token. Delegation protocols that bind each action to user intent and bound a
+sub-agent's authority target this
+category~\cite{agentauth2025agenticjwt,agentauth2026aip,agentauth2026boundedagents,agentauth2026aidguard};
+an empirical gap analysis finds identity, authorization, and runtime governance thinly
+deployed across multi-agent systems in practice~\cite{agentauth2026delegationwithouttrust}.
 
 \noindent\textbf{Scope (SCOPE-01..03).} The \texttt{scope} and \texttt{exp} a token
 carries bound what an injected agent can do with it. The exploit: an omnibus scope
@@ -252,17 +262,26 @@ in CI and which half needs a runtime control.
 Our systematization rests on three axes that, together, no prior work applies to
 agent authorization (\S\ref{sec:related}).
 
-\noindent\textbf{(1) Pre-deployment testability.} A threat is \emph{statically
-decidable} when a defender can reproduce it from a single token, the issuer's key
-set, and the server's declared tool contract, \emph{without running the agent}. By
-this criterion six of the fifteen threats are statically decidable: audience binding
-(MCP-01/02), the \texttt{act}-chain delegation checks (DEL-01/02), and scope and
-expiry (SCOPE-01/02). Each is a property of claims a token carries or of a server's
-declared identity, so a defender can mint the adversarial token an attacker would and
-confirm the verifier rejects it, as a check that runs on every build. The remaining
-nine depend on a live consent flow (CD-01/02), server-side enforcement or a
-human-in-the-loop (DEL-03/04, SCOPE-03, AGT-01/02), or a deployed workload-identity
-substrate (AID-01/02), and cannot be settled from a token.
+\noindent\textbf{(1) Pre-deployment testability.} Testability before an agent runs is
+not one thing but a short spectrum, and collapsing its halves is a common imprecision
+we make explicit. We separate three modes. \emph{Token inspection} decides a property
+from a presented token and the issuer's key set alone: whether an \texttt{aud} is
+present and names this server, whether \texttt{scope} lies within a declared
+allow-list, whether \texttt{exp} is set and within a cap, and whether a required
+\texttt{act} claim is present and well-formed. \emph{Conformance testing} mints the
+adversarial token an attacker would and confirms that the \emph{deployed verifier}
+rejects it; it runs before the agent is exercised but, unlike token inspection, needs
+the server's enforcement path, because whether a server honors an \texttt{aud} or
+refuses passthrough is a property of its implementation, not of the token.
+\emph{Runtime monitoring} needs live execution. By this refined criterion six of the
+fifteen threats are verifiable before deployment, by token inspection, conformance
+testing, or both: audience binding (MCP-01/02), the delegation \emph{hygiene} checks
+(DEL-01/02, in the bounded sense of \S\ref{sec:tax}), and scope and expiry
+(SCOPE-01/02). The remaining nine need runtime: a live consent flow (CD-01/02),
+enforced \texttt{may\_act} or a human in the loop (DEL-03/04, SCOPE-03, AGT-01/02), or
+a deployed workload-identity substrate (AID-01/02). The distinction tells a team which
+half of a check runs in CI from artifacts alone and which half requires standing up
+the verifier it ships.
 
 \noindent\textbf{(2) Normative provenance.} Each threat maps to the clause it
 violates: audience binding to RFC~8707 and the MCP passthrough prohibition;
@@ -303,26 +322,44 @@ tightened standard, can and cannot be expected to guarantee.}
 \label{fig:line}
 \end{figure*}
 
-\noindent\textbf{An instrument for the static subset.} We release an open-source
-analyzer that decodes a presented token and reports cited findings for the six
-statically decidable threats (audience binding, \texttt{act}-chain delegation,
-scope, and expiry) against a policy. It is stateless, makes no network calls, and
-runs in CI or beside the agent, so a team red-teams its own authorization before
-shipping. The taxonomy names the other nine as out of static scope, which is itself
-the result: it says what a pre-deployment tool, or a tightened standard, can and
-cannot be expected to guarantee.
+\noindent\textbf{An instrument for the token-inspection subset.} We release an
+open-source analyzer that performs the token-inspection checks of mode one: it decodes
+a presented token against a policy and reports cited findings on audience binding,
+scope, expiry, and the delegation hygiene property (a required \texttt{act} claim
+present and well-formed). It is explicit about the boundary the three modes draw. It
+\emph{verifies} the properties a token and key set settle; it only \emph{decodes and
+reports} the rest, because, exercising no server, it cannot attest that a deployment
+refuses passthrough or enforces \texttt{may\_act}. That attestation is conformance
+testing, for which MCP security benchmarks and harnesses are the right
+instrument~\cite{agentauth2025mcpsecbench,agentauth2025mcpxkit} and which our
+token-level checks complement rather than replace. The analyzer is stateless and makes
+no network calls, so it runs in CI or beside the agent. The taxonomy names the nine
+runtime threats as out of its scope, which is itself the result: it states what a
+pre-deployment token check, and separately a tightened standard, can and cannot
+guarantee.
 
 \section{Related work}\label{sec:related}
 We surveyed 44 research works on authorization, delegation, identity, and token
-security for agents and MCP (2023--2026); all arXiv identifiers were verified to
-exist. They divide into \emph{threat taxonomies} and \emph{point mechanisms}, and
-neither systematizes authorization by our three axes.
+security for agents and MCP, published 2023--2026 and gathered by keyword and
+citation search over arXiv and the OAuth, MCP, OWASP, and CWE corpora; all arXiv
+identifiers were verified to exist. We coded each work for which of the seven threat
+categories of Table~\ref{tab:matrix} it treats and at what depth (central
+contribution, partial, or absent), which yields the coverage scoring used below. The
+fifteen threats are the authorization failures these works name that are expressible
+as a property of a token, a key set, or a declared contract; we rate a threat
+\emph{critical} when it grants an injected agent authority beyond its task or defeats
+attribution, and \emph{high} otherwise, following the OWASP LLM and Agentic risk
+ratings~\cite{owaspllm,owaspagentic}. The works divide into \emph{threat taxonomies}
+and \emph{point mechanisms}, and neither systematizes authorization by our three axes.
 
 \noindent\textbf{Taxonomies and surveys.} MCP security surveys enumerate attack
 surfaces across the server lifecycle~\cite{agentauth2025mcplandscape}, and recent
 systematizations consolidate attacks and defenses for the
 ecosystem~\cite{agentauth2025sokmcp} and for multi-agent systems end to
-end~\cite{agentauth2026sokmultiagent}. Threat taxonomies name authorization-adjacent
+end~\cite{agentauth2026sokmultiagent}. Cross-protocol surveys map the security and
+interoperability of MCP, A2A, ACP, and ANP and compare their
+guarantees~\cite{agentauth2025commsurvey,agentauth2025interopsurvey,agentauth2025protocolcompare}.
+Threat taxonomies name authorization-adjacent
 risks explicitly, including the confused deputy and over-broad
 consent~\cite{agentauth2026mcp38}, and a defense-placement taxonomy classifies where
 in the architecture a control sits~\cite{agentauth2026mcpdpt}. Protocol-level
@@ -353,12 +390,18 @@ tool call~\cite{agentauth2026preaction}, apply mandatory access control to agent
 use~\cite{agentauth2026mac}, isolate tools in separate
 environments~\cite{agentauth2024isolategpt}, and enforce policy out-of-band at a
 trusted boundary~\cite{agentauth2026angels}; measurements show over-privilege is
-widespread in practice~\cite{agentauth2025privmgmtmcp}. For the model-level threats,
+widespread in practice~\cite{agentauth2025privmgmtmcp}, privilege escalation through
+the agent's execution context has its own analysis~\cite{agentauth2026contextroot},
+and runtime authorization governs the resources an agent acquires
+mid-task~\cite{agentauth2026runtimeauthz}. For the model-level threats,
 by-design defenses extract control and data flow so untrusted input cannot alter
 program flow~\cite{agentauth2025camel}, benchmarks quantify injection
 success~\cite{agentauth2024agentdojo}, and tool-poisoning work measures and defends
 the description surface~\cite{agentauth2025mcptox,agentauth2026trustdesc,agentauth2026noboxmcp,agentauth2026unicodetag},
-with indirect prompt injection the seminal threat~\cite{agentauth2023indirectpi}. Each
+with indirect prompt injection the seminal threat~\cite{agentauth2023indirectpi}, and
+recent taxonomies chart the prompt-injection threat space for LLM agents and for
+agentic coding assistants
+specifically~\cite{agentauth2026pitaxonomy,agentauth2026codingassistants}. Each
 is one point on the static/runtime line; none draws the line, and the densest coverage
 is on the model-level attacks rather than the token-level guarantees.
 

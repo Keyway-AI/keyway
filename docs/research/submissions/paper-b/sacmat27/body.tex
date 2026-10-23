@@ -25,6 +25,20 @@ omnibus scope such as \texttt{admin:*} hands an injected agent the keys to
 everything; and a non-expiring credential never stops being useful to whoever
 obtains it.
 
+\noindent\textbf{What agent autonomy and MCP change.} Each failure above is a known
+OAuth or JWT weakness, and the individual checks that catch them, require an
+\texttt{aud}, cap a scope, demand an \texttt{exp}, are classical hygiene. Two things
+are new. First, the client is now autonomous and driven by untrusted input, so a
+single over-broad or unbound token is not merely a misconfiguration a careful client
+avoids but a live capability an injected plan will exercise: the token is the attack
+surface. Second, MCP composes what single-service OAuth did not, and the composition
+is where authorization breaks: tokens pass through chains of servers, delegation nests
+across agent and sub-agent, clients register dynamically, and a server publishes a
+declared tool contract against which a token's scope can finally be judged. Our
+contribution is therefore not the individual checks but the systematization they
+enable under this threat model, sorting the threats by who can test each, and before
+what.
+
 A large and fast-moving body of research now studies agent and MCP security. As our
 survey (\S\ref{sec:related}) shows, it is dense on \emph{model-level} attacks
 (prompt-injection-driven escalation and tool poisoning) and it proposes many
@@ -45,12 +59,14 @@ six categories, each with its broken invariant, the conditions under which it is
 exploitable, a mitigation, and its normative source (\S\ref{sec:background},
 \S\ref{sec:tax}).
 (ii) We systematize this space along three axes no prior work combines: testability,
-normative provenance, and the static/runtime enforcement line (\S\ref{sec:syst}).
+normative provenance, and a three-way enforcement spectrum, token-static vs.
+server-dynamic vs. human-or-model; by it, twelve of fifteen threats are testable
+before production and only three need a human or the model (\S\ref{sec:syst}).
 (iii) We survey 44 research works on agent authorization and make the coverage gap
 precise: audience binding and confused-deputy are the under-formalized seam
 (\S\ref{sec:related}).
 (iv) We argue which authorization properties a standard or a pre-deployment tool
-could mandate, and release an open-source analyzer for the statically decidable
+could mandate, and release an open-source analyzer for the token-static
 subset (\S\ref{sec:syst}).
 
 \section{Background}\label{sec:background}
@@ -106,42 +122,59 @@ spec footnotes.
 
 \section{A threat model for agent authorization}\label{sec:tax}
 We organize the space into six categories. Table~\ref{tab:tax} lists fifteen threats
-with the invariant that must hold, a one-line mitigation, and whether a single-token
-or server-manifest check can decide the threat before deployment. We then give, per
-category, the exploit condition and the defense.
+with the invariant that must hold, a one-line mitigation, and the weakest harness that
+can decide the threat before production (its Test class, \S\ref{sec:syst}). We then
+give, per category, the exploit condition and the defense.
+
+\noindent\textbf{Attacker and defender capabilities.} Two capabilities must be kept
+apart, because conflating them is easy and misleads. The \emph{attacker} we model
+steers the agent through untrusted input, a poisoned document or a malicious tool
+description, and may capture a token in transit; it does not hold the issuer's signing
+key, so it cannot mint a token with an arbitrary \texttt{aud}, strip \texttt{exp}, or
+forge an \texttt{act} chain. What it exploits is a token the deployment already
+accepts: an over-broad scope it can cash in (SCOPE-01), an unbound or shared-issuer
+audience it can replay or pass through (MCP-01/02), a missing delegation record that
+defeats attribution (DEL-01). The \emph{defender}, by contrast, red-teams with issuer
+control in a test harness: it mints the adversarial token an attacker would benefit
+from and checks that its own verifier rejects it. The testability classes of
+\S\ref{sec:syst} describe this \emph{defender} capability, not the attacker's: a
+threat is token-static when the defender can settle it from a minted token offline,
+whether or not a real attacker could have produced that token unaided.
 
 \begin{table*}[t]
 \centering\footnotesize
 \caption{Agent-authorization threats by category, with the invariant that must hold,
-a mitigation, the normative source, and whether the threat is \emph{statically}
-decidable from a single token or server manifest before deployment (\yes) or is
-irreducibly runtime (\no). Sev.: severity.}
+a mitigation, the normative source, and the \emph{weakest harness} that can decide the
+threat before production (Test): \textsf{T}, from a token, key set, and declared
+contract alone; \textsf{S}, against a staging server or issuer with no human or model
+in the loop; \textsf{H}, only with a live human approver or the model itself. Sev.:
+severity (critical/high/med, per \S\ref{sec:related}).}
 \label{tab:tax}
 \begin{tabular}{@{}llp{4.1cm}p{4.3cm}lc@{}}
 \toprule
-ID & Sev. & Broken invariant (exploit) & Mitigation & Source & Static \\
+ID & Sev. & Broken invariant (exploit) & Mitigation & Source & Test \\
 \midrule
 \multicolumn{6}{@{}l}{\emph{Audience binding}}\\
-MCP-01 & crit & token accepted with wrong/any audience (passthrough, replay) & verify \texttt{aud} names this resource; reject forwarded tokens & RFC 8707/9728; MCP~\cite{rfc8707,rfc9728,mcpauth} & \yes \\
-MCP-02 & high & token carries no resource indicator (unbound audience) & request resource-bound tokens; require \texttt{aud} & RFC 8707~\cite{rfc8707} & \yes \\
+MCP-01 & crit & token accepted with wrong/any audience (passthrough, replay) & verify \texttt{aud} names this resource; reject forwarded tokens & RFC 8707/9728; MCP~\cite{rfc8707,rfc9728,mcpauth} & \textsf{T} \\
+MCP-02 & high & token carries no resource indicator (unbound audience) & request resource-bound tokens; require \texttt{aud} & RFC 8707~\cite{rfc8707} & \textsf{T} \\
 \multicolumn{6}{@{}l}{\emph{Delegation}}\\
-DEL-01 & high & missing or forged \texttt{act} claim (no accountable actor) & require a signed \texttt{act} claim on OBO tokens & RFC 8693~\cite{rfc8693} & \yes \\
-DEL-02 & high & unverifiable nested delegation chain (transitive-trust abuse) & validate the full nested \texttt{act} chain & RFC 8693~\cite{rfc8693} & \yes \\
-DEL-03 & high & \texttt{may\_act} not enforced on exchange & enforce \texttt{may\_act} at the token endpoint & RFC 8693~\cite{rfc8693} & \no \\
-DEL-04 & med  & impersonation where delegation was required & issue delegated (not impersonated) tokens & RFC 8693~\cite{rfc8693} & \no \\
+DEL-01 & high & missing or forged \texttt{act} claim (no accountable actor) & require a signed \texttt{act} claim on OBO tokens & RFC 8693~\cite{rfc8693} & \textsf{T} \\
+DEL-02 & high & unverifiable nested delegation chain (transitive-trust abuse) & validate the full nested \texttt{act} chain & RFC 8693~\cite{rfc8693} & \textsf{T} \\
+DEL-03 & high & \texttt{may\_act} not enforced on exchange & enforce \texttt{may\_act} at the token endpoint & RFC 8693~\cite{rfc8693} & \textsf{S} \\
+DEL-04 & med  & impersonation where delegation was required & issue delegated (not impersonated) tokens & RFC 8693~\cite{rfc8693} & \textsf{S} \\
 \multicolumn{6}{@{}l}{\emph{Scope}}\\
-SCOPE-01 & high & over-scoped agent credential (\texttt{admin:*}) & least-privilege scopes per task & RFC 9700; OWASP~\cite{rfc9700,owaspagentic} & \yes \\
-SCOPE-02 & high & non-expiring / long-lived token & short \texttt{exp}; rotation & RFC 8725~\cite{rfc8725} & \yes \\
-SCOPE-03 & high & agent reuses the human's root credential & distinct agent credential & OWASP~\cite{owaspagentic} & \no \\
+SCOPE-01 & high & over-scoped agent credential (\texttt{admin:*}) & least-privilege scopes per task & RFC 9700; OWASP~\cite{rfc9700,owaspagentic} & \textsf{T} \\
+SCOPE-02 & high & non-expiring / long-lived token & short \texttt{exp}; rotation & RFC 8725~\cite{rfc8725} & \textsf{T} \\
+SCOPE-03 & high & agent reuses the human's root credential & distinct agent credential & OWASP~\cite{owaspagentic} & \textsf{S} \\
 \multicolumn{6}{@{}l}{\emph{Agent identity}}\\
-AID-01 & high & session used as authentication & bind to a verifiable workload identity & WIMSE/SPIFFE~\cite{wimse,spiffe} & \no \\
-AID-02 & med  & no distinct workload/agent identity & issue per-agent SVID/credential & WIMSE/SPIFFE~\cite{wimse,spiffe} & \no \\
+AID-01 & high & session used as authentication & bind to a verifiable workload identity & WIMSE/SPIFFE~\cite{wimse,spiffe} & \textsf{S} \\
+AID-02 & med  & no distinct workload/agent identity & issue per-agent SVID/credential & WIMSE/SPIFFE~\cite{wimse,spiffe} & \textsf{S} \\
 \multicolumn{6}{@{}l}{\emph{Confused deputy}}\\
-CD-01 & crit & proxy acts on a client's behalf without per-client consent & per-client consent; exact \texttt{redirect\_uri} match & CWE-441; MCP~\cite{cwe441,mcpauth} & \no \\
-CD-02 & high & dynamic client registration abuse & vet/limit DCR; bind registrations & RFC 7591~\cite{rfc7591} & \no \\
+CD-01 & crit & proxy acts on a client's behalf without per-client consent & per-client consent; exact \texttt{redirect\_uri} match & CWE-441; MCP~\cite{cwe441,mcpauth} & \textsf{H} \\
+CD-02 & high & dynamic client registration abuse & vet/limit DCR; bind registrations & RFC 7591~\cite{rfc7591} & \textsf{S} \\
 \multicolumn{6}{@{}l}{\emph{Agency}}\\
-AGT-01 & crit & prompt-injection-driven privilege escalation & per-action authorization; human-in-loop & OWASP~\cite{owaspllm,owaspagentic} & \no \\
-AGT-02 & high & tool poisoning / rug-pull via tool metadata & vet tool descriptions; pin versions & OWASP~\cite{owaspagentic} & \no \\
+AGT-01 & crit & prompt-injection-driven privilege escalation & per-action authorization; human-in-loop & OWASP~\cite{owaspllm,owaspagentic} & \textsf{H} \\
+AGT-02 & high & tool poisoning / rug-pull via tool metadata & vet tool descriptions; pin versions & OWASP~\cite{owaspagentic} & \textsf{H} \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -252,11 +285,11 @@ auditor can later establish that the agent, rather than the user directly, issue
 request. Each of these three is visible in the token and the server's declared
 contract \emph{before the agent runs}: a defender mints a token with the wrong
 audience, an over-broad scope, and a missing \texttt{act}, and confirms the verifier
-rejects each. The consent flow that let the airline register as a client in the first
-place (CD-02) and the prompt injection that triggered the misuse (AGT-01) are not
-visible this way; they need a live consent flow and a running agent. The same
-scenario therefore straddles the line, and the line tells the team which half to gate
-in CI and which half needs a runtime control.
+rejects each. The per-client human consent the airline relied on (CD-01) and the prompt injection
+that triggered the misuse (AGT-01) are not visible this way; they need a live human
+approver and a running agent. The same scenario therefore straddles the line, and the
+line tells the team which part to gate in CI, which part to test against staging, and
+which part needs a runtime control.
 
 \section{Systematizing the space}\label{sec:syst}
 Our systematization rests on three axes that, together, no prior work applies to
@@ -273,15 +306,23 @@ adversarial token an attacker would and confirms that the \emph{deployed verifie
 rejects it; it runs before the agent is exercised but, unlike token inspection, needs
 the server's enforcement path, because whether a server honors an \texttt{aud} or
 refuses passthrough is a property of its implementation, not of the token.
-\emph{Runtime monitoring} needs live execution. By this refined criterion six of the
-fifteen threats are verifiable before deployment, by token inspection, conformance
-testing, or both: audience binding (MCP-01/02), the delegation \emph{hygiene} checks
+\emph{Runtime monitoring} (\textsf{H}) needs a live human approver or the model
+itself. These three modes, not a binary, are what Table~\ref{tab:tax}'s Test column
+records, and by them the fifteen threats sort \textbf{6/6/3}. Six are token-static
+(\textsf{T}): audience binding (MCP-01/02), the delegation \emph{hygiene} checks
 (DEL-01/02, in the bounded sense of \S\ref{sec:tax}), and scope and expiry
-(SCOPE-01/02). The remaining nine need runtime: a live consent flow (CD-01/02),
-enforced \texttt{may\_act} or a human in the loop (DEL-03/04, SCOPE-03, AGT-01/02), or
-a deployed workload-identity substrate (AID-01/02). The distinction tells a team which
-half of a check runs in CI from artifacts alone and which half requires standing up
-the verifier it ships.
+(SCOPE-01/02). Six more are server-dynamic (\textsf{S}): whether the issuer enforces
+\texttt{may\_act} or issues delegation rather than impersonation (DEL-03/04), whether
+the agent is provisioned a distinct credential (SCOPE-03), whether a workload-identity
+substrate attests each agent (AID-01/02), and whether dynamic client registration is
+left open (CD-02). Each of the six is testable against a staging server or issuer with
+no human and no model in the loop; a binary static/runtime split understates this by
+filing them all under ``runtime.'' Only three are irreducibly \textsf{H}: per-client
+human consent (CD-01) and the two agency threats, prompt-injection escalation and tool
+poisoning (AGT-01/02), which turn on the model's behavior under untrusted input. The
+result is sharper than a two-way line suggests: twelve of fifteen threats are testable
+before production, six from a token and six against a staging server, and only three
+need a human or the model.
 
 \noindent\textbf{(2) Normative provenance.} Each threat maps to the clause it
 violates: audience binding to RFC~8707 and the MCP passthrough prohibition;
@@ -290,8 +331,8 @@ RFC~7591; confused deputy to CWE-441; agency to the OWASP LLM and Agentic
 Top-10s~\cite{owaspllm,owaspagentic}. This lets a practitioner trace a defense to the
 authority that mandates it, a mapping the surveyed literature does not provide.
 
-\noindent\textbf{(3) The static/runtime enforcement line.} The defenses in the
-literature scatter across a line they never name: \emph{static} enforcement at the
+\noindent\textbf{(3) The enforcement spectrum.} The defenses in the
+literature scatter across a spectrum they never name: \emph{static} enforcement at the
 trust boundary (control/data-flow extraction~\cite{agentauth2025camel}, capability
 attestation, contract checks on tokens and key sets) versus \emph{runtime}
 enforcement during execution (monotonic privilege confinement~\cite{agentauth2025progent},
@@ -301,24 +342,31 @@ Drawing the line explicitly reframes several ``runtime-only'' defenses as
 compensating controls for threats a pre-deployment contract check could have
 excluded: if audience binding and scope are verified statically, a runtime
 controller has strictly less to contain. Figure~\ref{fig:line} places the fifteen
-threats on this line.
+threats on the three-way spectrum this yields, \textsf{T}/\textsf{S}/\textsf{H}.
 
 \begin{figure*}[t]
 \centering
 \begin{tikzpicture}[font=\footnotesize]
-\fill[black!6] (0,-.55) rectangle (7.9,.95);
-\draw[very thick] (8,1)--(8,-.7);
-\node[anchor=south west,align=left] at (0.1,-.5){\textbf{Static}: decidable from a token, a key set, and a declared contract,
-\\before the agent runs};
-\node[anchor=south east,align=right] at (15.9,-.5){\textbf{Runtime}: needs a live consent flow, server-side
-\\enforcement, or a deployed workload identity};
-\node[anchor=west,align=left] at (0.3,.45){MCP-01, MCP-02 \;(audience binding)\\DEL-01, DEL-02 \;(\texttt{act}-chain)\\SCOPE-01, SCOPE-02 \;(scope, expiry)};
-\node[anchor=west,align=left] at (8.3,.45){DEL-03, DEL-04 \;(\texttt{may\_act}, impersonation)\\SCOPE-03 \;(credential reuse) \quad AID-01, AID-02 \;(identity)\\CD-01, CD-02 \;(confused deputy) \quad AGT-01, AGT-02 \;(agency)};
+\fill[black!12] (0,-.75) rectangle (5.2,1.2);
+\fill[black!6]  (5.3,-.75) rectangle (10.5,1.2);
+\draw[very thick] (5.25,1.25)--(5.25,-.8);
+\draw[very thick] (10.55,1.25)--(10.55,-.8);
+\node[anchor=north west,align=left] at (0.1,1.17){\textbf{\textsf{T} token}: a token, key set, contract};
+\node[anchor=north west,align=left] at (5.4,1.17){\textbf{\textsf{S} staging server}: no human, no model};
+\node[anchor=north west,align=left] at (10.65,1.17){\textbf{\textsf{H} human / model}};
+\node[anchor=north west,align=left] at (0.1,.6){MCP-01, MCP-02\\DEL-01, DEL-02\\SCOPE-01, SCOPE-02};
+\node[anchor=north west,align=left] at (5.4,.6){DEL-03, DEL-04\\SCOPE-03, CD-02\\AID-01, AID-02};
+\node[anchor=north west,align=left] at (10.65,.6){CD-01\\AGT-01\\AGT-02};
+\node[anchor=north west,align=left] at (0.1,-.35){\emph{6: testable from a token}};
+\node[anchor=north west,align=left] at (5.4,-.35){\emph{6: testable against staging}};
+\node[anchor=north west,align=left] at (10.65,-.35){\emph{3: need a human/model}};
 \end{tikzpicture}
-\caption{The static/runtime enforcement line. Six of the fifteen threats are
-contract-verifiable before deployment; the other nine are irreducibly runtime. The
-line is the paper's organizing result: it says what a pre-deployment tool, or a
-tightened standard, can and cannot be expected to guarantee.}
+\caption{The testability spectrum. Twelve of fifteen threats are testable before
+production, six from a token alone (\textsf{T}) and six against a staging server or
+issuer with no human or model in the loop (\textsf{S}); only three (\textsf{H}) need a
+live human approver or the model. This three-way cut, sharper than a binary
+static/runtime line, says what a pre-deployment tool, and separately a tightened
+standard, can and cannot guarantee.}
 \label{fig:line}
 \end{figure*}
 
@@ -333,10 +381,11 @@ refuses passthrough or enforces \texttt{may\_act}. That attestation is conforman
 testing, for which MCP security benchmarks and harnesses are the right
 instrument~\cite{agentauth2025mcpsecbench,agentauth2025mcpxkit} and which our
 token-level checks complement rather than replace. The analyzer is stateless and makes
-no network calls, so it runs in CI or beside the agent. The taxonomy names the nine
-runtime threats as out of its scope, which is itself the result: it states what a
-pre-deployment token check, and separately a tightened standard, can and cannot
-guarantee.
+no network calls, so it runs in CI or beside the agent. It covers the six token-static
+threats; the six server-dynamic threats need a conformance harness against a staging
+server, and the three human-or-model threats a runtime control. Naming that boundary
+is itself the result: it states what a pre-deployment token check, and separately a
+conformance suite and a tightened standard, can and cannot guarantee.
 
 \section{Related work}\label{sec:related}
 We surveyed 44 research works on authorization, delegation, identity, and token
@@ -347,8 +396,10 @@ categories of Table~\ref{tab:matrix} it treats and at what depth (central
 contribution, partial, or absent), which yields the coverage scoring used below. The
 fifteen threats are the authorization failures these works name that are expressible
 as a property of a token, a key set, or a declared contract; we rate a threat
-\emph{critical} when it grants an injected agent authority beyond its task or defeats
-attribution, and \emph{high} otherwise, following the OWASP LLM and Agentic risk
+\emph{critical} when it directly grants an injected agent authority beyond its task or
+defeats attribution, \emph{high} when it materially widens exposure, and \emph{medium}
+when it is a precondition that enables the others rather than causing direct loss,
+following the severity bands of the OWASP LLM and Agentic risk
 ratings~\cite{owaspllm,owaspagentic}. The works divide into \emph{threat taxonomies}
 and \emph{point mechanisms}, and neither systematizes authorization by our three axes.
 
@@ -370,9 +421,10 @@ attacker type, lifecycle phase, defense placement, or ecosystem component, and n
 sorts threats by pre-deployment testability or binds each to the clause it violates.
 
 \noindent\textbf{Delegation and identity mechanisms.} A line of work makes delegation
-verifiable: Agentic JWT binds each agent action to a user intent in the
-token~\cite{agentauth2025agenticjwt}; AIP carries delegation chains across MCP and
-A2A boundaries~\cite{agentauth2026aip}; bounded-delegation and stateful-effect schemes
+verifiable: authenticated-delegation frameworks give an agent scoped, auditable
+authority to act for a user~\cite{agentauth2025authdelegation}; Agentic JWT binds each
+agent action to a user intent in the token~\cite{agentauth2025agenticjwt}; AIP carries
+delegation chains across MCP and A2A boundaries~\cite{agentauth2026aip}; bounded-delegation and stateful-effect schemes
 keep a sub-agent within what was delegated~\cite{agentauth2026boundedagents,agentauth2026aidguard};
 and secret-use delegation and residual authorization treat scoped secret handling and
 revocation~\cite{agentauth2026sudp,agentauth2026residualauth}. Identity work gives
@@ -465,25 +517,26 @@ No-Box MCP~\cite{agentauth2026noboxmcp}             & & & & & & \yes & \yes \\
 \end{table*}
 
 \section{Discussion: what a standard could mandate}\label{sec:disc}
-The testability axis has a direct standardization reading. The six statically
-decidable threats are exactly the ones a profile could make mandatory-to-verify and a
-conformance test could check: an MCP or OAuth profile that \emph{requires} resource
-indicators (RFC~8707), rejects passthrough, mandates nested \texttt{act} validation,
-and caps scope and lifetime would move these threats from ``deployer's
-responsibility, usually missed'' to ``checked at the boundary.''
-Table~\ref{tab:conformance} makes this concrete: for each statically decidable threat
-it states the clause a profile would cite, the requirement it would impose, and the
-conformance test that would decide it. Every test is a token minted to violate the
-requirement together with the expected rejection, so the profile ships with its own
-executable check rather than prose a deployer interprets. This is the sense in which
-the static subset is not only analyzable but \emph{standardizable}: a requirement a
-conformance suite can adjudicate from inputs the deployer already holds.
+The testability spectrum has a direct standardization reading: the twelve testable
+threats are exactly the ones a profile could make mandatory-to-verify. An MCP or OAuth
+profile that \emph{requires} resource indicators (RFC~8707), rejects passthrough,
+mandates nested \texttt{act} validation, enforces \texttt{may\_act} on exchange, and
+caps scope and lifetime would move them from ``deployer's responsibility, usually
+missed'' to ``checked at the boundary.'' The split tells a conformance suite how to
+check each: the six token-static requirements it adjudicates from a token alone, and
+the six server-dynamic ones by firing minted tokens, registration requests, and token
+exchanges at a candidate server and recording which it accepts. Table~\ref{tab:conformance}
+makes the token-static half concrete, pairing each clause with the token minted to
+violate it and the expected rejection, so the profile ships with its own executable
+check rather than prose a deployer interprets. Only the three human-or-model threats
+fall outside what such a profile and suite can settle.
 
 \begin{table}[t]
 \centering\footnotesize
-\caption{A conformance profile for the statically decidable subset. Each row is a
-requirement a profile could mandate and a test a suite could run from a token, a key
-set, and a declared contract, with no running agent.}
+\caption{A conformance profile for the six token-static threats. Each row is a
+requirement a profile could mandate and a test a suite runs from a token, a key set,
+and a declared contract, with no running agent. The six server-dynamic threats extend
+this with tests fired at a candidate server.}
 \label{tab:conformance}
 \begin{tabular}{@{}llp{3.3cm}@{}}
 \toprule
@@ -501,29 +554,31 @@ lifetime; the verifier must reject it. \\
 \end{tabular}
 \end{table}
 
-\noindent\textbf{A research agenda for the runtime nine.} The nine runtime threats
-cannot be closed by a static profile and instead name where the ecosystem still lacks
-deployable mechanism. They are not uniformly open: each needs a different substrate,
-and sorting them this way turns the taxonomy's right-hand column into an agenda.
-Confused deputy and over-broad registration (CD-01/02) need a consent record that is
-auditable after the fact, so that which client obtained which grant is reconstructable
-rather than trusted. Delegation enforcement and impersonation (DEL-03/04) need a
-runtime that honors a \texttt{may\_act} constraint and distinguishes delegation from
-impersonation at the point of use, not only at mint time. Credential reuse (SCOPE-03)
-needs sender-constrained tokens so a leaked bearer token is not freely replayable.
-Agent and workload identity (AID-01/02) need a deployed attestation substrate such as
-SPIFFE/SPIRE~\cite{agentauth2026ldp} so an agent presents a distinct, verifiable
-principal. And the agency threats (AGT-01/02) need a trusted mediation boundary that
-survives a prompt-injected plan, which the control- and data-flow
-work~\cite{agentauth2025camel} approaches but does not yet reduce to a standard.
-Framing these as the complement of the static subset is the practical payoff of the
-line: it says precisely which problems a tightened token standard retires and which
-remain genuinely open for mechanism research.
+\noindent\textbf{An agenda for the untested nine.} The nine threats outside token
+inspection are not uniformly open; the spectrum sorts them into two agendas. Six are
+server-dynamic and want \emph{engineering}: a conformance harness that fires minted
+tokens and registration and exchange requests at a candidate server and records what
+it accepts would cover whether the issuer enforces \texttt{may\_act} or issues
+delegation rather than impersonation (DEL-03/04), whether the agent is provisioned a
+distinct credential (SCOPE-03), whether a deployed substrate such as
+SPIFFE/SPIRE~\cite{agentauth2026ldp} attests each agent (AID-01/02), and whether
+dynamic registration is left open (CD-02). The other three want \emph{mechanism
+research}, because no server-side test settles them: per-client human consent (CD-01)
+needs an auditable consent record so that which client obtained which grant is
+reconstructable rather than trusted, and the agency threats (AGT-01/02) need a trusted
+mediation boundary that survives a prompt-injected plan, which the control- and
+data-flow work~\cite{agentauth2025camel} approaches but does not yet reduce to a
+standard. Separating the engineering agenda from the research one is the practical
+payoff of the spectrum: it says which untested threats a conformance suite can retire
+and which remain genuinely open.
 
 \section{Threats to validity}\label{sec:validity}
 The MCP specification is fast-moving; this systematization is a dated snapshot. The
-static/runtime line depends on token and manifest availability; a deployment that
-hides relevant state reduces what any static check can conclude. Our survey covers
+testability spectrum depends on token and manifest availability; a deployment that
+hides relevant state reduces what any check can conclude. The token/server/human cut
+is a judgment on the weakest harness per threat; a few threats sit near a boundary
+(for example AID-01/02 are server-dynamic only once an identity substrate is deployed
+in staging), which we mark rather than hide. Our survey covers
 research indexed by 2026-10; most agent-authorization work is recent and not yet
 peer-reviewed, which we mark. The coverage gap of \S\ref{sec:related} is a claim about
 the research literature, substantiated by our survey coding, and is distinct from a
@@ -550,10 +605,12 @@ systematization is inspectable and the statically checkable subset is reproducib
 \section{Conclusion}
 Agent authorization is a high-stakes surface the research literature has studied
 around rather than through. We systematize it by pre-deployment testability, by
-normative provenance, and by the static-versus-runtime enforcement line; we show that
-six of fifteen threats are contract-verifiable before an agent runs and nine are
-irreducibly runtime; and we argue this line should guide what a pre-deployment tool
-checks and what a standard makes mandatory to verify.
+normative provenance, and by a three-way enforcement spectrum; we show that twelve of
+fifteen threats are testable before production, six from a token alone and six against
+a staging server with no human or model in the loop, and only three need a live human
+approver or the model itself; and we argue this cut should guide what a pre-deployment
+tool checks, what a conformance suite exercises, and what a standard makes mandatory to
+verify.
 
 \section*{LLM Usage Statement}
 LLMs were used for editorial purposes in this manuscript, and all outputs were

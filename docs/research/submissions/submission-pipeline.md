@@ -28,6 +28,23 @@ Any next hop for *these two papers* must therefore open on/after **Dec 21**. The
 pattern becomes available the moment SACMAT releases on Dec 21 (chain a fast venue first)
 and for any paper not yet committed.
 
+### Withdrawal is NOT a license for concurrent archival submission
+
+Dual-submission policies forbid the concurrent *submission/review*, not just concurrent
+acceptance; "I'll withdraw the loser" does not make it compliant, because the paper has
+already been under review at two archival venues at once (the prohibited act). SACMAT/ACM
+and USENIX state this explicitly; penalty is desk-reject of both plus possible multi-year
+bans, and it is caught via overlapping PC/reviewers and dual-submission detection. So the
+non-overlap rule above stands for **archival** venues.
+
+Where withdrawal *is* valid:
+- **Non-archival venues (all our talks; workshops that permit work-under-review):**
+  concurrent is fine, withdraw as a courtesy. This is why the KubeCon co-located talks and
+  AIDC lightning talks do not conflict with the papers.
+- **Withdraw-then-submit:** pull from V1 before its decision, then submit to V2. No overlap.
+- **Sequential safety-valve:** submit to V2 only when its deadline is after V1's result, so
+  you submit only if V1 rejected; if V1 accepts first, withdraw/skip V2 before it reviews.
+
 ## Currently under review (do not re-submit elsewhere before Dec 21)
 
 | Paper | Venue | ID | Edit window closes | **Result** |

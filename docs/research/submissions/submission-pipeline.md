@@ -72,21 +72,34 @@ Prepare improved papers now; fire only if SACMAT rejects on Dec 21.
 
 | Venue | Deadline | Notify | Best paper | Notes |
 |---|---|---|---|---|
-| **USENIX Security 2027 Cycle 2** | **Jan 26, 2027** | May 6 | A or B | ~5 wks after SACMAT result; 13pp + Open Science appendix. Takes measurement and SoK. |
-| **IMC 2027 (R2)** | **~Apr 7, 2027** (confirm) | — | **Paper A** | the natural measurement home; most time. |
-| **ACM CCS 2027** | ~Apr 2027 (confirm) | — | A or B | large venue; confirm exact date. |
+| **CCS 2027 Cycle 1** | ~Jan 14–15, 2027 *(tentative — official CFP not posted)* | ~Apr 2027 | A or B | soonest shot but ~3 wks after SACMAT result and top-tier/hard. Confirm when CFP posts. |
+| **USENIX Security 2027 Cycle 2** | **Jan 26, 2027** *(official)* | **May 6, 2027** | A or B | ~5 wks after SACMAT; most reliable near-term. 13pp + mandatory Open Science appendix. |
+| **IMC 2027 (R2)** | ~Apr 7, 2027 *(tentative)* | — | **Paper A** | the natural measurement home; most prep time. Confirm. |
+| **CCS 2027 Cycle 2** | ~Apr 29, 2027 *(tentative)* | ~Jul 2027 | A or B | later CCS shot. |
 | ESORICS / ARES / EuroS&P 2027 | spring 2027 | — | A or B | secondary options. |
+| **SSR 2027** (Trento, Dec 9–10, 2027) | ~Sep 2027 *(est; SSR'26 was Sep 15)* | ~Oct 2027 | A or B | the natural *standardization* home — but SSR'26 rejected both, so it must lead with the fixes. A year out. |
 
-### Fast-first chaining (the reverse direction), usable after Dec 21
+### Fast-first chaining — NOT available in the Dec-2026/Jan-2027 window
 
-Once SACMAT releases on Dec 21, a *reject* doesn't have to go straight to a slow venue.
-A fast-turnaround workshop whose result lands before a later deadline can go **first**,
-buying an extra shot. We already know the fast workshops in this space (they rejected the
-earlier drafts and will have 2027 editions with the same quick cadence): **SSR, WAITI,
-AIDC** workshops. Pattern: SACMAT reject (Dec 21) → fast workshop (result in weeks, if a
-2027 edition is open) → still make **USENIX Sec C2 (Jan 26)** or **IMC R2 (Apr)**. Only
-run a workshop that is itself non-archival or whose timeline clears the next deadline, so
-the windows never overlap. Confirm each 2027 workshop's dates when its CFP opens.
+The reverse (fast-workshop-first) pattern is sound in principle, but the workshops we
+know — **SSR, WAITI, AIDC** — all recur only in **late 2027**, so none can be a fast hop
+right after SACMAT's Dec 21, 2026 result:
+- **SSR 2027** — Trento, Dec 9–10, 2027; deadline ~Sep 2027.
+- **WAITI 2027 / AIDC 2027** — co-located with **ACSAC 2027 (Dec 6, 2027, California)**;
+  their CFPs open mid-2027, deadlines ~Sep–Oct 2027.
+
+So after a Dec 21 reject there is no quick workshop to chain first; the near-term shots
+are the two January conference deadlines below. The fast-first pattern only becomes
+useful again in ~Sep–Dec 2027 (if we're still iterating then). Dates are estimates
+except the event dates and USENIX C2; confirm each CFP when posted.
+
+### The realistic post-Dec-21 chain
+
+1. **Dec 21, 2026** — SACMAT #13/#35 results.
+2. If rejected → the two near-term deadlines: **CCS '27 C1 (~Jan 14, tentative, hard)**
+   and/or **USENIX Sec '27 C2 (Jan 26, official)**. USENIX is the safer, confirmed target.
+3. Next tier → **IMC '27 R2 (~Apr, Paper A)**, **CCS '27 C2 (~Apr)**.
+4. Late-2027 homes → **SSR '27 (Sep, the standardization fit)**, **ACSAC/AIDC/WAITI '27 (Dec)**.
 
 ## Plan
 
@@ -113,7 +126,14 @@ the windows never overlap. Confirm each 2027 workshop's dates when its CFP opens
 | Date | Event |
 |---|---|
 | **Oct 31, 2026** | SACMAT edit window closes (#13, #35 locked after) |
-| Nov 6 / 17 / 23 | PAM / S&P-C2, IMC-R1 / CODASPY deadlines — **skip** (double-submit) |
+| Nov 6 / 17 / 17 / 23 | PAM / S&P-C2 / IMC-R1 / CODASPY deadlines — **skip** (would be concurrent) |
 | **Dec 21, 2026** | **SACMAT #13 + #35 results** — the decision gate |
-| **Jan 26, 2027** | USENIX Sec '27 Cycle 2 deadline (fallback) |
-| ~Apr 7, 2027 | IMC 2027 R2 deadline (fallback, Paper A) |
+| ~Jan 14–15, 2027 | CCS '27 Cycle 1 deadline *(tentative)* — fallback |
+| **Jan 26, 2027** | **USENIX Sec '27 Cycle 2** deadline *(official)* — primary fallback |
+| ~Apr 7, 2027 | IMC '27 R2 deadline *(tentative)* — fallback, Paper A |
+| ~Apr 29, 2027 | CCS '27 Cycle 2 deadline *(tentative)* |
+| ~Sep 2027 | SSR '27 + ACSAC/AIDC/WAITI '27 CFPs — late homes / fast-first reopens |
+| Dec 2027 | SSR '27 (Trento) & ACSAC '27 (California) events |
+
+*Dates are confirmed for events and USENIX C2; CCS/IMC/SSR/ACSAC deadlines are tracker
+estimates until their official CFPs post — re-verify before relying on them.*

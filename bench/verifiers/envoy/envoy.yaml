@@ -1,0 +1,67 @@
+# Envoy jwt_authn configured to be CORRECT: it requires a valid RS256 token from the
+# Keyway test issuer with aud=rs-A, and routes passing requests to echo-upstream (200).
+# Every attack token in the corpus should be rejected (401/403). A 200 is a finding.
+static_resources:
+  listeners:
+    - name: ingress
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 10001 }
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress
+                route_config:
+                  name: local
+                  virtual_hosts:
+                    - name: rs_a
+                      domains: ["*"]
+                      routes:
+                        - match: { prefix: "/" }
+                          route: { cluster: echo_upstream }
+                http_filters:
+                  - name: envoy.filters.http.jwt_authn
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+                      providers:
+                        keyway:
+                          issuer: "http://keyway-issuer:8099"
+                          audiences: ["rs-A"]
+                          forward: false
+                          from_headers:
+                            - name: Authorization
+                              value_prefix: "Bearer "
+                          remote_jwks:
+                            http_uri:
+                              uri: "http://keyway-issuer:8099/.well-known/jwks.json"
+                              cluster: keyway_issuer
+                              timeout: 5s
+                            cache_duration: 300s
+                      rules:
+                        - match: { prefix: "/" }
+                          requires: { provider_name: keyway }
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+  clusters:
+    - name: echo_upstream
+      connect_timeout: 2s
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: echo_upstream
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: echo-upstream, port_value: 5678 }
+    - name: keyway_issuer
+      connect_timeout: 2s
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: keyway_issuer
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: keyway-issuer, port_value: 80 }

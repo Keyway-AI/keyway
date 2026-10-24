@@ -29,6 +29,8 @@ import glob
 import json
 import os
 import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 VALID = {"correct", "correct-extra", "discovery-miss", "parser-artifact",
          "no-consumer", "spurious", "wrong-attribution"}
@@ -125,13 +127,24 @@ def label_row(client, model, row, config_text):
     return label, conf, str(obj.get("rationale", "")).strip()[:300]
 
 
+OUT_COLS = ["repo", "field", "value", "side", "in_nonauth_context",
+            "has_jwt_consumer", "suggested_label", "ai_label", "ai_confidence",
+            "ai_rationale", "human_label", "notes"]
+
+
+def key_of(r):
+    return (r["repo"], r["field"], r["value"])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("packet", nargs="?", default="bench/measurement/out/labeling-packet.csv")
     ap.add_argument("out", nargs="?", default="bench/measurement/out/labeling-packet-ai.csv")
     ap.add_argument("--corpus", default="bench/measurement/corpus")
     ap.add_argument("--model", default="claude-opus-5-5")
+    ap.add_argument("--workers", type=int, default=6, help="parallel API calls")
     ap.add_argument("--limit", type=int, default=0, help="label only the first N rows (testing)")
+    ap.add_argument("--fresh", action="store_true", help="ignore any prior output and relabel all")
     args = ap.parse_args()
 
     try:
@@ -143,40 +156,63 @@ def main():
     rows = list(csv.DictReader(open(args.packet)))
     if args.limit:
         rows = rows[:args.limit]
-    cfg_cache = {}
-    out_cols = ["repo", "field", "value", "side", "in_nonauth_context",
-                "has_jwt_consumer", "suggested_label", "ai_label", "ai_confidence",
-                "ai_rationale", "human_label", "notes"]
 
-    # Write incrementally (flush per row) so a long or backgrounded run is crash-safe.
+    # RESUME: keep prior rows whose ai_label is already a final (valid) label; redo
+    # everything else (blank / error / review) plus rows never attempted. A re-run
+    # therefore never repeats completed work — restart after a kill and it continues.
+    done = {}
+    if not args.fresh and os.path.exists(args.out):
+        for r in csv.DictReader(open(args.out)):
+            if (r.get("ai_label") or "").strip().lower() in VALID:
+                done[key_of(r)] = r
+    todo = [r for r in rows if key_of(r) not in done]
+    print(f"{len(rows)} packet rows | already done: {len(done)} | to label now: {len(todo)} "
+          f"| model={args.model} workers={args.workers}", flush=True)
+
+    # Re-persist the preserved rows first (in packet order), then append new results
+    # as they complete (lock-guarded, flushed), so a kill never loses progress.
     fh = open(args.out, "w", newline="")
-    w = csv.DictWriter(fh, fieldnames=out_cols)
+    w = csv.DictWriter(fh, fieldnames=OUT_COLS)
     w.writeheader()
+    for r in rows:
+        if key_of(r) in done:
+            w.writerow({c: done[key_of(r)].get(c, "") for c in OUT_COLS})
     fh.flush()
-    out_rows = []
-    for i, r in enumerate(rows, 1):
-        repo = r["repo"]
-        if repo not in cfg_cache:
-            cfg_cache[repo] = load_config(args.corpus, repo)
+
+    cfg_cache, cfg_lock, io_lock = {}, threading.Lock(), threading.Lock()
+    counter = [len(done)]
+
+    def get_cfg(repo):
+        with cfg_lock:
+            if repo not in cfg_cache:
+                cfg_cache[repo] = load_config(args.corpus, repo)
+            return cfg_cache[repo]
+
+    def work(r):
         try:
-            lab, conf, why = label_row(client, args.model, r, cfg_cache[repo])
-        except Exception as e:  # keep going; a failed row is marked, not fatal
+            lab, conf, why = label_row(client, args.model, r, get_cfg(r["repo"]))
+        except Exception as e:  # a failed row is marked 'error' (redone on next resume)
             lab, conf, why = "error", "", f"{type(e).__name__}: {e}"[:200]
         rec = {
-            "repo": repo, "field": r["field"], "value": r["value"], "side": r["side"],
+            "repo": r["repo"], "field": r["field"], "value": r["value"], "side": r["side"],
             "in_nonauth_context": r["in_nonauth_context"], "has_jwt_consumer": r["has_jwt_consumer"],
             "suggested_label": r.get("suggested_label", ""), "ai_label": lab,
             "ai_confidence": conf, "ai_rationale": why, "human_label": "", "notes": r.get("notes", ""),
         }
-        out_rows.append(rec)
-        w.writerow(rec)
-        fh.flush()
-        print(f"[{i}/{len(rows)}] {repo} {r['field']}={r['value'][:40]} -> {lab} ({conf})", flush=True)
+        with io_lock:
+            w.writerow(rec)
+            fh.flush()
+            counter[0] += 1
+            print(f"[{counter[0]}/{len(rows)}] {r['repo']} {r['field']}={r['value'][:36]} -> {lab} ({conf})", flush=True)
+
+    with ThreadPoolExecutor(max_workers=max(1, args.workers)) as ex:
+        list(ex.map(work, todo))
     fh.close()
 
-    n_review = sum(1 for r in out_rows if r["ai_label"] in ("review", "error"))
-    print(f"\nwrote {args.out}: {len(out_rows)} AI-labelled rows "
-          f"({n_review} need manual attention: review/error)")
+    final = list(csv.DictReader(open(args.out)))
+    pending = sum(1 for r in final if (r.get("ai_label") or "") in ("", "error", "review"))
+    print(f"\nwrote {args.out}: {len(final)} rows ({pending} still error/review — "
+          f"re-run the same command to retry just those)")
     print("Next: a human fills `human_label` (taxonomy in LABELING.md), then")
     print("  python3 bench/measurement/grade_dual.py", args.out)
 

@@ -1,0 +1,32 @@
+{
+  "_comment": "The 8 real verifiers for the eval run. Each trusts the Keyway test issuer and requires aud=rs-A + exp. Leave required_claims EMPTY (the generator fills listed claims with a placeholder; iss/aud/exp are handled as standard claims). Ports match bench/verifiers/run-eval.sh.",
+  "consumers": [
+    { "stable_id": "go-golangjwt", "kind": "middleware", "name": "golang-jwt/jwt v5 + keyfunc", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10001", "method": "GET", "safe_probe_path": "/api/protected" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } },
+    { "stable_id": "go-jwx", "kind": "middleware", "name": "lestrrat-go/jwx v2", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10002", "method": "GET", "safe_probe_path": "/api/protected" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } },
+    { "stable_id": "go-gojose", "kind": "middleware", "name": "go-jose/go-jose v4", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10010", "method": "GET", "safe_probe_path": "/api/protected" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } },
+    { "stable_id": "node-jsonwebtoken", "kind": "middleware", "name": "jsonwebtoken + jwks-rsa", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10003", "method": "GET", "safe_probe_path": "/" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } },
+    { "stable_id": "node-jose", "kind": "middleware", "name": "jose (panva)", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10004", "method": "GET", "safe_probe_path": "/" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } },
+    { "stable_id": "py-pyjwt", "kind": "middleware", "name": "PyJWT + PyJWKClient", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10005", "method": "GET", "safe_probe_path": "/" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } },
+    { "stable_id": "py-authlib", "kind": "middleware", "name": "Authlib", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10006", "method": "GET", "safe_probe_path": "/" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } },
+    { "stable_id": "envoy-jwt-authn", "kind": "proxy", "name": "Envoy jwt_authn", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10007", "method": "GET", "safe_probe_path": "/" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } },
+    { "stable_id": "py-jose", "kind": "middleware", "name": "python-jose", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10008", "method": "GET", "safe_probe_path": "/" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } }
+  ]
+}

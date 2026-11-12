@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { agentInspect } from "../api/mock";
 import { severityColor } from "../lib/format";
@@ -32,25 +32,40 @@ const AUDIENCE = "https://mcp.example/api";
 export function TokenInspector() {
   const [token, setToken] = useState(flawedSample);
   const [findings, setFindings] = useState<AgentFinding[] | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The analysis runs entirely in the browser (the same check `keyway agent
-  // inspect` runs), so it's synchronous and nothing leaves the page.
-  const inspect = useCallback((value: string) => {
-    if (!value.trim()) {
+  // inspect` runs). Live typing resolves instantly; an explicit inspect (mount,
+  // the button, "load sample") plays a brief scan so you see the tool work.
+  const inspect = useCallback((value: string, animate = false) => {
+    if (timer.current) clearTimeout(timer.current);
+    const v = value.trim();
+    if (!v) {
+      setScanning(false);
       setFindings(null);
       return;
     }
-    const res = agentInspect({
-      token: value.trim(),
-      audience: AUDIENCE,
-      require_delegation: true,
-    });
-    setFindings(res.findings);
+    const compute = () => setFindings(agentInspect({ token: v, audience: AUDIENCE, require_delegation: true }).findings);
+    if (!animate) {
+      setScanning(false);
+      compute();
+      return;
+    }
+    setScanning(true);
+    setFindings(null);
+    timer.current = setTimeout(() => {
+      compute();
+      setScanning(false);
+    }, 620);
   }, []);
 
-  // Analyze the sample on mount so the widget is alive immediately.
+  // Analyze the sample on mount, with the scan, so the widget is alive on arrival.
   useEffect(() => {
-    inspect(token);
+    inspect(token, true);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
     // run once
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -84,17 +99,17 @@ export function TokenInspector() {
 
       <div className="mt-2.5 flex items-center gap-2">
         <button
-          onClick={() => inspect(token)}
-          disabled={!token.trim()}
+          onClick={() => inspect(token, true)}
+          disabled={!token.trim() || scanning}
           className="glow-accent inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-md bg-accent px-4 text-caption font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.99] disabled:opacity-50"
         >
-          Inspect token
+          {scanning ? "Analyzing…" : "Inspect token"}
         </button>
         <button
           onClick={() => {
             const s = flawedSample();
             setToken(s);
-            void inspect(s);
+            inspect(s, true);
           }}
           className="h-9 rounded-md border border-border bg-surface px-3 text-caption font-medium text-muted transition hover:bg-surface-2 hover:text-text"
         >
@@ -102,7 +117,16 @@ export function TokenInspector() {
         </button>
       </div>
 
-      {findings !== null && (
+      {scanning && (
+        <div className="mt-3 border-t border-border/70 pt-3">
+          <div className="h-1 w-full overflow-hidden rounded-full bg-surface-2">
+            <div className="scan-bar h-full w-1/3 rounded-full bg-accent" />
+          </div>
+          <div className="mt-2.5 text-micro font-medium text-faint">Analyzing token against the agent-auth checks…</div>
+        </div>
+      )}
+
+      {!scanning && findings !== null && (
         <div className="mt-3 border-t border-border/70 pt-3">
           {findings.length === 0 ? (
             <div className="flex items-center gap-2 text-caption text-low">
@@ -118,7 +142,11 @@ export function TokenInspector() {
               </div>
               <ul className="space-y-1.5">
                 {findings.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2.5 rounded-lg bg-surface-2/70 px-2.5 py-2">
+                  <li
+                    key={i}
+                    className="finding-in flex items-start gap-2.5 rounded-lg bg-surface-2/70 px-2.5 py-2"
+                    style={{ animationDelay: `${i * 70}ms` }}
+                  >
                     <span
                       className={`mt-0.5 shrink-0 rounded-pill border px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase ${severityColor[f.severity]}`}
                     >

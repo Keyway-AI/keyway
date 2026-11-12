@@ -65,3 +65,9 @@ roc.svg
 /bench/measurement/corpus/
 __pycache__/
 *.pyc
+.vercel
+.env*
+
+# LaTeX build artifacts
+*.aux
+*.blg

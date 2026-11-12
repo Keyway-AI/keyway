@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { LogoBadge } from "./Logo";
 import { Reveal } from "./Reveal";
@@ -24,7 +24,7 @@ export function PageHero({
 }) {
   const centered = align === "center";
   return (
-    <section className="aurora grid-ground border-b border-border px-5 py-20 sm:px-8 sm:py-28">
+    <section className="aurora grid-ground px-5 py-20 sm:px-8 sm:py-28">
       <div className={`mx-auto max-w-3xl ${centered ? "text-center" : "max-w-5xl text-left"}`}>
         <Reveal>
           <span className="eyebrow">{eyebrow}</span>
@@ -65,6 +65,7 @@ const navLinks = [
 ];
 
 export function MarketingNav() {
+  const [open, setOpen] = useState(false);
   return (
     <header className="sticky top-0 z-30 px-3 pt-3 sm:px-5 sm:pt-4">
       <div className="glass mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-pill py-2 pl-4 pr-2 shadow-md">
@@ -100,8 +101,48 @@ export function MarketingNav() {
           >
             Get started
           </Link>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            className="grid h-9 w-9 place-items-center rounded-pill text-muted transition hover:bg-surface-2 hover:text-text md:hidden"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {open ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M3 6h18M3 12h18M3 18h18" />}
+            </svg>
+          </button>
         </div>
       </div>
+
+      {open && (
+        <nav className="glass mx-auto mt-2 max-w-5xl rounded-2xl p-2 shadow-md md:hidden">
+          {navLinks.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              onClick={() => setOpen(false)}
+              className="block rounded-lg px-3 py-2.5 text-body font-medium text-text transition hover:bg-surface-2"
+            >
+              {l.label}
+            </Link>
+          ))}
+          <a
+            href="https://github.com/Keyway-AI/keyway"
+            onClick={() => setOpen(false)}
+            className="block rounded-lg px-3 py-2.5 text-body font-medium text-text transition hover:bg-surface-2"
+          >
+            GitHub
+          </a>
+          <div className="my-1 border-t border-border/60" />
+          <div className="flex items-center justify-between px-3 py-1.5">
+            <Link to="/login" onClick={() => setOpen(false)} className="text-body font-medium text-muted hover:text-text">
+              Sign in
+            </Link>
+            <ThemeToggle />
+          </div>
+        </nav>
+      )}
     </header>
   );
 }
@@ -170,8 +211,11 @@ export function MarketingFooter() {
           ))}
         </div>
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-caption text-faint sm:flex-row">
-          <span>© {"2026"} Keyway — open source, MIT licensed.</span>
-          <span>Auth you can prove, not assume.</span>
+          <span>© {"2026"} Keyway — open source, Apache 2.0 licensed.</span>
+          <div className="flex items-center gap-4">
+            <Link to="/privacy" className="transition hover:text-text">Privacy</Link>
+            <Link to="/terms" className="transition hover:text-text">Terms</Link>
+          </div>
         </div>
       </div>
     </footer>

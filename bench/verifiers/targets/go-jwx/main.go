@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -55,5 +56,6 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 	log.Printf("go-jwx listening on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	srv := &http.Server{Addr: ":" + port, ReadHeaderTimeout: 5 * time.Second}
+	log.Fatal(srv.ListenAndServe())
 }

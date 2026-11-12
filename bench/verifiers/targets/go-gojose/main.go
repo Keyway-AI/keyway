@@ -68,5 +68,6 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 	log.Printf("go-gojose listening on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	srv := &http.Server{Addr: ":" + port, ReadHeaderTimeout: 5 * time.Second}
+	log.Fatal(srv.ListenAndServe())
 }

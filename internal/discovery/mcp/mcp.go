@@ -8,7 +8,7 @@
 // `authorization_servers` are the trusted issuers — so each one becomes a
 // Consumer.
 //
-// This is the agent-authorization analogue of the Envoy/Istio gateway sources:
+// This is the agent-authorization analog of the Envoy/Istio gateway sources:
 // where a mesh declares `issuer` + `audiences` per route, an MCP server declares
 // `authorization_servers` + `resource` per protected resource. Discovering it
 // lets the audience-binding checks (the SoK's headline MCP threat, token

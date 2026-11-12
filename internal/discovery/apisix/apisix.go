@@ -56,7 +56,7 @@ type apisixConfig struct {
 
 // Discover finds JWT-validating routes/services in APISIX config. A document
 // qualifies only if it has a `routes` or `services` list whose entries carry a
-// recognised JWT plugin, so unrelated manifests never false-match.
+// recognized JWT plugin, so unrelated manifests never false-match.
 func (d *Discoverer) Discover(_ context.Context, scope discovery.Scope) ([]model.Consumer, error) {
 	if len(scope.ConfigPaths) == 0 {
 		return nil, nil

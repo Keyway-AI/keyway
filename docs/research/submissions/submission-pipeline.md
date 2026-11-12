@@ -55,29 +55,56 @@ Where withdrawal *is* valid:
 Both are editable only until **Oct 31**; after that they are locked until the Dec 21
 result. So any improvement we want *in the SACMAT versions* must land by Oct 31.
 
-## Venues whose deadline is BEFORE Dec 21 — EXCLUDED as fallbacks
+## O-1 filter
 
-Submitting a SACMAT paper to any of these now = concurrent double submission.
+Only **peer-reviewed, archival, indexed proceedings** (IEEE, ACM, Springer LNCS, USENIX,
+Internet Society/NDSS) serve as O-1 evidence — the "authorship of scholarly articles" and
+"original contributions of major significance" criteria. So this tracker lists **only
+archival venues**. Deliberately excluded because they do **not** count for O-1:
+- **Non-archival / WIP / "No proceedings" tracks** (e.g. MADWeb's WIP option) — no citable
+  publication. Note the trap: the non-archival setting that would make a venue *legal* to
+  submit concurrently with SACMAT is exactly what makes it *useless* for O-1.
+- **Talks, invited talks, posters** (the KubeCon / KeycloakCon / OSS-SecurityCon / AIDC
+  items in [conference-watchlist.md](conference-watchlist.md)) — speaking engagements, not
+  scholarly articles. They can support *recognition*-type evidence but are not publications.
 
-| Venue | Deadline | Notify | Fit | Why excluded |
-|---|---|---|---|---|
-| PAM 2027 | **Nov 6, 2026** | Dec 14 | Paper A (measurement) | deadline < Dec 21 |
-| S&P 2027 Cycle 2 | Nov 17, 2026 | Mar 5 | A or B | deadline < Dec 21 |
-| IMC 2027 (R1) | Nov 17, 2026 | — | Paper A | deadline < Dec 21 |
-| CODASPY 2027 (incl. SoK track) | Nov 23, 2026 | Jan 25 | A or B | deadline < Dec 21 |
+## Near-term archival venues (deadline BEFORE Dec 21) — all concurrent-blocked
+
+Every O-1-qualifying venue is archival, and all of these overlap SACMAT's review (runs to
+Dec 21), so submitting a SACMAT paper to any of them now = dual-submission violation
+(withdrawing the loser does not cure it — the concurrent *review* is the prohibited act).
+**Net: there is no O-1-counting near-term move available while #13/#35 sit at SACMAT.**
+Listed for completeness and as post-Dec-21 targets if their next cycle/edition opens.
+
+| Venue | Deadline | **Result** | Fit | Proceedings | Verdict (vs SACMAT) |
+|---|---|---|---|---|---|
+| STALA 2027 (NDSS wksp) | Dec 11 *(est)* | ~Feb 1, 2027 *(est)* | **Paper B** (best fit) | Internet Society (archival) | ❌ concurrent; prohibits it explicitly |
+| SafeOSE 2027 (NDSS wksp) | Dec 10 *(est)* | — | A/B | NDSS (archival — verify) | ❌ concurrent |
+| EuroS&P 2027 | ~Nov 20–Dec 2 *(est)* | ~Mar 5, 2027 *(est, per '26)* | A/B | IEEE | ❌ concurrent |
+| DSN 2027 (research) | **Nov 25, 2026** | **Mar 18, 2027** | A | IEEE/IFIP | ❌ concurrent |
+| AsiaCCS 2027 Cycle 2 | **Dec 11, 2026** | **Mar 31, 2027** (early-rej Feb 5) | A/B | ACM | ❌ concurrent |
+| IEEE S&P 2027 C2 | **Nov 10, 2026** | **Mar 5, 2027** | A/B | IEEE | ❌ concurrent |
+| IMC 2027 R1 | ~Nov 20, 2026 *(est, per '26)* | ~Mar 17, 2027 *(est)* | A | ACM | ❌ concurrent (use R2) |
+| CODASPY 2027 (+SoK) | Nov 23, 2026 | Jan 25, 2027 *(est)* | A/B | ACM | ❌ concurrent |
+| PAM 2027 | ~mid-Oct 2026 *(likely passed)* | ~Dec 2026 *(est)* | A | Springer LNCS | ❌ concurrent / may be closed |
+
+**So:** the near-term archival list is entirely concurrent-blocked. The real O-1 pipeline
+is the clean fallback set below (deadlines after Dec 21), which all produce indexed
+proceedings.
 
 ## Valid sequential fallbacks — deadline ON/AFTER Dec 21
 
 Prepare improved papers now; fire only if SACMAT rejects on Dec 21.
 
-| Venue | Deadline | Notify | Best paper | Notes |
+| Venue | Deadline | Result/notify | Best paper | Notes |
 |---|---|---|---|---|
+| **ACNS 2027 Cycle 2** | **Jan 21, 2027** *(official)* | **Mar 25, 2027** | A or B | ✅ cleanest/earliest confirmed fallback; Springer LNCS, Royal Holloway Jun 28–Jul 1. |
 | **CCS 2027 Cycle 1** | ~Jan 14–15, 2027 *(tentative — official CFP not posted)* | ~Apr 2027 | A or B | soonest shot but ~3 wks after SACMAT result and top-tier/hard. Confirm when CFP posts. |
-| **USENIX Security 2027 Cycle 2** | **Jan 26, 2027** *(official)* | **May 6, 2027** | A or B | ~5 wks after SACMAT; most reliable near-term. 13pp + mandatory Open Science appendix. |
-| **IMC 2027 (R2)** | ~Apr 7, 2027 *(tentative)* | — | **Paper A** | the natural measurement home; most prep time. Confirm. |
+| **USENIX Security 2027 Cycle 2** | **Jan 26, 2027** (register Jan 19; *official, prelim*) | **May 6, 2027** (early-rej Mar 9) | A or B | most reliable near-term. 13pp + mandatory Open Science appendix. Denver Aug 11–13. |
+| **IMC 2027 (R2)** | ~Apr 29, 2027 *(est, per '26 R2)* | ~Aug 2027 *(est)* | **Paper A** | the natural measurement home; most prep time. Confirm. |
 | **CCS 2027 Cycle 2** | ~Apr 29, 2027 *(tentative)* | ~Jul 2027 | A or B | later CCS shot. |
 | ESORICS / ARES / EuroS&P 2027 | spring 2027 | — | A or B | secondary options. |
-| **SSR 2027** (Trento, Dec 9–10, 2027) | ~Sep 2027 *(est; SSR'26 was Sep 15)* | ~Oct 2027 | A or B | the natural *standardization* home — but SSR'26 rejected both, so it must lead with the fixes. A year out. |
+| **SSR 2027** (Trento, Dec 9–10, 2027) | ~Sep 2027 *(est; SSR'26 was Sep 15)* | ~Oct 2027 *(est)* | A or B | the natural *standardization* home — but SSR'26 rejected both, so it must lead with the fixes. A year out. |
 
 ### Fast-first chaining — NOT available in the Dec-2026/Jan-2027 window
 

@@ -38,12 +38,12 @@ still points to credwise.co.in (left as-is; no Nometria URL on hand to replace i
 |---|---|---|
 | Oct 19 (AoE ≈ Oct 20 17:30 IST) | WAITI #20 (Paper B SoK) acceptance notification | result |
 | Oct 23 | AIDC paper #43 notification | result |
-| Oct 25 | AIDC lightning talks (A + B) notification | result |
+| Oct 25 | AIDC lightning talks (A + B) notification | result — **DELAYED: still no email/decision as of Oct 27; site date unchanged** |
 | **Oct 27 (AoE)** | **WAITI #20 camera-ready** (if accepted) | deadline |
 | Oct 30 | AIDC #43 final paper (if accepted) | deadline |
 | Oct 31, 07:59 EDT | SACMAT SoK cycle-1 submission (fallback) | deadline |
 | Oct 31 | SACMAT #13 (Paper A) edit window closes | deadline |
-| Nov 2 | AIDC final lightning abstract (if accepted) | deadline |
+| **Nov 8, 11:59 UTC (≈ Nov 7 AoE)** | AIDC final lightning abstract (if accepted) | deadline — *corrected from Nov 2 per live site 2026-10-27* |
 
 - WAITI dates per https://waiti-workshop.github.io/dates/ — site states all deadlines
   are 11:59 PM AoE (UTC-12). Submission was Oct 12 (done); camera-ready Oct 27.

@@ -45,8 +45,24 @@ for pp in 10001:/api/protected 10002:/api/protected 10003:/ 10004:/ 10005:/ 1000
   echo "  :$port$path -> $code"
 done
 
-echo "== run harness =="
+echo "== run harness (raw probe table) =="
 "$OUT/keyway" probe --harness \
   --issuer-url http://localhost:8099 --issuer-key "$KEY" \
   --allow localhost --allow 127.0.0.1 \
   --consumers "$V/consumers/consumers.json" 2>"$OUT/harness.err" | tee "$OUT/results.txt"
+
+# The conformance report is the productized artifact: per-verifier findings and
+# per-threat prevalence, built by internal/conformance from the same harness run.
+# (Re-firing the corpus at localhost targets is idempotent.)
+echo "== conformance report (human) =="
+"$OUT/keyway" probe --harness --report conformance \
+  --issuer-url http://localhost:8099 --issuer-key "$KEY" \
+  --allow localhost --allow 127.0.0.1 \
+  --consumers "$V/consumers/consumers.json" 2>>"$OUT/harness.err" | tee "$OUT/conformance.txt"
+
+echo "== conformance report (json) =="
+"$OUT/keyway" probe --harness --report conformance-json \
+  --issuer-url http://localhost:8099 --issuer-key "$KEY" \
+  --allow localhost --allow 127.0.0.1 \
+  --consumers "$V/consumers/consumers.json" 2>>"$OUT/harness.err" >"$OUT/conformance.json"
+echo "wrote $OUT/conformance.txt and $OUT/conformance.json"

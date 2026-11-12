@@ -1,0 +1,6 @@
+# Dependencies for the MCP-server-class verifier targets (mcp-fastmcp, mcp-python-sdk).
+# These need Python >= 3.10, so they run in a dedicated venv (see run-mcp-eval.sh),
+# separate from the 3.9 library targets in requirements.txt.
+fastmcp
+mcp
+pyjwt[crypto]

@@ -3,4 +3,7 @@ out/*
 !out/.gitkeep
 !out/results.txt
 !out/RESULTS.md
+!out/mcp-conformance.txt
+!out/mcp-conformance.json
 targets/*/node_modules/
+targets/*/__pycache__/

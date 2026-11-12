@@ -1,0 +1,11 @@
+{
+  "_comment": "MCP-server-class verifier targets (A7, Paper B). Each is a real MCP auth implementation that trusts the Keyway test issuer and should require aud == its own resource identifier (the MCP spec's RFC 8707 binding). Ports match bench/verifiers/run-mcp-eval.sh. Needs the Python>=3.10 venv (fastmcp, mcp, pyjwt).",
+  "consumers": [
+    { "stable_id": "mcp-fastmcp", "kind": "mcp_server", "name": "FastMCP JWTVerifier", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10011", "method": "GET", "safe_probe_path": "/" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["mcp-rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } },
+    { "stable_id": "mcp-python-sdk", "kind": "mcp_server", "name": "MCP Python SDK bearer-auth (default, resource_server_url unset)", "probeable": true,
+      "endpoints": [{ "url": "http://localhost:10012", "method": "GET", "safe_probe_path": "/" }],
+      "expects": { "issuers": ["http://localhost:8099"], "audiences": ["mcp-sdk-rs-A"], "algorithms": ["RS256"], "required_claims": [], "clock_skew_sec": 60 } }
+  ]
+}

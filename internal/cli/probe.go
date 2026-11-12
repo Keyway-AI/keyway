@@ -13,6 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/Keyway-AI/keyway/internal/conformance"
 	"github.com/Keyway-AI/keyway/internal/discovery"
 	"github.com/Keyway-AI/keyway/internal/issuer/generic"
 	"github.com/Keyway-AI/keyway/internal/issuer/localkeys"
@@ -30,6 +31,7 @@ func newProbeCmd() *cobra.Command {
 	cmd.Flags().String("consumer", "", "limit to a single consumer StableID")
 	cmd.Flags().String("probe", "", "limit to a single probe ID")
 	cmd.Flags().Bool("harness", false, "run the generative attack harness (internal/attack) instead of the fixed probe set")
+	cmd.Flags().String("report", "", "post-run report over harness results: conformance|conformance-json (requires --harness)")
 	cmd.Flags().Bool("dry-run", false, "construct tokens but do not send requests")
 	cmd.Flags().Bool("i-know-this-is-production", false, "override the staging-only guard (dangerous)")
 	cmd.Flags().StringSlice("allow", nil, "host substrings the probe engine may target (staging allowlist)")
@@ -97,8 +99,9 @@ func runProbe(cmd *cobra.Command, _ []string) error {
 	mint := func(kid string, claims map[string]any) (string, error) {
 		return iss.MintToken(ctx, kid, claims)
 	}
+	harness, _ := cmd.Flags().GetBool("harness")
 	runFn := eng.Run
-	if harness, _ := cmd.Flags().GetBool("harness"); harness {
+	if harness {
 		runFn = eng.RunHarness
 	}
 	results, outcomes, err := runFn(ctx, issModel, mint, consumers)
@@ -110,7 +113,23 @@ func runProbe(cmd *cobra.Command, _ []string) error {
 		results = filterResults(results, onlyProbe)
 	}
 
-	printProbeResults(cmd, results, outcomes)
+	report, _ := cmd.Flags().GetString("report")
+	switch report {
+	case "conformance", "conformance-json":
+		if !harness {
+			return fmt.Errorf("--report %s requires --harness (the conformance report is built from the adversarial harness)", report)
+		}
+		rep := conformance.Build(results)
+		if report == "conformance-json" {
+			if werr := rep.WriteJSON(cmd.OutOrStdout()); werr != nil {
+				return werr
+			}
+		} else {
+			rep.WriteTable(cmd.OutOrStdout())
+		}
+	default:
+		printProbeResults(cmd, results, outcomes)
+	}
 
 	// Persist results unless dry-run or no DB configured.
 	if !dry {

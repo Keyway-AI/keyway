@@ -15,29 +15,10 @@
 % margin. Class-agnostic; applies under every venue wrapper.
 \emergencystretch=3em
 
-\begin{abstract}
-Whether a service accepts a bearer token comes down to configuration, not code:
-which issuers it trusts, which audiences it binds to, which algorithms it allows,
-and which claims it requires. These settings are spread across service meshes,
-proxies, and identity providers, they are rarely written down in one place, and a
-single change (a rotated key, a widened audience, a dropped claim) silently turns
-valid users away or starts admitting tokens that should be refused. We call this
-configuration a service's implicit \emph{authorization contract}, and we think it
-should be measured directly rather than assumed. We give a method that derives the
-contract from deployment configuration and run it over 428 public repositories. In a
-first sample of 102 JWT-validating configurations, none pinned a signing algorithm
-in configuration (100\%, leaving it to the verifying library's default), 85.3\%
-required no claims, and 42.2\% left the token audience unbound, all with Wilson
-95\% confidence intervals. Because a measurement is only as good as its extractor,
-we validate it two ways and state each method's limits: a kind-aware oracle for
-recall (issuers 89.6\%, audiences 99.0\%), and a negative control for precision that
-plants values a correct tool must ignore. We release the tool, the corpus manifest,
-and the analysis. These numbers are preliminary and from a small sample; the paper
-sets out the agenda a full study needs: scale, drift over time, and the line between
-what configuration reveals and what only runtime can.
-\draftonly{hand-labelled validation and scaled-corpus results before a full-paper
-submission; this Vision draft leads with the agenda.}
-\end{abstract}
+% The abstract lives in common/abstract.tex. acmart requires it BEFORE \maketitle,
+% llncs/IEEEtran after, so an acmart wrapper \inputs it itself (and defines
+% \keywayabstractdone); every other wrapper lets the body emit it here.
+\ifdefined\keywayabstractdone\else\input{abstract}\fi
 
 \section{Introduction}
 An engineer rotates a signing key on a Friday. No code changes; every test passes.
@@ -57,53 +38,199 @@ admits tokens that should be refused (a silent regression). As autonomous agents
 begin carrying OAuth/MCP tokens on a user's behalf, the same contract now governs a
 faster-moving, higher-stakes surface.
 
-This contract is where auth correctness actually lives, and yet almost nobody
-measures it. Two kinds of tooling exist, and neither answers ``what does the
-deployed auth contract look like, at scale, and how healthy is it?'' Static code
-scanners reason about source, not about which \emph{running} verifier trusts which
-issuer. Gateways and identity providers are the thing being configured, so they
-cannot tell you whether that configuration is healthy. We think the authorization
-contract should be something you can measure, and this paper is the first step
-toward measuring it.
+A caveat shapes the whole paper. What configuration states is the \emph{declared}
+contract; whether a request is ultimately accepted is the \emph{effective}
+behaviour, which also depends on the verifier's code, its library's defaults, and
+its software version. A verifier may, for example, accept the \texttt{none}
+algorithm because of an implementation flaw even where configuration says nothing,
+and that is not visible in configuration at all. We measure the declared contract,
+we say so throughout, and \S\ref{sec:background} and \S\ref{sec:limitations} make
+the boundary between declared and effective explicit; where a declared value is
+absent we distinguish ``not set in configuration'' from ``not enforced.''
+
+This declared contract is where much of auth correctness is decided, and yet almost
+nobody measures it at scale. Two kinds of tooling exist and neither answers ``what
+do deployed authorization contracts look like across a population, and how healthy
+are they?'' Static code scanners reason about source, not about which configured
+verifier trusts which issuer; gateways and identity providers are the thing being
+configured, so they do not tell an operator whether that configuration is healthy.
 
 \noindent\textbf{Contributions.}
-(i) A way of treating the authorization contract as something you can derive,
-version, and measure, and a method to derive it from heterogeneous deployment
-configuration with per-field provenance (\S\ref{sec:method}).
-(ii) A preliminary measurement of how common concrete, RFC-cited weaknesses are
-across 428 public repositories, with confidence intervals (\S\ref{sec:results}).
-(iii) A validation methodology that is honest about its own limits: a kind-aware
-oracle for recall and a non-circular negative control for precision, each with its
-failure mode stated (\S\ref{sec:validation}).
-(iv) A released instrument, corpus manifest, and analysis (\S\ref{sec:artifact}),
-and a research agenda (scale, drift, and the static/runtime frontier,
-\S\ref{sec:vision}) that a full study completes.
+(i) We define the \emph{authorization contract} and give a method that derives it
+from heterogeneous deployment configuration (Istio, Envoy, OIDC) with per-field
+provenance and content-addressed versioning, separating the declared contract from
+effective enforcement (\S\ref{sec:method}).
+(ii) We measure how common concrete, normatively grounded weaknesses are across
+2{,}718 public repositories and 530 JWT-validating configurations, with confidence
+intervals and a co-occurrence analysis (\S\ref{sec:results}).
+(iii) We give a validation methodology that is explicit about its own limits:
+recall against an independent parse, a non-circular negative control for precision,
+and a held-out over-attribution split, each with its failure mode stated
+(\S\ref{sec:validation}).
+(iv) We release the instrument, the corpus manifest, and the analysis so the study
+is reproducible from public sources (\S\ref{sec:artifact}).
 
-\noindent This is a vision-and-first-step paper by design: we contribute the
-framing, a validated instrument, and an honest baseline, and we set the agenda we
-think the community should pursue. \S\ref{sec:limitations} is open about what the
-preliminary measurement does not yet establish.
+\noindent\textbf{Research questions.} The study answers four. RQ1: can a service's
+authorization contract be derived accurately from heterogeneous deployment
+configuration, and how do we know (\S\ref{sec:method}, \S\ref{sec:validation})? RQ2:
+how prevalent are concrete, normatively grounded verification weaknesses across a
+population of real deployments (\S\ref{sec:results})? RQ3: do these weaknesses
+co-occur, or are they independent (\S\ref{sec:results})? RQ4: what fraction of the
+contract can a purely static reading settle, and where does effective enforcement
+require a runtime probe (\S\ref{sec:results}, \S\ref{sec:discussion})?
 
 \section{Background}\label{sec:background}
-A JWT verifier is defined by: the \emph{issuers} it trusts, the \emph{audiences}
-it binds tokens to (RFC~8707, RFC~9728), the signing \emph{algorithms} it permits
-(RFC~8725~\S3.1), the \emph{claims} it requires (RFC~8725~\S3.9), and its
-JWKS-fetch/cache behaviour. Agent authorization adds delegation (RFC~8693 \texttt{act}),
-resource binding for MCP servers, scope minimisation, and token lifetime. These
-are the fields whose prevalence we measure, each grounded in a normative source.
+
+\noindent\textbf{JWT verification.} A JSON Web Token is a signed statement of
+claims: a header naming the signing algorithm, a payload of claims (including
+\texttt{iss}, the issuer; \texttt{aud}, the intended audience; \texttt{exp}, the
+expiry), and a signature. To accept a token, a verifier must (1) fetch the issuer's
+public keys, in practice from a JSON Web Key Set (JWKS) endpoint, and verify the
+signature; (2) check that \texttt{iss} is a trusted issuer; (3) check that
+\texttt{aud} names this resource; (4) accept only an allow-list of signing
+algorithms; and (5) enforce any additional required claims (roles, scopes, tenant).
+Each step has a normative source. RFC~8725 (JSON Web Token Best Current Practices)
+requires an explicit algorithm allow-list (\S3.1) and validation of all security
+claims (\S3.9); RFC~9068 profiles JWT \emph{access tokens} and makes audience and
+issuer validation mandatory for that profile; RFC~8707 (resource indicators) and
+RFC~9728 (protected-resource metadata) bind a token to the resource it was minted
+for. Which checks are mandatory therefore depends partly on the token profile in
+use, a point we return to in \S\ref{sec:limitations}.
+
+\noindent\textbf{Where the contract lives.} Few services implement these checks in
+application code. In a service mesh the checks are declared as configuration and
+enforced by a sidecar or gateway. Under Istio, a \texttt{RequestAuthentication}
+resource declares the issuer, the JWKS source, and the accepted audiences, while an
+\texttt{AuthorizationPolicy} declares required claims as \texttt{when} conditions on
+\texttt{request.auth.claims[...]}; under Envoy, a \texttt{jwt\_authn} filter carries
+the providers, audiences, and clock-skew tolerance. These resources usually live in
+\emph{different files}, and the effective contract for one workload is their union.
+Figure~\ref{fig:example} shows a minimal pair.
+
+\begin{figure}[t]
+\footnotesize
+\begin{verbatim}
+kind: RequestAuthentication      # issuer + audience
+spec:
+  selector: {matchLabels: {app: orders}}
+  jwtRules:
+  - issuer: "https://idp.example/realms/main"
+    jwksUri: "https://idp.example/jwks.json"
+    audiences: ["orders-api"]
+---
+kind: AuthorizationPolicy        # a required claim
+spec:
+  selector: {matchLabels: {app: orders}}
+  rules:
+  - when:
+    - key: request.auth.claims[groups]
+      values: ["ops"]
+\end{verbatim}
+\caption{The declared authorization contract for the \texttt{orders} workload,
+spread across two resources: trust \texttt{idp.example}, require audience
+\texttt{orders-api}, and require a \texttt{groups} claim of \texttt{ops}. No signing
+algorithm is pinned, so the mesh applies its library default (\S\ref{sec:results}).}
+\label{fig:example}
+\end{figure}
+
+\noindent\textbf{Declared vs.\ effective; terminology.} We measure the
+\emph{declared} contract in resources like these. The \emph{effective} behaviour
+can differ: a verifier might skip a check, honour a dangerous default, or carry an
+implementation bug (accepting \texttt{alg=none}, confusing RS256 and HS256). Those
+are code, not configuration, and outside the reach of a static reading; we flag the
+absence of a configured check as ``not set in configuration,'' never as a confirmed
+runtime vulnerability. We use \emph{consumer} for the verifying entity a contract
+belongs to (an Istio workload, an Envoy route), and we restrict \emph{authorization
+contract} to \emph{token validation} (is this token acceptable?), as distinct from
+resource-level authorization (may this subject perform this action?), which is a
+separate layer we do not measure.
+
+\noindent\textbf{Weaknesses measured.} From these checks we define five
+configuration-visible properties, each the absence or breadth of a check the token
+profile expects. \emph{P1, unbound audience:} the contract names no audience, so a
+token minted for any resource the issuer serves is, as declared, acceptable here
+(RFC~8707, RFC~9068); this is the token-passthrough and replay risk, at the verifier
+side. \emph{P2, no required claims:} the contract requires only a valid signature,
+issuer, and audience and enforces no further claim such as a role, scope, or tenant,
+so any validly-issued token passes regardless of what it authorizes (RFC~8725
+\S3.9). \emph{P3, no algorithm pinned:} the contract restricts no signing algorithm
+and defers to the library's default allow-list (RFC~8725 \S3.1), which is where
+\texttt{alg=none} and RS/HS confusion historically enter. \emph{P4, multi-issuer
+trust:} the contract trusts more than one issuer, a wider trust surface we report
+descriptively rather than as a fault. \emph{P5, wide clock skew:} the contract
+accepts a lifetime tolerance beyond five minutes (RFC~8725 \S3.11). P1 through P3 are
+absences a stricter profile would forbid; P4 and P5 are reported for completeness.
+These are the quantities Table~\ref{tab:prevalence} measures.
 
 \section{Deriving authorization contracts}\label{sec:method}
-A \emph{consumer} is any entity that validates tokens. We derive consumers from
-configuration rather than declarations. Discoverers map each source to consumers:
-Istio \texttt{RequestAuthentication} (issuer, audiences, JWKS) and
-\texttt{AuthorizationPolicy} (required claims in \texttt{when} conditions); Envoy
-JWT filters; Kubernetes workload metadata for stable identity; OIDC/Keycloak
-registries. Each extracted field records \emph{provenance}
-(\{source, locator, confidence\}), so every measurement is attributable to a line
-of configuration. A library-defaults database fills verifier behaviour the config
-omits, because the contract includes what the verifier does \emph{by default}.
-Consumers are assembled into a content-addressed \texttt{ContractVersion}, enabling
-exact-equality change detection and diffing across versions.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[font=\footnotesize,
+  box/.style={draw,rounded corners,align=center,inner sep=4pt,
+              minimum height=8mm,text width=20mm}]
+\node[box] (a) at (0,0)    {Mesh/proxy\\config (GitHub)};
+\node[box] (b) at (3.2,0)  {Source\\discoverers};
+\node[box] (c) at (6.4,0)  {Authorization\\contract\\(per consumer)};
+\node[box] (d) at (9.6,0)  {Prevalence\\checks (P1--P5)};
+\node[box] (e) at (6.4,-1.5){Validation\\harness};
+\draw[->] (a)--(b) node[midway,above]{parse};
+\draw[->] (b)--(c) node[midway,above]{join};
+\draw[->] (c)--(d) node[midway,above]{flag};
+\draw[->] (c)--(e);
+\end{tikzpicture}
+\caption{Pipeline. Source-specific discoverers parse heterogeneous mesh and proxy
+configuration, the join (\S\ref{sec:method}) resolves the checks split across
+resources into one authorization contract per consumer, and the prevalence checks
+and the validation harness (\S\ref{sec:validation}) both read that contract.}
+\label{fig:pipeline}
+\end{figure*}
+
+We derive one contract per \emph{consumer} (\S\ref{sec:background}) from the
+configuration that governs it. Source-specific \emph{discoverers} parse each format
+(Istio \texttt{RequestAuthentication} and \texttt{AuthorizationPolicy}, Envoy
+\texttt{jwt\_authn}, and OIDC/Keycloak registries) into a common contract of
+issuers, audiences, algorithms, required claims, and JWKS behaviour.
+
+Deriving a contract is not a one-resource read, because the checks are split across
+resources (\S\ref{sec:background}). For the pair in Figure~\ref{fig:example}, the
+\texttt{RequestAuthentication} contributes the issuer, JWKS source, and audience,
+and the \texttt{AuthorizationPolicy} contributes the required \texttt{groups} claim;
+we join them by the workload they select (\texttt{app: orders}) into a single
+consumer whose contract carries all three. Attribution follows the mesh's own
+semantics: a selector-less policy applies to every workload in its namespace, and
+in a namespace with a single JWT consumer a per-service claim policy attaches to
+that consumer (the common edge-gateway pattern). The same join resolves audiences
+declared in an \texttt{AuthorizationPolicy} condition on
+\texttt{request.auth.audiences} rather than in the \texttt{RequestAuthentication}.
+
+\noindent\textbf{Attribution rules.} Three rules decide how a policy's claims reach a
+consumer, in order of specificity. (1) \emph{Selector match:} a policy whose selector
+labels match a consumer's workload contributes its claims to that consumer. (2)
+\emph{Namespace-wide:} a selector-less policy applies to every consumer in its
+namespace, which is Istio's own semantics, so its claims reach all of them. (3)
+\emph{Single validator:} in a namespace with exactly one JWT consumer, a per-service
+claim policy still constrains the tokens that consumer validates even if it selects a
+workload with no \texttt{RequestAuthentication} of its own, because that consumer is
+the only verifier inbound traffic passes. Rule (3) captures the edge-gateway pattern,
+where one edge \texttt{RequestAuthentication} authenticates and per-service policies
+add claim checks; without it those claims would be dropped as unattributable, which
+is what depressed the earlier claims recall. Each rule is conservative, attaching a
+claim only where the mesh would apply it, and the negative control
+(\S\ref{sec:validation}) tests exactly this with a claim placed behind a non-matching
+selector, which a correct extractor must not attribute. Envoy routes that accept
+several providers through a \texttt{requires\_any} are the dual case: they are one
+validation point trusting several issuers, so we merge them into a single
+multi-issuer consumer rather than counting each provider separately.
+
+Every extracted field records \emph{provenance}: the source kind, the file
+locator, and a confidence. Each measurement is therefore attributable to a line of
+configuration and a human can check it (we use this in \S\ref{sec:validation}).
+A library-defaults database records what a verifier does when configuration is
+silent, kept separate from what configuration states so the two are never conflated.
+Consumers are assembled into a content-addressed \texttt{ContractVersion}, which
+makes change detection exact equality and lets us diff one deployment's contract
+against another or against its own history.
 
 \section{Corpus construction}\label{sec:corpus}
 We crawl public GitHub read-only for real auth configuration (Istio
@@ -114,15 +241,40 @@ limit monorepo dominance, and analyse \emph{per repository} so a
 \texttt{RequestAuthentication} and its \texttt{AuthorizationPolicy} (usually in
 separate files) are resolved together while distinct repositories remain isolated.
 Two cleaning steps address representativeness: we exclude tutorial/vendored copies
-by path, and we deduplicate identical configurations (a canonical sample pasted
-across repositories counts once). The preliminary corpus is 603 files across 428
-public repositories, yielding 102 distinct JWT-validating configurations after
-cleaning. \gate{A full study will scale the corpus toward $10^3$--$10^4$ services
-and report the exact $N$ with confidence intervals and a selection-bias analysis.}
+by path (matched against the full locator, so \texttt{testdata/}, \texttt{vendor/},
+and \texttt{/e2e/} components are caught, not only basenames), and we deduplicate
+identical configurations (a canonical sample pasted across repositories counts
+once). To reach the full population rather than a convenience sample, the crawler
+partitions its searches by file size so a single query's result ceiling does not cap
+the corpus, retries under rate limiting, and resumes without re-fetching. The result
+is 5{,}214 files across 2{,}718 public repositories (Table~\ref{tab:corpus}),
+yielding 778 JWT-validating configurations, or 530 after deduplication, which is the
+measurement denominator. \gate{A full study will push the corpus further toward
+$10^4$ services, add OIDC/MCP sources, and report a selection-bias analysis against
+the public-configuration population.}
+
+\begin{table}[t]
+\centering\small
+\caption{Corpus composition. The deduplicated configuration count is the
+denominator for Table~\ref{tab:prevalence}.}
+\label{tab:corpus}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Public repositories crawled & 2{,}718 \\
+Configuration files & 5{,}214 \\
+\quad Helm-templated & $\approx$13\% \\
+\quad kustomize or variable markers & $\approx$8\% \\
+Example/fixture files excluded & 417 \\
+JWT-validating configurations & 778 \\
+\quad after deduplication (denominator) & 530 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Validation methodology}\label{sec:validation}
-Measurement is only as good as the extractor. We validate discovery two ways and
-are explicit about what each can and cannot establish.
+Measurement is only as good as the extractor. We validate discovery three ways, for
+recall, for precision, and for over-attribution, and are explicit about what each
+can and cannot establish.
 
 \noindent\textbf{Recall (kind-aware independent parse).} An independent YAML parse
 of each repository yields the declared issuers/audiences/claims; we compare to what
@@ -130,12 +282,37 @@ discovery captured, per repository. The independent parser also
 \emph{over-declares}: it scrapes \texttt{issuer:} keys and claim-like strings from
 non-auth resources (a ConfigMap, an annotation). We therefore measure recall only
 against values in \emph{genuine} auth resources (RequestAuthentication /
-AuthorizationPolicy / Envoy JWT). Adjudicated recall is issuers 89.6\%, audiences
-99.0\%, and claims 82.1\% (scoped to repositories where a JWT consumer exists;
+AuthorizationPolicy / Envoy JWT). Adjudicated recall is issuers 96.0\%, audiences
+98.2\%, and claims 86.0\% (scoped to repositories where a JWT consumer exists;
 claims declared in repositories whose RequestAuthentication is absent from the
-corpus have no consumer to attach to). The adjudication removed 17 parser
-over-declarations, which both raises the honest recall and demonstrates the proxy
-oracle is itself imperfect.
+corpus have no consumer to attach to). The adjudication removed 106 parser
+over-declarations (65 issuers, 27 audiences, 14 claims), which both raises the
+honest recall and demonstrates the proxy oracle is itself imperfect. The issuer
+figure rose from an earlier 89.6\% once a document-splitting bug was fixed: a single
+templated or malformed YAML document had been aborting the rest of its file, so the
+earlier recall was depressed by the extractor, not by the corpus.
+Table~\ref{tab:validation} summarizes the three checks.
+
+\begin{table}[t]
+\centering\small
+\caption{Validation summary. Recall is measured per repository against an
+independent parse of genuine auth resources; precision against planted
+negative-control values a correct extractor must ignore; over-attribution on a
+held-out 70/30 repository split labelled by an independent model.}
+\label{tab:validation}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Recall (field) & Recall & TP & FN \\
+\midrule
+issuers           & 96.0\% & 767 & 32 \\
+audiences         & 98.2\% & 336 & 6  \\
+claims (scoped to a consumer) & 86.0\% & 153 & 25 \\
+\midrule
+\multicolumn{4}{@{}l}{Precision, negative control: 4 planted, 0 leaked} \\
+\multicolumn{4}{@{}l}{Over-attribution, held-out test: 0.0\% (0 of 6); precision 100\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \noindent\textbf{Precision (non-circular negative control).} An independent-parse
 oracle cannot honestly measure precision: it reads the same fields as the
@@ -146,24 +323,153 @@ issuer, an \texttt{issuer:}/claim in a non-auth ConfigMap, a claim behind a
 non-matching AuthorizationPolicy selector (the real attribution risk), and strings
 in annotations. Result: 4 planted, 0 leaked, with real values still captured.
 
-\noindent\textbf{Gold standard.} Both above are automated proxies.
-\gate{The definitive precision and recall await a hand-labelled stratified sample,
-with each captured value adjudicated as real, correctly attributed, or spurious.}
+\noindent\textbf{Over-attribution (held-out split).} To measure how often discovery
+\emph{adds} a value that is not really there, we take every captured/declared
+disagreement, label each with an independent model that reads only the raw
+configuration and never the extractor's output (so the grading is non-circular),
+and split the labelled set 70/30 by repository so no repository informs both sides.
+On the held-out test split, precision is 100\% and over-attribution is 0.0\% (0 of 6
+captured-only values are spurious or mis-attributed); on the full labelled set,
+precision 100\% and over-attribution 0.0\%. This split is what caught, and then
+confirmed the fix for, an Envoy test-fixture leak and a claim mis-attribution during
+development.
 
-\section{Preliminary results}\label{sec:results}
-\emph{These numbers are preliminary (small N, no human labels) and are not to be
-cited as final; they are reported to demonstrate the instrument and to bound the
-work remaining.}
+\noindent\textbf{Gold standard.} All three above are automated or model-assisted
+proxies. For a population-level ground truth we draw a stratified random sample of
+401 \mbox{(repo, field, value)} rows. The sample is stratified by field (issuer,
+audience, claim) and by side (a value both the parse and discovery found, a
+captured-only value, or a declared-only value) and drawn at one rate across every
+stratum, so it is self-weighting and the raw counts estimate the population directly.
+At this size the precision and recall estimates carry a $\pm$1.8\% and $\pm$2.4\%
+Wilson half-width. Each row is adjudicated by a human against a seven-label taxonomy
+(real and correctly attributed, real but missed, parser artifact, no consumer to
+attach to, spurious, or wrong-consumer), from which recall and precision follow by
+the definitions above. An independent model drafts a first-pass label from the raw
+configuration, which a human then confirms or corrects; to keep the human-model
+agreement honest, a random blind subset is labelled by the human before the model's
+draft is revealed, and Cohen's $\kappa$ is computed on that subset.
+\gate{We report the hand-validated precision, recall, and $\kappa$ in the final
+version; the automated results above are what the gold standard refines.}
 
-\noindent\textbf{Prevalence.} Over 102 distinct JWT-validating configurations
-(Wilson 95\% CIs): no algorithm pinning \emph{in configuration} 100\%
-[96.4, 100]; no required claims 85.3\% [77.1, 90.9]; unbound audience 42.2\%
-[33.0, 51.9]. The algorithm-pinning figure reflects reliance on the verifying
-\emph{library's default}, which configuration does not restate. This is a
-static-vs-runtime gap, not a 100\% vulnerability rate; we report it as
-``not pinned in config.''
-\gate{We will re-run these over the scaled, hand-labelled corpus and add a
-co-occurrence analysis.}
+\section{Results}\label{sec:results}
+We report prevalence over the 530 deduplicated JWT-validating configurations, each
+with a 95\% Wilson confidence interval (the Wilson interval is preferred over the
+normal approximation for proportions near 0 or 1). These figures come from the
+independently validated extractor of \S\ref{sec:validation}; the hand-validated
+gold standard refines the \emph{validation} numbers, not the prevalence below.
+
+\noindent\textbf{Prevalence.} Table~\ref{tab:prevalence} reports the five checks
+over the 530 configurations. The headline result is that most contracts leave the
+basic validation checks unstated: four in five require no claim beyond issuer and
+audience, and a majority bind no audience, so a token minted for one service is, as
+declared, acceptable at another. No configuration pins a signing algorithm, which we
+read as reliance on the library default rather than as a confirmed runtime failure
+(\S\ref{sec:limitations}); we label it ``not pinned in config.'' The clock-skew
+figure is read directly from Envoy \texttt{clock\_skew\_seconds} rather than assumed:
+of the configurations that set it the widest is 60\,s, so the 0.0\% above the
+five-minute threshold is measured, not merely unobserved. For reference, the earlier
+102-configuration pilot reported unbound audience at 42.2\%; the figure rises to
+53.4\% on this larger and more representative corpus, and the majority finding is
+unchanged.
+
+\begin{table}[t]
+\centering\small
+\caption{Prevalence of cited verification weaknesses over 530 deduplicated
+JWT-validating configurations, with Wilson 95\% confidence intervals. P3 reflects
+reliance on a library default, not a confirmed runtime failure
+(\S\ref{sec:limitations}); P4 is descriptive.}
+\label{tab:prevalence}
+\begin{tabular}{@{}llrcc@{}}
+\toprule
+Weakness & Source & $K/N$ & Prev. & 95\% CI \\
+\midrule
+P1 unbound audience          & RFC 8707        & 283/530 & 53.4\% & [49.1, 57.6] \\
+P2 no required claims         & RFC 8725 \S3.9  & 429/530 & 80.9\% & [77.4, 84.1] \\
+P3 no algorithm pinned        & RFC 8725 \S3.1  & 530/530 & 100\%  & [99.3, 100] \\
+P4 multi-issuer trust         & n/a             & 70/530  & 13.2\% & [10.6, 16.4] \\
+P5 clock skew $>5$\,min       & RFC 8725 \S3.11 & 0/530   & 0.0\%  & [0.0, 0.7] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Co-occurrence.} Weaknesses travel together but do not reinforce one
+another (Table~\ref{tab:cooccur}): the pairwise lift stays close to one, so a
+configuration missing one check is no more likely than chance to miss a second. The
+picture is of contracts that are uniformly thin rather than of a few badly
+misconfigured outliers.
+
+\begin{table}[t]
+\centering\small
+\caption{Co-occurrence of weaknesses (fraction of the 530 configurations exhibiting
+both) with lift. Lift near one indicates rough independence.}
+\label{tab:cooccur}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Pair & Both & Lift \\
+\midrule
+P2 $\wedge$ P3 (no claims, no algorithm)      & 80.9\% & 1.00 \\
+P1 $\wedge$ P3 (unbound aud., no algorithm)   & 53.4\% & 1.00 \\
+P1 $\wedge$ P2 (unbound aud., no claims)      & 43.8\% & 1.01 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{By source.} The two dominant sources differ
+(Table~\ref{tab:bysource}). Istio and Envoy consumers leave the audience unbound at
+similar rates (55.7\% vs 47.7\%) and pin no algorithm universally, but they diverge
+on required claims: every Envoy consumer appears to require none, against 73.2\% for
+Istio. We flag this gap honestly as partly a measurement artifact. Envoy commonly
+enforces claims in a separate RBAC filter that the \texttt{jwt\_authn} contract does
+not carry, so the Envoy P2 figure is an upper bound on missing-claim prevalence,
+whereas Istio's claim checks live in an AuthorizationPolicy we do resolve.
+
+\begin{table}[t]
+\centering\small
+\caption{Prevalence by source adapter over the 530 configurations. The Envoy P2
+figure is an upper bound: claims may be enforced in a separate RBAC filter we do not
+parse.}
+\label{tab:bysource}
+\begin{tabular}{@{}lrccccc@{}}
+\toprule
+Source & $n$ & P1 & P2 & P3 & P4 & P5 \\
+\midrule
+Istio & 377 & 55.7\% & 73.2\% & 100\% & 15.9\% & 0\% \\
+Envoy & 153 & 47.7\% & 100\%  & 100\% & 6.5\%  & 0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Sensitivity to cleaning.} Both cleaning steps, excluding examples
+and deduplication, \emph{lower} the estimates (Table~\ref{tab:sensitivity}): the raw
+corpus reports unbound audience at 68.5\% and no-required-claims at 85.0\%, and each
+step removes demonstrative or copy-pasted configurations that skew toward the very
+weaknesses we count. The reported figures, with both steps applied, are therefore
+the conservative end of the range, and the qualitative finding, a majority unbound
+audience and a large majority with no required claims, holds across all four
+combinations; P3 is 100\% throughout.
+
+\begin{table}[t]
+\centering\small
+\caption{Sensitivity of the headline prevalence to the two cleaning steps. Both
+lower the estimates, so the reported figures (first row) are conservative.}
+\label{tab:sensitivity}
+\begin{tabular}{@{}lrccc@{}}
+\toprule
+Cleaning applied & $N$ & P1 & P2 & P3 \\
+\midrule
+examples excluded + dedup (reported) & 530 & 53.4\% & 80.9\% & 100\% \\
+examples excluded only & 775 & 61.8\% & 83.6\% & 100\% \\
+dedup only & 647 & 54.1\% & 79.9\% & 100\% \\
+neither & 1{,}192 & 68.5\% & 85.0\% & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Static/runtime frontier.} Four of the five check types are
+conclusive from configuration alone; only algorithm pinning carries the
+library-default caveat. Of 1{,}312 weakness flags raised, 782 (60\%) are
+static-conclusive and 530 carry that caveat, quantifying how much of the contract a
+purely static reading can settle.
 
 \input{../common/fig-prevalence}
 
@@ -174,11 +480,43 @@ FPR, with mutation testing (24 mutants, 100\% killed) and a held-out adversarial
 set at Youden 0.75. \gate{Drift in the wild, over real commit histories, is left to
 the full study.}
 
+\section{Discussion}\label{sec:discussion}
+The measurement describes a population of \emph{under-specified} authorization
+contracts. The two checks that decide which tokens a service accepts, audience
+binding and required claims, are absent in a majority of configurations, so the
+decision is deferred to library defaults and to runtime, where it is opaque and
+drifts. For access control this is the familiar problem of an implicit policy: the
+effective rule exists but is not written anywhere a reviewer can inspect it.
+
+Two consequences follow. For operators, deriving the contract makes the implicit
+policy explicit and reviewable: a team can see, per service, which issuers it trusts,
+which audiences it binds, and which claims it requires, diff that contract across
+versions, and gate a change that widens trust the same way code changes are gated.
+For standardization, the static/runtime frontier is actionable. Because audience
+binding and required claims are decidable from configuration (Table~\ref{tab:prevalence}
+reports them as static checks), a profile could make them mandatory-to-verify and a
+conformance test could check them, moving these properties from ``deployer's
+responsibility, usually missed'' to ``checked at the boundary.'' The checks that are
+not statically decidable, chiefly whether the library enforces an algorithm
+allow-list at runtime, mark where a live probe or a library-defaults database is
+needed instead. The same contract governs the OAuth and MCP tokens that autonomous
+agents now carry, so the declared-versus-effective distinction this paper draws is
+the lens we expect to carry to that surface.
+
 \section{Limitations and threats to validity}\label{sec:limitations}
-\textbf{Static discovery sees configuration, not the running verifier;} where true
-behaviour diverges from config and library defaults, only live probing (out of
-scope here) would catch it. \textbf{Templating:} $\approx$17\% of corpus files are
-Helm-templated and $\approx$2\% carry kustomize/variable markers, so roughly one in
+\textbf{Declared, not effective.} We measure the contract configuration declares,
+not what the running verifier enforces. A configured check can still be skipped by
+buggy verifier code, and a check absent from configuration can still hold because a
+library default supplies it; conversely an implementation flaw (accepting
+\texttt{alg=none}, RS/HS confusion) is invisible to us. We therefore report an
+absent check as ``not set in configuration,'' not as a confirmed vulnerability, and
+closing this gap needs live probing or a library-defaults database, which we leave
+to future work. \textbf{Profile dependence.} Which checks are mandatory depends on
+the token profile: audience and issuer validation are required for RFC~9068 access
+tokens but optional for a bare RFC~7519 JWT, so an ``unbound audience'' is a
+weakness only under a profile that requires binding; we measure the configured check
+and name the profile where the corpus reveals it. \textbf{Templating:} $\approx$13\% of corpus files are
+Helm-templated and $\approx$8\% carry kustomize/variable markers, so roughly one in
 five configurations is under-resolved without rendering. \textbf{Selection bias:}
 public configuration skews to samples, demos, and OSS and is not representative of
 private enterprise deployments; this must be stated, not hidden. \textbf{Proxy
@@ -188,41 +526,90 @@ only; we do not probe third-party live endpoints and handle no real tokens;
 identifiable high-severity findings follow responsible disclosure.
 
 \section{Related work}\label{sec:related}
-\textbf{JWT/OIDC attacks.} Individual verification flaws (\texttt{alg=none}, RS/HS
-key confusion, \texttt{jku}/\texttt{kid} injection) are well
-documented~\cite{mclean2015jwt,portswigger-jwt}, and OAuth itself has been formally
-analysed~\cite{fett2016oauth}. These establish \emph{which} misconfigurations
-matter; our contribution is a different one: a \emph{population-scale} view of the
-derived contract and its drift, grounded in the same normative
-sources~\cite{rfc8725,rfc8707,rfc9728,rfc8693}.
-\textbf{IaC/config scanners} (Checkov, KICS, Semgrep~\cite{checkov,kics,semgrep})
-pattern-match rules over configuration; we instead \emph{derive} an
-attributable auth contract and measure its properties, and our negative control
-targets exactly the precision failure pattern-matching is prone to.
-\textbf{Contract testing} (Pact~\cite{pact}) borrows the ``contract'' framing but
-targets API shape, not auth verification.
-\textbf{Measurement studies} of misconfiguration are our methodological template
-(pre-registered inclusion, confidence intervals, released artifacts).
-\textbf{Agent authorization}~\cite{owaspllm} is a related, fast-moving area treated
-in depth by a separate systematization.
+\noindent\textbf{In-the-wild web-authentication and SSO measurement.} The closest
+line of work measures deployed authentication. Early studies inspect a small set of
+sites by hand and show that SSO and OAuth failures are driven by deployment and
+implementation choices rather than protocol flaws~\cite{authzmeas2012wangsignmein,authzmeas2012sunoauth}.
+Later work makes this a population measurement: SSOScan automatically tests a fixed
+catalog of five SSO vulnerabilities across the top 20{,}000 sites and finds that over
+20\% of Facebook-SSO sites carry a serious flaw~\cite{authzmeas2014ssoscan}, and
+subsequent studies measure sign-off and session handling, dual-window SSO, and SSO
+adoption across the Tranco list~\cite{authzmeas2018singlesignoff,authzmeas2022distinct,authzmeas2023ssomonitor};
+the OpenID Connect attack classes are systematized by Mainka et al.~\cite{authzmeas2017soksso}.
+SSOScan is our closest methodological ancestor: automated detection of a fixed
+weakness catalog over a crawled population. We keep that ambition but change the
+object and the vantage point. We read the declared verification contract out of
+static mesh and proxy configuration rather than driving a runtime login flow, which
+reaches services no crawler can log into and separates what a service declares from
+what it enforces.
 
-\section{A research agenda (vision)}\label{sec:vision}
-Beyond the present preliminary measurement, we see a program: (i) scale to a
-representative corpus and report prevalence with tight intervals and a
-hand-validated extractor; (ii) characterise \emph{drift} longitudinally: do auth
-contracts widen more than they narrow, and are widenings tied to reviewable
-events?; (iii) quantify the static-vs-runtime frontier: what fraction of
-weaknesses are decidable from configuration versus require probing; and
-(iv) extend the same instrument to the agent/MCP frontier. This paper contributes
-the method, the validated instrument, and the honest baseline that make the
-program tractable.
+\noindent\textbf{Large-scale misconfiguration measurement.} Our methodology follows
+a well-established template: crawl a population, report the prevalence of a concrete
+weakness, and quantify uncertainty. Studies of the HTTPS certificate ecosystem and
+of Heartbleed turn repeated scans into a structured prevalence
+picture~\cite{authzmeas2013httpsecosystem,authzmeas2014heartbleed}; the email-delivery
+study measures adoption of \emph{declared} security policies (SPF, DKIM, DMARC)
+across more than 700{,}000 servers~\cite{authzmeas2015emaildelivery}; and studies of
+HTTPS adoption, Content Security Policy, CORS, and S3 buckets measure how a declared
+per-service policy is set or fails at scale~\cite{authzmeas2017httpsadoption,authzmeas2016csp,authzmeas2018cors,authzmeas2018s3buckets}.
+We adopt this template, including confidence intervals and a replication-style
+validation of recall and precision, and apply it to a surface none of these touch,
+the JWT authorization contract.
+
+\noindent\textbf{IaC and configuration security.} Repository-mining studies quantify
+security weaknesses in declarative infrastructure code: the Seven Sins study derives
+smells from 1{,}726 scripts and counts occurrences across hundreds of
+repositories~\cite{authzmeas2019sevensins}, replicated at larger scale and across
+technologies~\cite{authzmeas2021iacreplication,authzmeas2022glitch}, and Kubernetes
+security practice is systematized separately~\cite{authzmeas2020k8scommandments}.
+Practitioner scanners (Checkov, KICS, Terrascan, Semgrep) and policy-as-code
+engines~\cite{authzmeas2024checkov,authzmeas2024kics,authzmeas2024terrascan,authzmeas2024semgrep,authzmeas2024opa}
+apply rule sets to individual files. These target generic hygiene (hard-coded
+secrets, weak crypto) and check rules per file; we instead normalize heterogeneous
+mesh and proxy configuration into one typed authorization contract per service and
+measure its properties, and our negative control targets the attribution errors that
+per-file pattern-matching is prone to.
+
+\noindent\textbf{Formal analysis and config-as-contract.} A body of formal and
+attack analysis establishes \emph{which} issuer, audience, algorithm, and endpoint
+behaviours are load-bearing, for SAML, OAuth, and OpenID
+Connect~\cite{authzmeas2008samlsso,authzmeas2012websanalysis,authzmeas2016oauthformal,authzmeas2017oidcformal};
+the concrete JWT weaknesses we count (\texttt{alg=none}, RS/HS key confusion) are
+documented by practitioners~\cite{authzmeas2015jwtlibs,authzmeas2024portswiggerjwt}
+and codified in RFC~8725~\cite{rfc8725}. We cite these for the properties and then
+measure how often deployments violate them rather than re-arguing relevance. The
+idea of deriving a policy model from static configuration has a precedent in Batfish,
+which parses heterogeneous device configuration into a vendor-independent model and
+checks properties over it~\cite{authzmeas2015batfish}, and in ABAC policy
+mining~\cite{authzmeas2015abacmining}; consumer-driven contract testing (Pact) shares
+the ``contract'' framing~\cite{authzmeas2024pact}. None recovers a JWT authorization
+contract or measures one across a population.
+
+\noindent\textbf{Agent and MCP authorization.} Indirect prompt injection makes
+token-scoped, verifiable authorization necessary for autonomous
+agents~\cite{authzmeas2023promptinjection}, and recent measurements of live remote
+MCP servers report widespread missing authentication and OAuth
+flaws~\cite{authzmeas2026mcpauthmeas,authzmeas2026mcpexposed}. These show the same
+population-measurement method reaching the agent frontier, where the declared-versus-effective
+contract framing of this paper is the natural lens to carry forward.
+
+\section{Future work}\label{sec:future}
+Three extensions follow directly. (i) Pairing the static reading with live probing
+would close the declared-vs-effective gap this paper is careful to leave open,
+turning ``not set in configuration'' into a confirmed runtime behaviour. (ii) The
+content-addressed contract makes \emph{drift} measurable over commit history: do
+contracts widen more than they narrow, and are widenings tied to reviewable events?
+(iii) The same instrument extends to the agent and MCP frontier, where OAuth/MCP
+tokens carry the same issuer, audience, and claim checks on a faster-moving surface.
 
 \section{Conclusion}
-Authorization correctness is a property of what is running, not of what is written,
-and it drifts. We make the implicit token-auth contract explicit, measurable, and
-validated with a methodology that is honest about its own limits. The preliminary
-measurement and the released instrument are a step toward understanding
-auth-verification hygiene at scale.
+A service's decision to accept a token is configuration, declared across meshes,
+proxies, and identity providers and rarely collected in one place. We make that
+declared authorization contract an object that can be derived, measured, versioned,
+and validated, we separate it from the effective enforcement that configuration
+cannot show, and we measure it across 2{,}718 repositories with a methodology
+honest about its own limits. The instrument and corpus are released so the
+measurement is reproducible and extensible.
 
 \section*{Ethics considerations}\label{sec:ethics}
 This study measures only \emph{public} configuration, fetched read-only at pinned
@@ -248,3 +635,18 @@ archival snapshot and, where the venue offers it, Artifact-Evaluation ``Availabl
 The instrument, harness, validator, negative-control test, and corpus manifest are
 open source under the MIT licence. \gate{The archival DOI will be added at
 camera-ready.}
+
+\section*{LLM Usage Statement}
+LLMs were used for editorial purposes in this manuscript, and all outputs were
+inspected by the authors to ensure accuracy and originality. An LLM is also part of
+the validation method (\S\ref{sec:validation}): the gold-standard sample is first
+labelled by an independent model that reads only the raw configuration, and a human
+then confirms or corrects every label, so the model is a first-pass aid and the human
+adjudication is the ground truth. We report the inter-annotator agreement on a blind
+subset precisely so this model-assisted step can be judged. The related-work survey
+was likewise compiled with model assistance and then verified by the authors against
+each work's primary record. The authors are responsible for every claim, number, and
+citation. One reproducibility limitation applies: the assisting models are not openly
+available, so the model-only labels and the survey's search recall cannot be
+reproduced exactly, though the released corpus, harness, and per-value provenance let
+the measurement itself be reproduced from public sources.

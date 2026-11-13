@@ -1,0 +1,247 @@
+% Paper A (measurement: "Authorization Contracts in the Wild") -- related-work references.
+% Every entry verified against a primary record (ACM DOI, IEEE Xplore, USENIX, or the
+% arXiv abstract page) on 2026-10-06. Peer-reviewed works use @inproceedings/@article with
+% real venue fields; arXiv technical reports are @misc and marked as preprints; industrial
+% tooling and writeups are @misc. Verify URLs/DOIs again before camera-ready.
+
+% ===================================================================
+% Thread 1 -- Empirical/in-the-wild web-auth, SSO, OAuth, OIDC measurement
+% ===================================================================
+
+@inproceedings{authzmeas2012wangsignmein,
+  title={Signing Me onto Your Accounts through {Facebook} and {Google}: A Traffic-Guided Security Study of Commercially Deployed Single-Sign-On Web Services},
+  author={Wang, Rui and Chen, Shuo and Wang, XiaoFeng},
+  booktitle={Proc. IEEE Symposium on Security and Privacy (S\&P)}, pages={365--379}, year={2012},
+  note={Peer-reviewed. \url{https://www.microsoft.com/en-us/research/publication/signing-me-onto-your-accounts-through-facebook-and-google-a-traffic-guided-security-study-of-commercially-deployed-single-sign-on-web-services/}}}
+
+@inproceedings{authzmeas2012sunoauth,
+  title={The Devil is in the (Implementation) Details: An Empirical Analysis of {OAuth} {SSO} Systems},
+  author={Sun, San-Tsai and Beznosov, Konstantin},
+  booktitle={Proc. ACM Conference on Computer and Communications Security (CCS)}, pages={378--390}, year={2012},
+  doi={10.1145/2382196.2382238},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/2382196.2382238}}}
+
+@inproceedings{authzmeas2014ssoscan,
+  title={{SSOScan}: Automated Testing of Web Applications for Single Sign-On Vulnerabilities},
+  author={Zhou, Yuchen and Evans, David},
+  booktitle={Proc. 23rd USENIX Security Symposium}, pages={495--510}, year={2014},
+  note={Peer-reviewed. \url{https://www.usenix.org/conference/usenixsecurity14/technical-sessions/presentation/zhou}}}
+
+@inproceedings{authzmeas2017soksso,
+  title={{SoK}: Single Sign-On Security --- An Evaluation of {OpenID} {Connect}},
+  author={Mainka, Christian and Mladenov, Vladislav and Schwenk, J{\"o}rg and Wich, Tobias},
+  booktitle={Proc. IEEE European Symposium on Security and Privacy (EuroS\&P)}, pages={251--266}, year={2017},
+  doi={10.1109/EuroSP.2017.32},
+  note={Peer-reviewed. \url{https://ieeexplore.ieee.org/document/7961983}}}
+
+@inproceedings{authzmeas2018singlesignoff,
+  title={{O} Single Sign-Off, Where Art Thou? An Empirical Analysis of Single Sign-On Account Hijacking and Session Management on the Web},
+  author={Ghasemisharif, Mohammad and Ramesh, Amrutha and Checkoway, Stephen and Kanich, Chris and Polakis, Jason},
+  booktitle={Proc. 27th USENIX Security Symposium}, pages={1475--1492}, year={2018},
+  note={Peer-reviewed. \url{https://www.usenix.org/conference/usenixsecurity18/presentation/ghasemisharif}}}
+
+@inproceedings{authzmeas2022distinct,
+  title={{DISTINCT}: Identity Theft using In-Browser Communications in Dual-Window Single Sign-On},
+  author={Jannett, Louis and Mladenov, Vladislav and Mainka, Christian and Schwenk, J{\"o}rg},
+  booktitle={Proc. ACM Conference on Computer and Communications Security (CCS)}, pages={1553--1567}, year={2022},
+  doi={10.1145/3548606.3560692},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/3548606.3560692}}}
+
+@misc{authzmeas2023ssomonitor,
+  title={{SSO-Monitor}: Fully-Automatic Large-Scale Landscape, Security, and Privacy Analyses of Single Sign-On in the Wild},
+  author={Westers, Maximilian and Wich, Tobias and Jannett, Louis and Mladenov, Vladislav and Mainka, Christian and Mayer, Andreas},
+  year={2023}, eprint={2302.01024}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint (not peer-reviewed); a later systematization appeared as a SoK. \url{https://arxiv.org/abs/2302.01024}}}
+
+% ===================================================================
+% Thread 2 -- Large-scale security misconfiguration measurement methodology
+% ===================================================================
+
+@inproceedings{authzmeas2013httpsecosystem,
+  title={Analysis of the {HTTPS} Certificate Ecosystem},
+  author={Durumeric, Zakir and Kasten, James and Bailey, Michael and Halderman, J. Alex},
+  booktitle={Proc. ACM Internet Measurement Conference (IMC)}, pages={291--304}, year={2013},
+  doi={10.1145/2504730.2504755},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/2504730.2504755}}}
+
+@inproceedings{authzmeas2014heartbleed,
+  title={The Matter of {Heartbleed}},
+  author={Durumeric, Zakir and Li, Frank and Kasten, James and Amann, Johanna and Beverly, Robert and Bailey, Michael and Halderman, J. Alex and others},
+  booktitle={Proc. ACM Internet Measurement Conference (IMC)}, pages={475--488}, year={2014},
+  doi={10.1145/2663716.2663755},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/2663716.2663755}}}
+
+@inproceedings{authzmeas2015emaildelivery,
+  title={Neither Snow Nor Rain Nor {MITM}...: An Empirical Analysis of Email Delivery Security},
+  author={Durumeric, Zakir and Adrian, David and Mirian, Ariana and Kasten, James and Bursztein, Elie and Lidzborski, Nicolas and Thomas, Kurt and Eranti, Vijay and Bailey, Michael and Halderman, J. Alex},
+  booktitle={Proc. ACM Internet Measurement Conference (IMC)}, pages={27--39}, year={2015},
+  doi={10.1145/2815675.2815695},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/2815675.2815695}}}
+
+@inproceedings{authzmeas2017httpsadoption,
+  title={Measuring {HTTPS} Adoption on the Web},
+  author={Felt, Adrienne Porter and Barnes, Richard and King, April and Palmer, Chris and Bentzel, Chris and Tabriz, Parisa},
+  booktitle={Proc. 26th USENIX Security Symposium}, pages={1323--1338}, year={2017},
+  note={Peer-reviewed. \url{https://www.usenix.org/conference/usenixsecurity17/technical-sessions/presentation/felt}}}
+
+@inproceedings{authzmeas2016csp,
+  title={{CSP} Is Dead, Long Live {CSP}! On the Insecurity of Whitelists and the Future of Content Security Policy},
+  author={Weichselbaum, Lukas and Spagnuolo, Michele and Lekies, Sebastian and Janc, Artur},
+  booktitle={Proc. ACM Conference on Computer and Communications Security (CCS)}, pages={1376--1387}, year={2016},
+  doi={10.1145/2976749.2978363},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/2976749.2978363}}}
+
+@inproceedings{authzmeas2018cors,
+  title={We Still Don't Have Secure Cross-Domain Requests: An Empirical Study of {CORS}},
+  author={Chen, Jianjun and Jiang, Jian and Duan, Haixin and Wan, Tao and Chen, Shuo and Paxson, Vern and Yang, Min},
+  booktitle={Proc. 27th USENIX Security Symposium}, pages={1079--1093}, year={2018},
+  note={Peer-reviewed. \url{https://www.usenix.org/conference/usenixsecurity18/presentation/chen-jianjun}}}
+
+@inproceedings{authzmeas2018s3buckets,
+  title={There's a Hole in that Bucket! A Large-scale Analysis of Misconfigured {S3} Buckets},
+  author={Continella, Andrea and Polino, Mario and Pogliani, Marcello and Zanero, Stefano},
+  booktitle={Proc. Annual Computer Security Applications Conference (ACSAC)}, pages={702--711}, year={2018},
+  doi={10.1145/3274694.3274736},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/3274694.3274736}}}
+
+% ===================================================================
+% Thread 3 -- Infrastructure-as-Code, Kubernetes, service-mesh security
+% ===================================================================
+
+@inproceedings{authzmeas2019sevensins,
+  title={The Seven Sins: Security Smells in Infrastructure as Code Scripts},
+  author={Rahman, Akond and Parnin, Chris and Williams, Laurie},
+  booktitle={Proc. 41st International Conference on Software Engineering (ICSE)}, pages={164--175}, year={2019},
+  doi={10.1109/ICSE.2019.00033},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1109/ICSE.2019.00033}}}
+
+@article{authzmeas2021iacreplication,
+  title={Security Smells in {Ansible} and {Chef} Scripts: A Replication Study},
+  author={Rahman, Akond and Rahman, Md Rayhanur and Parnin, Chris and Williams, Laurie},
+  journal={ACM Transactions on Software Engineering and Methodology (TOSEM)}, volume={30}, number={1}, pages={1--31}, year={2021},
+  doi={10.1145/3408897},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/3408897}}}
+
+@inproceedings{authzmeas2022glitch,
+  title={{GLITCH}: Automated Polyglot Security Smell Detection in Infrastructure as Code},
+  author={Saavedra, Nuno and Ferreira, Jo{\~a}o F.},
+  booktitle={Proc. 37th IEEE/ACM International Conference on Automated Software Engineering (ASE)}, articleno={47}, pages={1--12}, year={2022},
+  doi={10.1145/3551349.3556945},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/3551349.3556945}}}
+
+@inproceedings{authzmeas2020k8scommandments,
+  title={{XI} Commandments of {Kubernetes} Security: A Systematization of Knowledge Related to {Kubernetes} Security Practices},
+  author={Shamim, Md Shazibul Islam and Bhuiyan, Farzana Ahamed and Rahman, Akond},
+  booktitle={Proc. IEEE Secure Development (SecDev)}, pages={58--64}, year={2020},
+  doi={10.1109/SecDev45635.2020.00025},
+  note={Peer-reviewed. \url{https://ieeexplore.ieee.org/document/9230286}}}
+
+% ---- Thread 3 tooling (industrial artifacts, not research) ----
+
+@misc{authzmeas2024checkov,
+  title={Checkov: Policy-as-Code for Infrastructure}, author={{Prisma Cloud / Bridgecrew}}, year={2024},
+  note={Tool. \url{https://www.checkov.io/}}}
+
+@misc{authzmeas2024kics,
+  title={{KICS}: Keeping Infrastructure as Code Secure}, author={{Checkmarx}}, year={2024},
+  note={Tool. \url{https://kics.io/}}}
+
+@misc{authzmeas2024terrascan,
+  title={Terrascan: Detect Compliance and Security Violations across Infrastructure as Code}, author={{Tenable}}, year={2024},
+  note={Tool. \url{https://runterrascan.io/}}}
+
+@misc{authzmeas2024semgrep,
+  title={Semgrep: Lightweight Static Analysis}, author={{Semgrep, Inc.}}, year={2024},
+  note={Tool. \url{https://semgrep.dev/}}}
+
+@misc{authzmeas2024opa,
+  title={Open Policy Agent ({OPA}): Policy-based Control for Cloud Native Environments}, author={{Cloud Native Computing Foundation}}, year={2024},
+  note={Tool. \url{https://www.openpolicyagent.org/}}}
+
+% ===================================================================
+% Thread 4 -- Formal/attack analysis of OAuth, OIDC, SAML, JWT
+% ===================================================================
+
+@inproceedings{authzmeas2008samlsso,
+  title={Formal Analysis of {SAML} 2.0 Web Browser Single Sign-On: Breaking the {SAML}-based Single Sign-on for {Google} Apps},
+  author={Armando, Alessandro and Carbone, Roberto and Compagna, Luca and Cuellar, Jorge and Tobarra, Llanos},
+  booktitle={Proc. 6th ACM Workshop on Formal Methods in Security Engineering (FMSE)}, pages={1--10}, year={2008},
+  doi={10.1145/1456396.1456397},
+  note={Peer-reviewed. \url{https://dl.acm.org/doi/10.1145/1456396.1456397}}}
+
+@inproceedings{authzmeas2012websanalysis,
+  title={Discovering Concrete Attacks on Website Authorization by Formal Analysis},
+  author={Bansal, Chetan and Bhargavan, Karthikeyan and Delignat-Lavaud, Antoine and Maffeis, Sergio},
+  booktitle={Proc. IEEE 25th Computer Security Foundations Symposium (CSF)}, pages={247--262}, year={2012},
+  doi={10.1109/CSF.2012.27},
+  note={Peer-reviewed; extended version in Journal of Computer Security 22(4):601--657, 2014. \url{https://ieeexplore.ieee.org/document/6266165}}}
+
+@inproceedings{authzmeas2016oauthformal,
+  title={A Comprehensive Formal Security Analysis of {OAuth} 2.0},
+  author={Fett, Daniel and K{\"u}sters, Ralf and Schmitz, Guido},
+  booktitle={Proc. ACM Conference on Computer and Communications Security (CCS)}, pages={1204--1215}, year={2016},
+  doi={10.1145/2976749.2978385},
+  note={Peer-reviewed; also arXiv:1601.01229. \url{https://dl.acm.org/doi/10.1145/2976749.2978385}}}
+
+@inproceedings{authzmeas2017oidcformal,
+  title={The Web {SSO} Standard {OpenID} {Connect}: In-Depth Formal Security Analysis and Security Guidelines},
+  author={Fett, Daniel and K{\"u}sters, Ralf and Schmitz, Guido},
+  booktitle={Proc. IEEE 30th Computer Security Foundations Symposium (CSF)}, pages={189--202}, year={2017},
+  doi={10.1109/CSF.2017.20},
+  note={Peer-reviewed; also arXiv:1704.08539. \url{https://ieeexplore.ieee.org/document/8049720}}}
+
+@misc{authzmeas2015jwtlibs,
+  title={Critical Vulnerabilities in {JSON} Web Token Libraries},
+  author={McLean, Tim}, year={2015}, howpublished={Auth0 Blog},
+  note={Industrial writeup (alg=none, key confusion). \url{https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/}}}
+
+@misc{authzmeas2024portswiggerjwt,
+  title={{JWT} Attacks (Web Security Academy)},
+  author={{PortSwigger}}, year={2024},
+  note={Industrial reference. \url{https://portswigger.net/web-security/jwt}}}
+
+% RFC 8725 (JWT BCP) is defined in common/refs.bib as rfc8725.
+
+% ===================================================================
+% Thread 5 -- Config-as-contract, policy extraction, contract testing
+% ===================================================================
+
+@inproceedings{authzmeas2015batfish,
+  title={A General Approach to Network Configuration Analysis},
+  author={Fogel, Ari and Fung, Stanley and Pedrosa, Luis and Walraed-Sullivan, Meg and Govindan, Ramesh and Mahajan, Ratul and Millstein, Todd},
+  booktitle={Proc. 12th USENIX Symposium on Networked Systems Design and Implementation (NSDI)}, pages={469--483}, year={2015},
+  note={Peer-reviewed (Batfish). \url{https://www.usenix.org/conference/nsdi15/technical-sessions/presentation/fogel}}}
+
+@article{authzmeas2015abacmining,
+  title={Mining Attribute-Based Access Control Policies},
+  author={Xu, Zhongyuan and Stoller, Scott D.},
+  journal={IEEE Transactions on Dependable and Secure Computing (TDSC)}, volume={12}, number={5}, pages={533--545}, year={2015},
+  doi={10.1109/TDSC.2014.2369048},
+  note={Peer-reviewed; also arXiv:1306.2401. \url{https://ieeexplore.ieee.org/document/6951368}}}
+
+@misc{authzmeas2024pact,
+  title={Pact: Consumer-Driven Contract Testing}, author={{Pact Foundation}}, year={2024},
+  note={Tool. \url{https://pact.io/}}}
+
+% ===================================================================
+% Thread 6 -- Agent / MCP authorization frontier
+% ===================================================================
+
+@inproceedings{authzmeas2023promptinjection,
+  title={Not What You've Signed Up For: Compromising Real-World {LLM}-Integrated Applications with Indirect Prompt Injection},
+  author={Greshake, Kai and Abdelnabi, Sahar and Mishra, Shailesh and Endres, Christoph and Holz, Thorsten and Fritz, Mario},
+  booktitle={Proc. 16th ACM Workshop on Artificial Intelligence and Security (AISec)}, pages={79--90}, year={2023},
+  doi={10.1145/3605764.3623985},
+  note={Peer-reviewed; also arXiv:2302.12173. \url{https://dl.acm.org/doi/10.1145/3605764.3623985}}}
+
+@misc{authzmeas2026mcpauthmeas,
+  title={A First Measurement Study on Authentication Security in Real-World Remote {MCP} Servers},
+  author={Zhou, Huijun and Zhang, Xiaohan and Zhang, Haozhe and Zhang, Haoyang and Zhang, Mi and Yang, Min},
+  year={2026}, eprint={2605.22333}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint (not peer-reviewed). \url{https://arxiv.org/abs/2605.22333}}}
+
+@misc{authzmeas2026mcpexposed,
+  title={Exposed by Design: A Dynamic Security Assessment of Internet-Facing {MCP} Servers at Scale},
+  author={Padilla, Nicol{\'a}s},
+  year={2026}, eprint={2608.00150}, archivePrefix={arXiv}, primaryClass={cs.CR},
+  note={arXiv preprint (not peer-reviewed). \url{https://arxiv.org/abs/2608.00150}}}

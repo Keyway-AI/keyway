@@ -157,6 +157,8 @@ func (d *Discoverer) assemble(scope discovery.Scope, ras []raWithLoc, aps []apWi
 	var consumers []model.Consumer
 	claimsByWorkload := map[string][]string{} // "ns/service" -> required claims
 	claimSource := map[string]string{}        // "ns/service" -> AuthorizationPolicy locator
+	audByWorkload := map[string][]string{}    // "ns/service" -> audiences bound via AP when-conditions
+	audSource := map[string]string{}          // "ns/service" -> AuthorizationPolicy locator
 
 	for _, r := range ras {
 		if len(r.ra.Spec.JWTRules) == 0 {
@@ -169,39 +171,115 @@ func (d *Discoverer) assemble(scope discovery.Scope, ras []raWithLoc, aps []apWi
 	}
 	// Selector-less AuthorizationPolicies apply to every workload in their
 	// namespace (Istio semantics), so their claims are tracked per-namespace.
-	nsWideClaims := map[string][]string{} // namespace -> claims
+	// nsAllClaims additionally unions the required claims of EVERY policy in a
+	// namespace (any selector), used by the single-validator rule in the merge.
+	nsWideClaims := map[string][]string{} // namespace -> claims (selector-less APs)
 	nsWideSource := map[string]string{}
+	nsAllClaims := map[string][]string{} // namespace -> claims (any AP)
+	nsAllSource := map[string]string{}
+	nsWideAud := map[string][]string{} // namespace -> audiences (selector-less APs)
+	nsWideAudSrc := map[string]string{}
+	nsAllAud := map[string][]string{} // namespace -> audiences (any AP)
+	nsAllAudSrc := map[string]string{}
 	for _, a := range aps {
 		ns := nsOrDefault(a.ap.Metadata.Namespace)
 		if len(scope.Namespaces) > 0 && !contains(scope.Namespaces, ns) {
 			continue
 		}
 		claims := requiredClaims(a.ap)
-		if len(claims) == 0 {
+		auds := requiredAudiences(a.ap)
+		if len(claims) == 0 && len(auds) == 0 {
 			continue
 		}
-		if len(a.ap.Spec.Selector.MatchLabels) == 0 {
-			nsWideClaims[ns] = unionAll(nsWideClaims[ns], claims)
-			nsWideSource[ns] = a.loc
-			continue
-		}
+		selectorLess := len(a.ap.Spec.Selector.MatchLabels) == 0
 		key := workloadKey(ns, apServiceName(a.ap))
-		claimsByWorkload[key] = unionAll(claimsByWorkload[key], claims)
-		claimSource[key] = a.loc
+		if len(claims) > 0 {
+			nsAllClaims[ns] = unionAll(nsAllClaims[ns], claims)
+			if nsAllSource[ns] == "" {
+				nsAllSource[ns] = a.loc
+			}
+			if selectorLess {
+				nsWideClaims[ns] = unionAll(nsWideClaims[ns], claims)
+				nsWideSource[ns] = a.loc
+			} else {
+				claimsByWorkload[key] = unionAll(claimsByWorkload[key], claims)
+				claimSource[key] = a.loc
+			}
+		}
+		if len(auds) > 0 {
+			nsAllAud[ns] = unionAll(nsAllAud[ns], auds)
+			if nsAllAudSrc[ns] == "" {
+				nsAllAudSrc[ns] = a.loc
+			}
+			if selectorLess {
+				nsWideAud[ns] = unionAll(nsWideAud[ns], auds)
+				nsWideAudSrc[ns] = a.loc
+			} else {
+				audByWorkload[key] = unionAll(audByWorkload[key], auds)
+				audSource[key] = a.loc
+			}
+		}
 	}
 
-	// Merge required claims into the matching consumers: both those from a policy
-	// that selects this workload and those from any namespace-wide policy.
+	// A namespace with exactly one JWT consumer has a single validator covering its
+	// inbound traffic, so every required-claim policy in that namespace (whatever
+	// workload it selects) constrains the tokens that consumer validates. This is
+	// the common gateway pattern: one RequestAuthentication at the edge, with claim
+	// policies on individual services that have no RA of their own.
+	consumersPerNs := map[string]int{}
+	for i := range consumers {
+		consumersPerNs[consumers[i].Namespace]++
+	}
+
+	// Merge required claims into the matching consumers: those from a policy that
+	// selects this workload, any namespace-wide policy, and — for a single-validator
+	// namespace — every required-claim policy in the namespace.
 	for i := range consumers {
 		ns := consumers[i].Namespace
 		key := workloadKey(ns, consumers[i].Name)
+
+		// An audience can be bound in an AuthorizationPolicy `when` condition on
+		// request.auth.audiences rather than in the RequestAuthentication jwtRule
+		// (the same edge-RA / per-service-policy gateway pattern as claims). Without
+		// this the consumer looks like it has no audience and is falsely counted as
+		// unbound (P1). Attribute audiences with the same selector / namespace-wide /
+		// single-validator rules used for claims.
+		auds := unionAll(audByWorkload[key], nsWideAud[ns])
+		if consumersPerNs[ns] == 1 {
+			auds = unionAll(auds, nsAllAud[ns])
+		}
+		if len(auds) > 0 {
+			before := len(consumers[i].Expects.Audiences)
+			consumers[i].Expects.Audiences = unionAll(consumers[i].Expects.Audiences, auds)
+			if len(consumers[i].Expects.Audiences) > before {
+				aloc := audSource[key]
+				if aloc == "" {
+					aloc = nsWideAudSrc[ns]
+				}
+				if aloc == "" {
+					aloc = nsAllAudSrc[ns]
+				}
+				consumers[i].Confidence["expects.audiences"] = 1.0
+				consumers[i].Provenance["expects.audiences"] = append(
+					consumers[i].Provenance["expects.audiences"],
+					model.ProvenanceRecord{Source: "istio:AuthorizationPolicy", Locator: aloc, ObservedAt: d.now(), Confidence: 1.0},
+				)
+			}
+		}
+
 		claims := unionAll(claimsByWorkload[key], nsWideClaims[ns])
+		if consumersPerNs[ns] == 1 {
+			claims = unionAll(claims, nsAllClaims[ns])
+		}
 		if len(claims) == 0 {
 			continue
 		}
 		loc := claimSource[key]
 		if loc == "" {
 			loc = nsWideSource[ns]
+		}
+		if loc == "" {
+			loc = nsAllSource[ns]
 		}
 		consumers[i].Expects.RequiredClaims = unionAll(consumers[i].Expects.RequiredClaims, claims)
 		consumers[i].Confidence["expects.required_claims"] = 1.0
@@ -220,6 +298,27 @@ func requiredClaims(ap authorizationPolicy) []string {
 		for _, w := range rule.When {
 			if name, ok := claimKey(w.Key); ok {
 				out = appendUnique(out, name)
+			}
+		}
+	}
+	return out
+}
+
+// requiredAudiences extracts the audiences an AuthorizationPolicy binds through
+// a when-condition on request.auth.audiences. Istio matches the condition when a
+// token's aud claim is in the listed values, so those values are accepted
+// audiences for the workload the policy selects.
+func requiredAudiences(ap authorizationPolicy) []string {
+	var out []string
+	for _, rule := range ap.Spec.Rules {
+		for _, w := range rule.When {
+			if strings.TrimSpace(w.Key) != "request.auth.audiences" {
+				continue
+			}
+			for _, v := range w.Values {
+				if v := strings.TrimSpace(v); v != "" {
+					out = appendUnique(out, v)
+				}
 			}
 		}
 	}

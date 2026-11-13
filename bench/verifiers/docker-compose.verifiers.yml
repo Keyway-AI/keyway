@@ -1,0 +1,49 @@
+# Staging verifier targets for the empirical evaluation (docs/research/empirical-eval-plan.md).
+# All on localhost; the probe engine is default-deny and only targets --allow'd hosts.
+#
+# WAVE 1 below is Envoy jwt_authn (the reference proxy validator) in front of an echo
+# upstream that returns 200 for any request Envoy lets through. Envoy is configured to
+# be CORRECT: it requires iss=keyway-issuer, aud=rs-A, RS256, and a valid signature from
+# the Keyway test issuer's JWKS. It must therefore reject every attack token; a 200 for
+# an attack token is a live vulnerability.
+#
+# KEY WIRING (the one real setup task, see plan §6b): the Keyway test issuer must serve a
+# STABLE JWKS at http://keyway-issuer:8099/.well-known/jwks.json whose private key the
+# harness mints with. Commit a throwaway test keypair under bench/verifiers/issuer/ and
+# serve its JWKS statically, and run the harness with that same key (via a --issuer-key
+# flag, a small addition) so signatures validate. Until that is wired, targets reject the
+# CONTROL token too and results are vacuous.
+version: "3.8"
+services:
+  # The Keyway test issuer: serves the public JWKS for the test signing key.
+  # TODO(D1): replace with a service that serves bench/verifiers/issuer/jwks.json
+  # (the public half of the committed test key the harness mints with).
+  keyway-issuer:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./issuer:/usr/share/nginx/html/.well-known:ro
+    ports:
+      - "8099:80"
+
+  # Dummy upstream: returns 200 to anything Envoy forwards (i.e., when the token passed).
+  echo-upstream:
+    image: hashicorp/http-echo:1.0
+    command: ["-text=ok", "-listen=:5678"]
+
+  # WAVE 1 target: Envoy jwt_authn requiring aud=rs-A from the Keyway issuer.
+  envoy:
+    image: envoyproxy/envoy:v1.31-latest
+    depends_on: [keyway-issuer, echo-upstream]
+    volumes:
+      - ./envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
+    ports:
+      - "10001:10001"   # matches consumers.example.json envoy-jwt-authn endpoint
+
+  # --- WAVE 2 stubs (uncomment/add as you stand each up; see README target table) ---
+  # mcp-ts-sdk:        # MCP TypeScript SDK reference server w/ OAuth RS auth -> :10010
+  # mcp-python-sdk:    # MCP Python SDK reference server -> :10011
+  # express-oauth2:    # Auth0 express-oauth2-jwt-bearer -> :10020
+  # fastapi-authlib:   # FastAPI + Authlib -> :10021
+  # spring-rs:         # Spring Security Resource Server -> :10022
+  # Each: configure to trust http://keyway-issuer:8099 and require aud=rs-A, then add an
+  # entry to consumers.json with its endpoint + expects.

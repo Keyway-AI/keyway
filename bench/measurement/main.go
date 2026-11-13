@@ -97,6 +97,7 @@ var checks = []check{
 
 type record struct {
 	Source         string          `json:"source"`
+	Discoverer     string          `json:"discoverer"`
 	StableID       string          `json:"stable_id"`
 	Service        string          `json:"service"`
 	Issuers        []string        `json:"issuers"`
@@ -150,7 +151,7 @@ type summary struct {
 // exampleRe matches source paths that are tutorial/sample/vendored copies rather
 // than a project's own deployment config — copying the docs is not a finding about
 // production, so the study excludes them from the denominator.
-var exampleRe = regexp.MustCompile(`(?i)example|sample|tutorial|demo|quickstart|getting.?started|/test|testdata|vendor|/docs?/`)
+var exampleRe = regexp.MustCompile(`(?i)example|sample|tutorial|demo|quickstart|getting.?started|/test|_test|testdata|test-data|fixture|golden|/e2e/|conformance|snapshot|vendor|/docs?/`)
 
 // configOf projects a discovered consumer onto the contract fields the dedup
 // package canonicalizes and compares.
@@ -255,7 +256,7 @@ func main() {
 	var jwt []model.Consumer
 	if *excludeExamples {
 		for _, c := range jwtAll {
-			if exampleRe.MatchString(provenanceSource(c)) {
+			if exampleRe.MatchString(provenancePath(c)) {
 				excluded++
 				continue
 			}
@@ -292,7 +293,7 @@ func main() {
 			}
 		}
 		records = append(records, record{
-			Source: provenanceSource(c), StableID: c.StableID, Service: c.Name,
+			Source: provenanceSource(c), Discoverer: discovererOf(c), StableID: c.StableID, Service: c.Name,
 			Issuers: c.Expects.Issuers, Audiences: c.Expects.Audiences,
 			Algorithms: c.Expects.Algorithms, RequiredClaims: c.Expects.RequiredClaims,
 			ClockSkewSec: c.Expects.ClockSkewSec, Flags: flags,
@@ -479,12 +480,45 @@ func wilson(k, n int) (lo, hi float64) {
 	return lo, hi
 }
 
+// discovererOf returns which source adapter produced the consumer (istio, envoy,
+// oidc, ...), taken from the provenance tag prefix (e.g. "istio:RequestAuthentication").
+func discovererOf(c model.Consumer) string {
+	for _, entries := range c.Provenance {
+		for _, e := range entries {
+			if e.Source != "" {
+				if i := strings.IndexByte(e.Source, ':'); i > 0 {
+					return e.Source[:i]
+				}
+				return e.Source
+			}
+		}
+	}
+	return "other"
+}
+
 func provenanceSource(c model.Consumer) string {
 	// Use the first provenance locator if present; fall back to the stable id.
 	for _, entries := range c.Provenance {
 		for _, e := range entries {
 			if e.Locator != "" {
 				return filepath.Base(e.Locator)
+			}
+			if e.Source != "" {
+				return e.Source
+			}
+		}
+	}
+	return c.StableID
+}
+
+// provenancePath returns the FULL locator (not just the basename) so example/test
+// detection can match directory components like testdata/, /test/, or vendor/ — a
+// real deployment keeps those in the path, which filepath.Base would discard.
+func provenancePath(c model.Consumer) string {
+	for _, entries := range c.Provenance {
+		for _, e := range entries {
+			if e.Locator != "" {
+				return e.Locator
 			}
 			if e.Source != "" {
 				return e.Source

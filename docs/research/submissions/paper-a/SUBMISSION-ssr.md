@@ -28,6 +28,14 @@ Vision: Measuring JWT Authorization Contracts in the Wild
 (SSR requires Vision-track titles to start with `Vision:`. The full-research
 wrappers for other venues keep the longer, un-prefixed title.)
 
+> **Note (revised 2026-10-04).** The abstract below is the text *as submitted* to
+> EasyChair (submission #21, Aug 19). The paper source (`common/body.tex`) has since
+> been revised with the scaled-corpus numbers — 2,718 repositories, 530 configs,
+> unbound audience 53.4%, no-required-claims 80.9%, recall issuers 96.0% /
+> audiences 98.2% — and a held-out over-attribution check. If the paper is accepted,
+> the revised figures go into the proceedings version; the portal abstract here is
+> left unchanged as the record of what was submitted.
+
 ## Abstract (portal-ready plaintext — paste into the submission form)
 
 > Whether a service accepts a bearer token comes down to configuration, not code:

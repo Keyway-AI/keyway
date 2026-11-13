@@ -66,6 +66,7 @@ def main():
 
     ai = [(r.get("ai_label") or "").strip().lower() for r in rows]
     hu = [(r.get("human_label") or "").strip().lower() for r in rows]
+    bl = [(r.get("human_label_blind") or "").strip().lower() for r in rows]
     ai_valid = [x for x in ai if x in VALID]
     hu_valid = [x for x in hu if x in VALID]
     pending = sum(1 for x in ai if x in ("review", "error"))
@@ -85,6 +86,15 @@ def main():
         print(f"  discovery precision v1(AI) {p_ai:.1%}  ->  v2(human) {p_hu:.1%}")
     else:
         print("\n(no human_label values yet — fill them to get v2 + the AI/human kappa)")
+
+    # Anchoring-caveat number: agreement on the BLIND subset the human labelled
+    # before seeing the AI draft. Un-anchored, so it is the honest kappa to report.
+    blind_pairs = [(a, b) for a, b in zip(ai, bl) if a in VALID and b in VALID]
+    if blind_pairs:
+        po_b, kappa_b = cohen_kappa(blind_pairs)
+        print(f"\n== AI <-> human agreement, BLIND subset == ({len(blind_pairs)} rows, un-anchored)")
+        print(f"  raw agreement = {po_b:.1%}")
+        print(f"  Cohen's kappa = {kappa_b:.3f}  (report THIS as the honest agreement)")
 
 
 if __name__ == "__main__":

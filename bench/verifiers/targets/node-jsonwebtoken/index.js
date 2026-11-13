@@ -20,7 +20,8 @@ function getKey(header, cb) {
 http.createServer((req, res) => {
   const auth = (req.headers.authorization || '').replace(/^Bearer /, '');
   jwt.verify(auth, getKey, { algorithms: ['RS256'], issuer: ISS, audience: AUD }, (err) => {
-    if (err) { res.writeHead(401); res.end(err.message); return; }
-    res.writeHead(200); res.end('ok');
+    // Static body only (never err.message) — echoing error text is a reflected-XSS sink.
+    if (err) { res.writeHead(401, { 'Content-Type': 'text/plain' }); res.end('denied'); return; }
+    res.writeHead(200, { 'Content-Type': 'text/plain' }); res.end('ok');
   });
 }).listen(PORT, () => console.log('node-jsonwebtoken on ' + PORT));

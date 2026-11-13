@@ -7,3 +7,6 @@ out/*
 !out/mcp-conformance.json
 targets/*/node_modules/
 targets/*/__pycache__/
+targets/go-golangjwt/go-golangjwt
+targets/go-jwx/go-jwx
+targets/go-gojose/go-gojose

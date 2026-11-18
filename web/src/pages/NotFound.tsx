@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { MarketingShell } from "../components/MarketingChrome";
-import { buttonClass } from "../components/ui";
+import { buttonClass } from "../components/buttonClass";
 import { LogoGlyph } from "../components/Logo";
 
 export default function NotFound() {

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { ComponentType } from "react";
 import { MarketingShell } from "../components/MarketingChrome";
-import { buttonClass } from "../components/ui";
+import { buttonClass } from "../components/buttonClass";
 import { AppPreview } from "../components/AppPreview";
 import { TokenInspector } from "../components/TokenInspector";
 import { Reveal } from "../components/Reveal";

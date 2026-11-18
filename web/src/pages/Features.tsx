@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { MarketingShell, PageHero } from "../components/MarketingChrome";
-import { buttonClass } from "../components/ui";
+import { buttonClass } from "../components/buttonClass";
 import { CTA, FeatureSections } from "./Marketing";
 
 export default function Features() {

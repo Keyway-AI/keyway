@@ -1,5 +1,5 @@
 import { MarketingShell, PageHero } from "../components/MarketingChrome";
-import { buttonClass } from "../components/ui";
+import { buttonClass } from "../components/buttonClass";
 
 /**
  * The research & methods hub. Surfaces the whitepaper, the research-note series,

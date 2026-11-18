@@ -1,0 +1,53 @@
+{
+  "_comment": "Staging verifier targets for `keyway probe --harness --consumers`. Each entry is a real verifier we stand up on localhost (see docker-compose.verifiers.yml), configured to be CORRECT: it trusts the Keyway test issuer and requires aud=rs-A + exp, so it SHOULD reject every attack token. An accepted (2xx) attack token is a live vulnerability. Copy this to consumers.json and fill in the real ports. Fields match internal/model.Consumer.",
+  "consumers": [
+    {
+      "stable_id": "envoy-jwt-authn",
+      "kind": "proxy",
+      "name": "Envoy jwt_authn (RS-A)",
+      "probeable": true,
+      "endpoints": [
+        { "url": "http://localhost:10001", "method": "GET", "safe_probe_path": "/" }
+      ],
+      "expects": {
+        "issuers": ["http://localhost:8099"],
+        "audiences": ["rs-A"],
+        "algorithms": ["RS256"],
+        "required_claims": ["exp", "aud"],
+        "clock_skew_sec": 60
+      }
+    },
+    {
+      "stable_id": "mcp-ts-sdk",
+      "kind": "mcp_server",
+      "name": "MCP TypeScript SDK reference server (RS-A)",
+      "probeable": true,
+      "endpoints": [
+        { "url": "http://localhost:10010", "method": "GET", "safe_probe_path": "/mcp" }
+      ],
+      "expects": {
+        "issuers": ["http://localhost:8099"],
+        "audiences": ["rs-A"],
+        "algorithms": ["RS256"],
+        "required_claims": ["exp", "aud"],
+        "clock_skew_sec": 60
+      }
+    },
+    {
+      "stable_id": "express-oauth2-jwt-bearer",
+      "kind": "middleware",
+      "name": "Auth0 express-oauth2-jwt-bearer (RS-A)",
+      "probeable": true,
+      "endpoints": [
+        { "url": "http://localhost:10020", "method": "GET", "safe_probe_path": "/api/protected" }
+      ],
+      "expects": {
+        "issuers": ["http://localhost:8099"],
+        "audiences": ["rs-A"],
+        "algorithms": ["RS256"],
+        "required_claims": ["exp", "aud"],
+        "clock_skew_sec": 60
+      }
+    }
+  ]
+}

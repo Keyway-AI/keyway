@@ -29,6 +29,11 @@ type Options struct {
 	JWKSURI   string
 	// Now allows tests to inject a clock; defaults to time.Now.
 	Now func() time.Time
+	// ImportKeys, when non-empty, seeds the key set with these persisted keys
+	// (so the issuer mints with a fixed, externally-shared key) instead of
+	// generating a fresh one. Used by the empirical eval to share one key between
+	// the JWKS server real verifiers fetch and the harness that mints tokens.
+	ImportKeys []localkeys.PersistedKey
 }
 
 // New constructs a generic issuer with a freshly generated active RS256 key.
@@ -47,6 +52,12 @@ func New(opts Options) (*Adapter, error) {
 		jwksURI:   jwks,
 		keys:      localkeys.NewKeySet(),
 		now:       now,
+	}
+	if len(opts.ImportKeys) > 0 {
+		if err := a.keys.Import(opts.ImportKeys); err != nil {
+			return nil, err
+		}
+		return a, nil
 	}
 	if _, err := a.keys.Generate("RS256", model.KeyActive, now()); err != nil {
 		return nil, err

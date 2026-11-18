@@ -1,0 +1,274 @@
+{
+  "verifiers": [
+    {
+      "consumer_id": "mcp-fastmcp",
+      "verified": true,
+      "attacks": 21,
+      "accepted": 2,
+      "findings": [
+        {
+          "threat_id": "CLM-02",
+          "name": "not_yet_valid",
+          "title": "not-yet-valid token accepted (nbf ignored)",
+          "category": "claims_validation",
+          "severity": "medium",
+          "status_code": 200
+        },
+        {
+          "threat_id": "CLM-08",
+          "name": "missing_exp",
+          "title": "token with no expiry accepted",
+          "category": "claims_validation",
+          "severity": "medium",
+          "status_code": 200
+        }
+      ]
+    },
+    {
+      "consumer_id": "mcp-python-sdk",
+      "verified": true,
+      "attacks": 21,
+      "accepted": 5,
+      "findings": [
+        {
+          "threat_id": "MCP-01",
+          "name": "resource_passthrough",
+          "title": "token passthrough (wrong-audience token accepted)",
+          "category": "token_binding",
+          "severity": "critical",
+          "status_code": 200
+        },
+        {
+          "threat_id": "CLM-04",
+          "name": "wrong_audience",
+          "title": "audience not validated",
+          "category": "claims_validation",
+          "severity": "high",
+          "status_code": 200
+        },
+        {
+          "threat_id": "DEL-02",
+          "name": "sibling_resource",
+          "title": "delegation-chain / transitive-trust abuse",
+          "category": "delegation",
+          "severity": "high",
+          "status_code": 200
+        },
+        {
+          "threat_id": "MCP-02",
+          "name": "unbound_audience",
+          "title": "missing resource indicator / unbound audience",
+          "category": "token_binding",
+          "severity": "high",
+          "status_code": 200
+        },
+        {
+          "threat_id": "CLM-08",
+          "name": "missing_exp",
+          "title": "token with no expiry accepted",
+          "category": "claims_validation",
+          "severity": "medium",
+          "status_code": 200
+        }
+      ]
+    }
+  ],
+  "prevalence": [
+    {
+      "threat_id": "CLM-08",
+      "name": "missing_exp",
+      "title": "token with no expiry accepted",
+      "category": "claims_validation",
+      "severity": "medium",
+      "accepting": 2,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "MCP-01",
+      "name": "resource_passthrough",
+      "title": "token passthrough (wrong-audience token accepted)",
+      "category": "token_binding",
+      "severity": "critical",
+      "accepting": 1,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "CLM-04",
+      "name": "wrong_audience",
+      "title": "audience not validated",
+      "category": "claims_validation",
+      "severity": "high",
+      "accepting": 1,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "DEL-02",
+      "name": "sibling_resource",
+      "title": "delegation-chain / transitive-trust abuse",
+      "category": "delegation",
+      "severity": "high",
+      "accepting": 1,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "MCP-02",
+      "name": "unbound_audience",
+      "title": "missing resource indicator / unbound audience",
+      "category": "token_binding",
+      "severity": "high",
+      "accepting": 1,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "CLM-02",
+      "name": "not_yet_valid",
+      "title": "not-yet-valid token accepted (nbf ignored)",
+      "category": "claims_validation",
+      "severity": "medium",
+      "accepting": 1,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "ALG-01",
+      "name": "alg_confusion_rs_hs",
+      "title": "RS/HS key confusion",
+      "category": "algorithm",
+      "severity": "critical",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "ALG-04",
+      "name": "psychic_signature_es256",
+      "title": "invalid ECDSA signature (0,0) — \"psychic signature\"",
+      "category": "algorithm",
+      "severity": "critical",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "HDR-01",
+      "name": "jku_injection",
+      "title": "jku header → attacker-controlled JWKS",
+      "category": "header_key_injection",
+      "severity": "critical",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "HDR-02",
+      "name": "x5u_injection",
+      "title": "x5u header → attacker-controlled certificate",
+      "category": "header_key_injection",
+      "severity": "critical",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "HDR-03",
+      "name": "embedded_jwk",
+      "title": "embedded jwk self-signed token",
+      "category": "header_key_injection",
+      "severity": "critical",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "SIG-01",
+      "name": "alg_none",
+      "title": "none algorithm accepted",
+      "category": "signature",
+      "severity": "critical",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "SIG-02",
+      "name": "tampered_signature",
+      "title": "signature not verified",
+      "category": "signature",
+      "severity": "critical",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "SIG-03",
+      "name": "empty_signature_rs256",
+      "title": "empty signature with a signing alg",
+      "category": "signature",
+      "severity": "critical",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "ALG-03",
+      "name": "alg_none_variant_none",
+      "title": "alg header case/whitespace variant",
+      "category": "algorithm",
+      "severity": "high",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "CLM-01",
+      "name": "expired",
+      "title": "expired token accepted (exp not validated)",
+      "category": "claims_validation",
+      "severity": "high",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "CLM-03",
+      "name": "wrong_issuer",
+      "title": "issuer not validated",
+      "category": "claims_validation",
+      "severity": "high",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "HDR-05",
+      "name": "kid_path_traversal",
+      "title": "kid path traversal",
+      "category": "header_key_injection",
+      "severity": "high",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "CLM-06",
+      "name": "aud_array_confusion",
+      "title": "aud array/string type confusion",
+      "category": "claims_validation",
+      "severity": "medium",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "ENC-01",
+      "name": "extra_segments",
+      "title": "malformed structure / extra segments accepted",
+      "category": "encoding_parsing",
+      "severity": "medium",
+      "accepting": 0,
+      "evaluated": 2
+    },
+    {
+      "threat_id": "ENC-02",
+      "name": "non_base64url",
+      "title": "lax base64 / non-canonical encoding",
+      "category": "encoding_parsing",
+      "severity": "low",
+      "accepting": 0,
+      "evaluated": 2
+    }
+  ],
+  "summary": {
+    "verifiers": 2,
+    "verified": 2,
+    "clean": 0,
+    "with_findings": 2,
+    "total_findings": 7
+  }
+}

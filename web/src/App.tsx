@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import { ToastProvider } from "./components/toast";
 import Dashboard from "./pages/Dashboard";
@@ -21,6 +21,8 @@ import { CloudAuthProvider } from "./cloud/CloudAuth";
 import CloudLayout from "./cloud/CloudLayout";
 import CloudProjects from "./cloud/CloudProjects";
 import CloudProject from "./cloud/CloudProject";
+import NotFound from "./pages/NotFound";
+import { Privacy, Terms } from "./pages/legal";
 
 export default function App() {
   return (
@@ -31,6 +33,8 @@ export default function App() {
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/research" element={<Research />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/app" element={<Layout />}>
@@ -55,7 +59,7 @@ export default function App() {
           <Route index element={<CloudProjects />} />
           <Route path="projects/:id" element={<CloudProject />} />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </ToastProvider>
   );

@@ -1,0 +1,26 @@
+\begin{abstract}
+Whether a service accepts a JSON Web Token (JWT) is decided by configuration rather
+than by application code: which token issuers it trusts, which audience a token must
+name, which signing algorithms it accepts, and which claims it requires. In modern
+deployments these settings are spread across a service mesh (e.g.\ Istio), an edge
+proxy (e.g.\ Envoy), and an identity provider; they are rarely collected in one
+place; and they change often, so a rotated signing key or a widened audience can
+silently begin refusing valid requests or admitting tokens that should be rejected.
+We call the resulting set of checks a service's implicit \emph{authorization
+contract}. This paper makes that contract an object that can be \emph{derived} from
+deployment configuration, measured, and compared across versions, and it separates
+the \emph{declared} contract we extract from the \emph{effective} enforcement that
+additionally depends on verifier code, library defaults, and software versions.
+
+We derive authorization contracts from 2{,}718 public repositories and measure them
+over 530 distinct JWT-validating configurations. None pins a signing algorithm in
+configuration (each relies on a library default), 80.9\% require no claim beyond
+issuer and audience, and 53.4\% leave the audience unbound; we report every figure
+with a 95\% confidence interval. Because a measurement is only as sound as its
+extractor, we validate discovery three ways and state the limit of each: recall
+against an independent parse of the same configuration (issuers 96.0\%, audiences
+98.2\%), precision against planted distractor values a correct extractor must
+ignore, and a held-out split, labelled by an independent model that never sees the
+extractor's output, that finds no over-attribution. We release the tool, the corpus
+manifest, and the analysis.
+\end{abstract}

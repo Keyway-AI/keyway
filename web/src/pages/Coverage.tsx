@@ -45,7 +45,9 @@ export default function Coverage() {
     const list = cov.data?.threats ?? [];
     const filtered = domain === "all" ? list : list.filter((t) => t.domain === domain);
     return [...filtered].sort(
-      (a, b) => severityRank[a.severity] - severityRank[b.severity] || a.id.localeCompare(b.id),
+      (a, b) =>
+        (severityRank[a.severity] ?? 99) - (severityRank[b.severity] ?? 99) ||
+        (a.id ?? "").localeCompare(b.id ?? ""),
     );
   }, [cov.data, domain]);
 

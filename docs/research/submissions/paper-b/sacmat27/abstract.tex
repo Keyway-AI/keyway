@@ -1,0 +1,27 @@
+\begin{abstract}
+An autonomous agent calls tools and Model Context Protocol (MCP) servers while
+carrying a bearer token (an OAuth~2.0 access token or an MCP authorization token)
+on each request. Because the agent is driven by untrusted input, its authorization
+layer is part of the attack surface: a token not bound to the server it is sent to
+can be replayed or passed through, an over-broad scope hands an injected agent far
+more than any task needs, and an on-behalf-of token with no verifiable delegation
+chain leaves ``who authorized this?'' unanswerable. A fast-growing research
+literature studies agent security, but its coverage is densest on model-level attacks
+(prompt injection, tool poisoning) and it proposes individual mechanisms; it does not
+systematize the authorization layer. We survey 44 research works and show that two
+authorization properties, audience binding and confused-deputy / dynamic client
+registration, are treated as mere specification obligations rather than as
+properties anyone tests or enforces. We then systematize agent authorization along
+three axes no prior work combines: (i) by \emph{pre-deployment testability}, meaning
+which threats are decidable from a token, a key set, and a declared tool contract
+before the agent runs; (ii) by \emph{normative provenance}, a threat-to-clause mapping to
+the OAuth RFCs, the MCP authorization specification, OWASP, and CWE; and (iii) by a
+\emph{three-way enforcement spectrum}, token-static vs.\ server-dynamic vs.\ needing a
+human or the model. Across fifteen threats in six categories, we find twelve are
+testable before production, six from a token alone and six against a staging server
+with no human or model in the loop, and only three need a human or the model. We
+evaluate the token-static subset against nine independent verifiers, eight libraries
+across three ecosystems and the Envoy proxy, and find six accept a token they should
+reject, a no-expiry token (four, including the Envoy proxy that fronts service meshes)
+or an unbound-audience token (one), so the weaknesses are defaults, not corner cases. We argue this cut should guide both tooling and standardization.
+\end{abstract}

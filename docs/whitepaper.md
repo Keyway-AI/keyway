@@ -314,4 +314,4 @@ the same table. The honest headline is **100% recall / 0% false alarms on a
 1,226‑pair gated corpus, 0.75 Youden on held‑out hard cases, 54% of a cited
 50‑threat taxonomy covered with every gap named.**
 
-*Keyway is open source under the MIT license: <https://github.com/Keyway-AI/keyway>.*
+*Keyway is open source under the Apache 2.0 license: <https://github.com/Keyway-AI/keyway>.*

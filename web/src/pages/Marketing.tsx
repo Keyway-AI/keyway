@@ -12,7 +12,7 @@ const GITHUB = "https://github.com/Keyway-AI/keyway";
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 function Hero() {
   return (
-    <section className="aurora grid-ground relative overflow-hidden border-b border-border">
+    <section className="aurora grid-ground relative overflow-hidden">
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-24">
         <div className="text-center lg:text-left">
           <Reveal>
@@ -21,7 +21,7 @@ function Hero() {
               className="glass inline-flex items-center gap-2 rounded-pill px-3.5 py-1.5 text-caption font-medium text-muted shadow-sm transition hover:text-text"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-low" />
-              Open source · MIT
+              Open source · Apache 2.0
               <span className="text-faint">→</span>
             </a>
           </Reveal>
@@ -56,10 +56,6 @@ function Hero() {
 
         {/* interactive centerpiece — the product does the talking */}
         <Reveal delay={140} className="relative">
-          <div
-            aria-hidden
-            className="drift pointer-events-none absolute -inset-6 -z-10 rounded-[2rem] bg-accent/10 blur-3xl"
-          />
           <TokenInspector />
         </Reveal>
       </div>
@@ -71,7 +67,7 @@ function Hero() {
 function StandardsStrip() {
   const standards = ["RFC 8725", "RFC 8693", "RFC 8707", "MCP Authorization", "OWASP Agentic Top 10", "OWASP JWT"];
   return (
-    <section className="border-b border-border bg-surface-2/40">
+    <section className="bg-surface-2/40">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-7 gap-y-2 px-5 py-6 sm:px-8">
         {standards.map((s) => (
           <span key={s} className="text-caption font-medium text-faint">
@@ -99,7 +95,7 @@ function Proof() {
     { n: "54%", l: "of 50 threats, gaps named", href: DOCS.coverage },
   ];
   return (
-    <section className="border-b border-border bg-surface-2/30">
+    <section className="bg-surface-2/30">
       <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
           {stats.map((s, i) => (
@@ -119,7 +115,7 @@ function Proof() {
 /* ── Product showcase: real output, not a description ─────────────────────── */
 function ProductShowcase() {
   return (
-    <section className="border-b border-border">
+    <section>
       <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
         <Reveal>
           <div className="mx-auto max-w-2xl text-center">
@@ -128,10 +124,6 @@ function ProductShowcase() {
         </Reveal>
         <Reveal delay={100}>
           <div className="relative mx-auto mt-12 max-w-4xl">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-x-8 -bottom-8 top-8 -z-10 rounded-[2rem] bg-gradient-to-b from-accent/10 to-transparent blur-2xl"
-            />
             <div className="lift">
               <AppPreview />
             </div>
@@ -145,7 +137,7 @@ function ProductShowcase() {
 /* ── One sharp line of positioning ───────────────────────────────────────── */
 function Thesis() {
   return (
-    <section className="border-b border-border bg-surface-2/30">
+    <section className="bg-surface-2/30">
       <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8 sm:py-28">
         <Reveal>
           <h2 className="display text-[2rem] font-semibold tracking-tight sm:text-[2.6rem]">
@@ -264,7 +256,7 @@ export function FeatureGrid() {
 /* ── CTA ──────────────────────────────────────────────────────────────── */
 export function CTA() {
   return (
-    <section className="border-t border-border">
+    <section>
       <div className="mx-auto max-w-6xl px-5 py-24 text-center sm:px-8">
         <Reveal>
           <h2 className="display mx-auto max-w-xl text-h1 font-semibold tracking-tight">

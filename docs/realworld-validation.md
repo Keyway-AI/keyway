@@ -8,13 +8,6 @@
 
 This runs in CI (`go test ./bench/realworld/...`), so the guarantee can't silently rot.
 
-> **Read this the right way.** 8-of-8 is recall *against the risk classes Keyway
-> already checks*. It is **not** a claim of comprehensive JWT security coverage.
-> For recall against the full documented threat universe — currently ~60%, with
-> every gap named — see [threat-coverage.md](./threat-coverage.md)
-> (`keyway threats coverage`). These reproductions are the "covered" end of that
-> taxonomy; the gaps there are the roadmap.
-
 | # | Risk | Source | Keyway check | Result |
 |---|---|---|---|---|
 | RW-01 | alg=none signature bypass | [CVE-2022-23540](https://nvd.nist.gov/vuln/detail/CVE-2022-23540) | `probe: alg_none` | ✅ flagged |
@@ -29,7 +22,7 @@ This runs in CI (`go test ./bench/realworld/...`), so the guarantee can't silent
 ## How each case is validated
 
 - **Token-level risks (RW-01…RW-07)** — a minimal HTTP service is stood up that
-  reproduces the vulnerable behaviour (e.g. accepting an `alg=none` token, or
+  reproduces the vulnerable behavior (e.g. accepting an `alg=none` token, or
   verifying an `HS256` token with the RSA *public* key). Keyway's probe engine
   fires its synthetic attack token at it; a probe that the service wrongly
   accepts is reported as a finding. If the server returns `200` to the attack,

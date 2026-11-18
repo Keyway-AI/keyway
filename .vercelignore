@@ -1,0 +1,20 @@
+# Only web/ is built (Root Directory = web). Exclude top-level dirs with a leading
+# slash so nested paths like web/src/cloud are NOT matched.
+/.claude
+/.github
+/actions
+/bench
+/bin
+/cloud
+/cmd
+/docs
+/examples
+/internal
+/pkg
+/playground
+/scripts
+/testdata
+/web/dist
+/go.mod
+/go.sum
+*.go

@@ -186,13 +186,16 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(52rem 34rem at 12% -8%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 60%),
-    radial-gradient(46rem 30rem at 108% 6%, color-mix(in srgb, #f6b24d 26%, transparent), transparent 58%),
-    radial-gradient(60rem 42rem at 78% 118%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 60%);
+  /* One restrained wash from the top-left, not a field of multicolor blobs.
+     Depth should be felt, not seen. */
+  background: radial-gradient(
+    44rem 30rem at 18% -12%,
+    color-mix(in srgb, var(--color-accent) 7%, transparent),
+    transparent 60%
+  );
 }
 .dark .aurora::before {
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 /* Frosted floating panel — the swishX "card that hovers" look. */
@@ -303,6 +306,28 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .lift:hover { transform: none; }
+}
+
+/*
+ * ── Token-inspector feedback ─────────────────────────────────────────────
+ * The hero widget shows its work: a scan sweep while analyzing, then each
+ * finding cascades in. Both honor reduced-motion.
+ */
+@keyframes scan-x {
+  0% { transform: translateX(-60%); }
+  100% { transform: translateX(260%); }
+}
+.scan-bar { animation: scan-x 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+@keyframes finding-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.finding-in { animation: finding-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-bar { animation: none; }
+  .finding-in { animation: none; }
 }
 
 /* Slow drift for hero accent glows — barely-there parallax of light. */

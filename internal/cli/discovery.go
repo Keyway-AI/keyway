@@ -15,10 +15,13 @@ import (
 	"github.com/Keyway-AI/keyway/internal/config"
 	"github.com/Keyway-AI/keyway/internal/contract"
 	"github.com/Keyway-AI/keyway/internal/discovery"
+	"github.com/Keyway-AI/keyway/internal/discovery/apisix"
 	"github.com/Keyway-AI/keyway/internal/discovery/envoy"
 	"github.com/Keyway-AI/keyway/internal/discovery/istio"
 	"github.com/Keyway-AI/keyway/internal/discovery/k8s"
+	"github.com/Keyway-AI/keyway/internal/discovery/kong"
 	"github.com/Keyway-AI/keyway/internal/discovery/kube"
+	"github.com/Keyway-AI/keyway/internal/discovery/mcp"
 	"github.com/Keyway-AI/keyway/internal/discovery/oidcclient"
 	"github.com/Keyway-AI/keyway/internal/libdefaults"
 	"github.com/Keyway-AI/keyway/internal/model"
@@ -39,7 +42,7 @@ func buildScope(cmd *cobra.Command) discovery.Scope {
 
 // defaultDiscoverers returns the file-based discovery sources.
 func defaultDiscoverers() []discovery.Discoverer {
-	return []discovery.Discoverer{istio.New(), k8s.New(), envoy.New()}
+	return []discovery.Discoverer{istio.New(), k8s.New(), envoy.New(), mcp.New(), kong.New(), apisix.New()}
 }
 
 // configDiscoverers builds the config-driven sources: one Keycloak client-registry

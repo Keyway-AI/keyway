@@ -1,0 +1,26 @@
+Verifier conformance report
+===========================
+2 verifier(s), 2 trusted the test issuer; 0 clean, 2 with findings (7 finding(s) total).
+
+VERIFIER        TRUSTS ISSUER  ATTACKS  ACCEPTED  VERDICT
+mcp-fastmcp     true           21       2         2 FINDING(S)
+mcp-python-sdk  true           21       5         5 FINDING(S)
+
+Findings (an adversarial token a correct verifier MUST reject, but this one accepted):
+  VERIFIER        THREAT                                                      SEVERITY  TOKEN                 STATUS
+  mcp-fastmcp     CLM-02 (not-yet-valid token accepted (nbf ignored))         medium    not_yet_valid         200
+  mcp-fastmcp     CLM-08 (token with no expiry accepted)                      medium    missing_exp           200
+  mcp-python-sdk  MCP-01 (token passthrough (wrong-audience token accepted))  critical  resource_passthrough  200
+  mcp-python-sdk  CLM-04 (audience not validated)                             high      wrong_audience        200
+  mcp-python-sdk  DEL-02 (delegation-chain / transitive-trust abuse)          high      sibling_resource      200
+  mcp-python-sdk  MCP-02 (missing resource indicator / unbound audience)      high      unbound_audience      200
+  mcp-python-sdk  CLM-08 (token with no expiry accepted)                      medium    missing_exp           200
+
+Per-threat prevalence (across verifiers that trusted the issuer):
+  THREAT                                                    SEVERITY  ACCEPTING
+  CLM-08 token with no expiry accepted                      medium    2/2
+  MCP-01 token passthrough (wrong-audience token accepted)  critical  1/2
+  CLM-04 audience not validated                             high      1/2
+  DEL-02 delegation-chain / transitive-trust abuse          high      1/2
+  MCP-02 missing resource indicator / unbound audience      high      1/2
+  CLM-02 not-yet-valid token accepted (nbf ignored)         medium    1/2

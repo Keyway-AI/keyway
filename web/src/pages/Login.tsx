@@ -34,7 +34,7 @@ function AuthPanel({ title, subtitle, children }: { title: string; subtitle: str
             Verify and adversarially test JWT and agent-auth, for classic services and AI agents alike.
           </p>
         </div>
-        <div className="relative text-caption text-accent-fg/70">Open source · MIT licensed</div>
+        <div className="relative text-caption text-accent-fg/70">Open source · Apache 2.0 licensed</div>
       </div>
 
       {/* form panel */}

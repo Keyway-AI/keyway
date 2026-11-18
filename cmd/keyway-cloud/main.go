@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/Keyway-AI/keyway/cloud"
+	"github.com/Keyway-AI/keyway/cloud/postgres"
 	"github.com/Keyway-AI/keyway/internal/version"
 )
 
@@ -28,9 +29,13 @@ func run() error {
 	defer stop()
 
 	cfg := cloud.ConfigFromEnv()
-	// TODO(hosting): swap NewMemoryStore for the Postgres store when KEYWAY_DB_URL
-	// is set. The Store interface is a drop-in; memory is per-process (dev).
-	store := cloud.NewMemoryStore()
+	// Persistence: Postgres when KEYWAY_DB_URL is set (hosting), else the
+	// in-memory store for local/dev. The Store interface is a drop-in.
+	store, cleanup, err := openStore(ctx)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
 	srv := cloud.NewServer(cfg, store)
 
 	httpSrv := &http.Server{
@@ -58,4 +63,26 @@ func run() error {
 		return err
 	}
 	return nil
+}
+
+// openStore returns the cloud store for the environment plus a cleanup func.
+// KEYWAY_DB_URL selects the persistent Postgres backend (migrations are applied
+// first); without it, the in-memory store backs local/dev and loses data on
+// restart.
+func openStore(ctx context.Context) (cloud.Store, func(), error) {
+	dsn := os.Getenv("KEYWAY_DB_URL")
+	if dsn == "" {
+		log.Printf("note: KEYWAY_DB_URL not set — using the in-memory store (data is lost on restart)")
+		st := cloud.NewMemoryStore()
+		return st, func() { _ = st.Close() }, nil
+	}
+	if err := postgres.MigrateUp(dsn); err != nil {
+		return nil, nil, err
+	}
+	st, err := postgres.Open(ctx, dsn)
+	if err != nil {
+		return nil, nil, err
+	}
+	log.Printf("persistence: Postgres (KEYWAY_DB_URL)")
+	return st, func() { _ = st.Close() }, nil
 }

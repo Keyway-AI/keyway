@@ -1,22 +1,30 @@
-% AIDC 2026 wrapper (Agentic-AI focus workshop, co-located with ACSAC, Dec 2026).
-% Open in Overleaf with the ACM primary article template (acmart, sigconf).
-%   Confirm CFP page limit + review model. Deadline 2026-09-25. CONFIRM.
-\documentclass[sigconf,review,anonymous]{acmart}
-\settopmatter{printacmref=false}
-\setcopyright{none}
+% AIDC 2026 wrapper — Workshop on Agentic AI in Offensive and Defensive Cyber
+% Operations (co-located with ACSAC, Dec 7 2026, Los Angeles).
+% CFP: https://aidcworkshop.github.io/  — PAPER-TRACK requirements (confirmed Oct 2026):
+%   * class: \documentclass[conference,compsoc]{IEEEtran}, US Letter
+%   * double-blind (anonymized); short position/WIP paper: up to 6 pp excl. refs.
+%   * paper deadline 2026-10-02 (AoE, extended from Sep 25); lightning talks Oct 8.
+% NOTE: this is a DISTINCT short paper (offense<->defense framing), not the SSR SoK.
+% Author plan: submit now, withdraw if the overlapping work is accepted at SSR.
+% Camera-ready authors (entered in the submission system, not in this anonymized PDF):
+%   Archit Sharma, Nometria Inc, United States  <archits1996@gmail.com>.
+%   Garima Mann,   Nometria Inc, United States  <garima@nometria.com>.
+\documentclass[conference,compsoc,letterpaper]{IEEEtran}
 \usepackage{booktabs}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
 
-\title{SoK: Authorization for Autonomous Agents}
+\title{Attack Your Own Agent's Authorization:\\
+Testing MCP and OAuth Agent Tokens Before Deployment}
 
-% anonymous option hides authors for review.
-% Camera-ready authors: Archit Sharma, Garima Mann.
-\author{Anonymous Author(s)}
-\affiliation{\institution{Submitted for review}\country{}}
+\author{\IEEEauthorblockN{Anonymous Submission}\\
+\IEEEauthorblockA{Short position / work-in-progress paper (double-blind review)}}
 
 \begin{document}
 \maketitle
-\input{../common/body}
+\input{body}
 
-% \bibliographystyle{ACM-Reference-Format}
+\bibliographystyle{IEEEtran}
 \bibliography{../common/refs}
 \end{document}

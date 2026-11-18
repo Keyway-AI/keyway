@@ -130,7 +130,7 @@ export default function Findings() {
             {loading
               ? "Analysing changes…"
               : findings.length === 0
-                ? "No findings — every service's token contract is unchanged since the baseline. 🎉"
+                ? "No findings — every service's token contract is unchanged since the baseline."
                 : "No findings match this severity."}
           </Empty>
         </Card>

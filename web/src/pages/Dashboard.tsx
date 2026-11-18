@@ -137,7 +137,7 @@ export default function Dashboard() {
             </ul>
           ) : (
             <Empty>
-              {changes.loading ? "Loading…" : "No findings — token contracts unchanged since baseline. 🎉"}
+              {changes.loading ? "Loading…" : "No findings — token contracts unchanged since baseline."}
             </Empty>
           )}
         </Card>

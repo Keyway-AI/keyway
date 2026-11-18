@@ -58,15 +58,30 @@ export default function CloudSignIn() {
               </div>
             </div>
 
-            {!apiReachable && (
-              <div className="mb-4 rounded-md border border-high/30 bg-high/8 px-3 py-2.5 text-caption text-high">
-                Can't reach the Cloud API{error ? ` (${error})` : ""}. Start it with{" "}
-                <code className="rounded bg-surface-2 px-1 font-mono">make cloud</code> or set{" "}
-                <code className="rounded bg-surface-2 px-1 font-mono">VITE_CLOUD_API_URL</code>.
-              </div>
-            )}
+            {!apiReachable &&
+              (import.meta.env.DEV ? (
+                <div className="mb-4 rounded-md border border-high/30 bg-high/8 px-3 py-2.5 text-caption text-high">
+                  Can't reach the Cloud API{error ? ` (${error})` : ""}. Start it with{" "}
+                  <code className="rounded bg-surface-2 px-1 font-mono">make cloud</code> or set{" "}
+                  <code className="rounded bg-surface-2 px-1 font-mono">VITE_CLOUD_API_URL</code>.
+                </div>
+              ) : (
+                <div className="mb-4 rounded-md border border-border bg-surface-2 px-3 py-2.5 text-caption text-muted">
+                  Keyway Cloud is in private preview — the hosted version is on the way. You can run the full tool
+                  yourself today.
+                </div>
+              ))}
 
             <div className="space-y-3">
+              {!apiReachable && !import.meta.env.DEV && (
+                <Link
+                  to="/app"
+                  className="inline-flex h-11 w-full items-center justify-center rounded-md bg-accent px-4 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.99] glow-accent"
+                >
+                  Open the local app
+                </Link>
+              )}
+
               {config?.github_login && (
                 <a
                   href={cloud.githubLoginUrl()}

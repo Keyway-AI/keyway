@@ -47,7 +47,7 @@
       // the default (matching the dayotter design language).
       (function () {
         try {
-          var t = localStorage.getItem("keyway.theme") || "light";
+          var t = localStorage.getItem("keyway.theme") || "dark";
           var dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.classList.toggle("dark", dark);
         } catch (e) {}

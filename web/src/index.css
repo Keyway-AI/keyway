@@ -168,7 +168,44 @@
  * nav, cards and the live inspector adopt the look with no per-component edits.
  * Severity colors stay semantic (green = pass, red = fail), never the accent.
  */
+/* Light-machined (the base): warm steel + a contrast-safe bronze accent. */
 .machined {
+  --color-bg: #f7f6f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #ecebe5;
+  --color-elevated: #ffffff;
+
+  --color-border: #e4e2db;
+  --color-border-strong: #d0cec5;
+
+  --color-text: #1b1a14;
+  --color-muted: #5d5b52;
+  --color-faint: #8a887d;
+
+  --color-accent: #8a6912; /* bronze — AA on white (≈5:1) */
+  --color-accent-strong: #725710;
+  --color-accent-fg: #ffffff;
+  --color-accent-soft: #f1e9d4;
+  --color-brand: #8a6912;
+  --color-brand-strong: #725710;
+
+  --color-critical: #c62f35;
+  --color-high: #bb5f12;
+  --color-medium: #9a760f;
+  --color-low: #2a8f5f; /* pass */
+  --color-info: #8a887d;
+
+  --shadow-xs: 0 1px 2px rgba(24, 23, 18, 0.05);
+  --shadow-sm: 0 1px 3px rgba(24, 23, 18, 0.06), 0 1px 2px rgba(24, 23, 18, 0.05);
+  --shadow-md: 0 8px 24px -8px rgba(24, 23, 18, 0.14);
+  --shadow-lg: 0 24px 56px -16px rgba(24, 23, 18, 0.22);
+
+  color-scheme: light;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+/* Dark-machined (under the theme toggle): graphite + bright brass. */
+.dark .machined {
   --color-bg: #121311;
   --color-surface: #1a1b19;
   --color-surface-2: #212220;
@@ -200,8 +237,6 @@
   --shadow-lg: 0 30px 64px -18px rgba(0, 0, 0, 0.8);
 
   color-scheme: dark;
-  background-color: var(--color-bg);
-  color: var(--color-text);
 }
 /* Engineered display face, tight tracking — only in the machined scope. */
 .machined .display,

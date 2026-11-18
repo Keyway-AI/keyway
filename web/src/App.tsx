@@ -1,4 +1,5 @@
-import { Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import { ToastProvider } from "./components/toast";
 import Dashboard from "./pages/Dashboard";
@@ -24,9 +25,42 @@ import CloudProject from "./cloud/CloudProject";
 import NotFound from "./pages/NotFound";
 import { Privacy, Terms } from "./pages/legal";
 
+/** Per-route document titles — React 18 has no native <title> hoisting. */
+const TITLES: Record<string, string> = {
+  "/": "Keyway — Verify your token contracts",
+  "/features": "Features — Keyway",
+  "/pricing": "Pricing — Keyway",
+  "/contact": "Contact — Keyway",
+  "/research": "Research & methods — Keyway",
+  "/privacy": "Privacy — Keyway",
+  "/terms": "Terms — Keyway",
+  "/login": "Sign in — Keyway",
+  "/signup": "Get started — Keyway",
+  "/cloud": "Keyway Cloud",
+  "/app": "Dashboard — Keyway",
+  "/app/findings": "Findings — Keyway",
+  "/app/consumers": "Consumers — Keyway",
+  "/app/changes": "Changes — Keyway",
+  "/app/probes": "Probes — Keyway",
+  "/app/blast-radius": "Blast radius — Keyway",
+  "/app/canary": "Canary — Keyway",
+  "/app/coverage": "Threat coverage — Keyway",
+  "/app/agent": "Agent token inspector — Keyway",
+};
+
+function RouteTitle() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.title =
+      TITLES[pathname] ?? (pathname.startsWith("/cloud") ? "Keyway Cloud" : "Keyway");
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   return (
     <ToastProvider>
+      <RouteTitle />
       <Routes>
         <Route path="/" element={<Marketing />} />
         <Route path="/features" element={<Features />} />

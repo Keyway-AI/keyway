@@ -206,11 +206,15 @@
   border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
 }
 
-/* Soft glow for the primary CTA — light-forward, subtle. */
+/* Quiet neutral elevation for the primary CTA. Depth is felt, not colored;
+   on dark themes it comes from surface steps, so no shadow there. */
 .glow-accent {
   box-shadow:
-    0 10px 30px -8px color-mix(in srgb, var(--color-accent) 45%, transparent),
-    0 2px 6px -2px color-mix(in srgb, var(--color-accent) 30%, transparent);
+    0 1px 2px rgb(0 0 0 / 0.08),
+    0 2px 8px -3px rgb(0 0 0 / 0.1);
+}
+.dark .glow-accent {
+  box-shadow: none;
 }
 
 /* Heavier, rounder display headline (the bold swishX hero voice). */

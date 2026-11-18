@@ -1,4 +1,5 @@
 import { MarketingShell, PageHero } from "../components/MarketingChrome";
+import { buttonClass } from "../components/ui";
 
 /**
  * The research & methods hub. Surfaces the whitepaper, the research-note series,
@@ -61,16 +62,10 @@ export default function Research() {
         line="Every accuracy number ships with its counter-evidence. Nothing here is claimed that the repo can't regenerate."
         actions={
           <>
-            <a
-              href={`${REPO}/docs/whitepaper.md`}
-              className="glow-accent inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
-            >
+            <a href={`${REPO}/docs/whitepaper.md`} className={buttonClass("primary", "lg")}>
               Read the whitepaper
             </a>
-            <a
-              href={`${REPO}/BENCHMARK.md`}
-              className="inline-flex h-11 items-center rounded-md border border-border bg-surface px-5 text-body font-medium text-text shadow-xs transition hover:bg-surface-2 active:scale-[0.98]"
-            >
+            <a href={`${REPO}/BENCHMARK.md`} className={buttonClass("secondary", "lg")}>
               How accurate is it?
             </a>
           </>

@@ -138,8 +138,8 @@ export function Td({ children, className = "" }: { children?: ReactNode; classNa
 
 /* ── Button ───────────────────────────────────────────────────────────── */
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-type ButtonSize = "sm" | "md";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonSize = "sm" | "md" | "lg";
 
 const buttonBase =
   "inline-flex select-none items-center justify-center gap-2 rounded-md border font-medium tracking-tight transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45";
@@ -154,7 +154,14 @@ const buttonVariants: Record<ButtonVariant, string> = {
 const buttonSizes: Record<ButtonSize, string> = {
   sm: "h-8 px-3 text-caption",
   md: "h-10 px-4 text-body",
+  lg: "h-11 px-5 text-body", // marketing CTAs
 };
+
+/** The single source of truth for button formatting — shared by the <Button>
+ * component (app) and the marketing <Link>/<a> CTAs, so both read identically. */
+export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", className = "") {
+  return `${buttonBase} ${buttonSizes[size]} ${buttonVariants[variant]} ${className}`.trim();
+}
 
 export function Button({
   variant = "secondary",
@@ -173,7 +180,7 @@ export function Button({
     <button
       {...props}
       disabled={disabled || loading}
-      className={`${buttonBase} ${buttonSizes[size]} ${buttonVariants[variant]} ${className}`}
+      className={buttonClass(variant, size, className)}
     >
       {loading && (
         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { MarketingShell } from "../components/MarketingChrome";
+import { buttonClass } from "../components/ui";
 import { LogoGlyph } from "../components/Logo";
 
 export default function NotFound() {
@@ -15,16 +16,10 @@ export default function NotFound() {
           The page you&apos;re looking for isn&apos;t here. It may have moved, or the link is off.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            to="/"
-            className="glow-accent inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
-          >
+          <Link to="/" className={buttonClass("primary", "lg")}>
             Back home
           </Link>
-          <a
-            href="https://github.com/Keyway-AI/keyway"
-            className="inline-flex h-11 items-center rounded-md border border-border bg-surface px-5 text-body font-medium text-text shadow-xs transition hover:bg-surface-2 active:scale-[0.98]"
-          >
+          <a href="https://github.com/Keyway-AI/keyway" className={buttonClass("secondary", "lg")}>
             View on GitHub
           </a>
         </div>

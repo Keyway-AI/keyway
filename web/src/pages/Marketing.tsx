@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { ComponentType } from "react";
 import { MarketingShell } from "../components/MarketingChrome";
+import { buttonClass } from "../components/ui";
 import { AppPreview } from "../components/AppPreview";
 import { TokenInspector } from "../components/TokenInspector";
 import { Reveal } from "../components/Reveal";
@@ -69,16 +70,10 @@ function Hero() {
           </Reveal>
           <Reveal delay={180}>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-              <Link
-                to="/signup"
-                className="inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
-              >
+              <Link to="/signup" className={buttonClass("primary", "lg")}>
                 Get started
               </Link>
-              <a
-                href={GITHUB}
-                className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong bg-surface px-5 text-body font-medium text-text transition hover:bg-surface-2 active:scale-[0.98]"
-              >
+              <a href={GITHUB} className={buttonClass("secondary", "lg")}>
                 <GitHubIcon />
                 GitHub
               </a>
@@ -311,16 +306,10 @@ export function CTA() {
             See it on your own contracts.
           </h2>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/signup"
-              className="glow-accent inline-flex h-11 items-center rounded-md bg-accent px-6 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
-            >
+            <Link to="/signup" className={buttonClass("primary", "lg")}>
               Get started
             </Link>
-            <a
-              href={GITHUB}
-              className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-surface px-5 text-body font-medium text-text shadow-xs transition hover:bg-surface-2 active:scale-[0.98]"
-            >
+            <a href={GITHUB} className={buttonClass("secondary", "lg")}>
               <GitHubIcon />
               View source
             </a>

@@ -9,24 +9,56 @@ import { IconAgent, IconBlast, IconCoverage, IconFindings, IconProbes, IconChang
 
 const GITHUB = "https://github.com/Keyway-AI/keyway";
 
+/* ── Keyway signature ───────────────────────────────────────────────────
+ * The name made visible: a keyway is the exact slot a key must match — the
+ * precise shape auth has to fit. Used small as the brand bullet, and large and
+ * faint as the hero's engineering watermark. */
+function KeywayMark({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
+      <path d="M12 2.5A5.5 5.5 0 0 0 9.3 12.8l-1.07 7.04A1 1 0 0 0 9.22 21h5.56a1 1 0 0 0 .99-1.16L14.7 12.8A5.5 5.5 0 0 0 12 2.5Zm0 3.2a2.3 2.3 0 1 1 0 4.6 2.3 2.3 0 0 1 0-4.6Z" />
+    </svg>
+  );
+}
+
+function KeywayWatermark() {
+  return (
+    <svg
+      className="pointer-events-none absolute -left-24 top-1/2 hidden h-[560px] w-[560px] -translate-y-1/2 text-accent opacity-[0.08] lg:block"
+      viewBox="0 0 200 200"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden
+    >
+      <circle cx="100" cy="76" r="30" strokeWidth="1.6" />
+      <circle cx="100" cy="76" r="46" strokeWidth="0.8" strokeDasharray="2 7" />
+      <path d="M86 102 L80 170a4 4 0 0 0 4 4h32a4 4 0 0 0 4-4l-6-68" strokeWidth="1.6" />
+      <path d="M118 118h16M118 130h11M118 142h16M118 154h9" strokeWidth="1.6" />
+      <path d="M18 38h164M18 38v-7M182 38v-7M100 38v-7" strokeWidth="0.8" />
+    </svg>
+  );
+}
+
+const SPECS = ["RFC 8725", "RFC 8707", "RFC 8693", "MCP authorization"];
+
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 function Hero() {
   return (
-    <section className="aurora grid-ground relative overflow-hidden">
-      <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-24">
+    <section className="grid-ground relative overflow-hidden border-b border-border">
+      <KeywayWatermark />
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-20 pt-14 sm:px-8 sm:pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-28">
         <div className="text-center lg:text-left">
           <Reveal>
             <a
               href={GITHUB}
-              className="glass inline-flex items-center gap-2 rounded-pill px-3.5 py-1.5 text-caption font-medium text-muted shadow-sm transition hover:text-text"
+              className="inline-flex items-center gap-2 rounded-pill border border-border bg-surface/60 px-3 py-1 font-mono text-micro text-muted transition hover:text-text"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-low" />
-              Open source · Apache 2.0
-              <span className="text-faint">→</span>
+              <KeywayMark className="h-3.5 w-3.5 text-accent" />
+              open source · Apache 2.0
             </a>
           </Reveal>
           <Reveal delay={60}>
-            <h1 className="display mt-6 text-[2.7rem] leading-[1.02] sm:text-[3.4rem]">
+            <h1 className="display mt-6 text-[2.7rem] leading-[1.02] sm:text-[3.5rem]">
               Verify the auth<br className="hidden sm:block" /> everyone else <span className="text-accent">assumes.</span>
             </h1>
           </Reveal>
@@ -39,17 +71,28 @@ function Hero() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Link
                 to="/signup"
-                className="glow-accent inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
+                className="inline-flex h-11 items-center rounded-md bg-accent px-5 text-body font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98]"
               >
                 Get started
               </Link>
               <a
                 href={GITHUB}
-                className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-surface px-5 text-body font-medium text-text shadow-xs transition hover:bg-surface-2 active:scale-[0.98]"
+                className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong bg-surface px-5 text-body font-medium text-text transition hover:bg-surface-2 active:scale-[0.98]"
               >
                 <GitHubIcon />
                 GitHub
               </a>
+            </div>
+          </Reveal>
+          <Reveal delay={240}>
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1.5 font-mono text-micro text-faint lg:justify-start">
+              <span className="text-muted">checks against</span>
+              {SPECS.map((s, i) => (
+                <span key={s} className="flex items-center gap-3.5">
+                  {i > 0 && <span className="text-border-strong">/</span>}
+                  {s}
+                </span>
+              ))}
             </div>
           </Reveal>
         </div>
@@ -95,18 +138,18 @@ function Proof() {
     { n: "54%", l: "of 50 threats, gaps named", href: DOCS.coverage },
   ];
   return (
-    <section className="bg-surface-2/30">
-      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-          {stats.map((s, i) => (
-            <Reveal key={s.l} delay={i * 70}>
-              <a href={s.href} className="group block text-center">
-                <div className="text-h1 font-semibold tracking-tight tabular-nums text-accent">{s.n}</div>
-                <div className="mt-1 text-caption text-muted transition group-hover:text-text">{s.l}</div>
+    <section className="border-b border-border">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+        <Reveal>
+          <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-border bg-surface/40 sm:grid-cols-4 sm:divide-x sm:divide-border">
+            {stats.map((s) => (
+              <a key={s.l} href={s.href} className="group block px-5 py-6 text-center transition hover:bg-surface-2/60">
+                <div className="font-mono text-[2rem] font-medium tabular-nums text-accent sm:text-[2.2rem]">{s.n}</div>
+                <div className="mt-1.5 text-caption text-muted transition group-hover:text-text">{s.l}</div>
               </a>
-            </Reveal>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -140,6 +183,7 @@ function Thesis() {
     <section className="bg-surface-2/30">
       <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8 sm:py-28">
         <Reveal>
+          <KeywayMark className="mx-auto mb-6 h-7 w-7 text-accent" />
           <h2 className="display text-[2rem] font-semibold tracking-tight sm:text-[2.6rem]">
             A scanner guesses.<br />
             Keyway <span className="text-accent">proves</span> it.
@@ -197,13 +241,17 @@ const sections: Section[] = [
   },
 ];
 
-function FeatureSection({ s }: { s: Section }) {
+function FeatureSection({ s, index }: { s: Section; index: number }) {
   const Mock = s.mock;
   return (
     <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
       <Reveal className={s.flip ? "lg:order-2" : ""}>
-        <span className="eyebrow">{s.eyebrow}</span>
-        <h3 className="mt-2 text-h2 font-semibold tracking-tight">{s.title}</h3>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-caption font-medium text-accent">{String(index + 1).padStart(2, "0")}</span>
+          <span className="h-px w-8 bg-border-strong" />
+          <span className="eyebrow">{s.eyebrow}</span>
+        </div>
+        <h3 className="mt-3 text-h2 font-semibold tracking-tight">{s.title}</h3>
         <p className="mt-2.5 max-w-sm text-body text-muted">{s.line}</p>
       </Reveal>
       <Reveal delay={90} className={s.flip ? "lg:order-1" : ""}>
@@ -217,8 +265,8 @@ export function FeatureSections() {
   return (
     <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
       <div className="space-y-20 sm:space-y-28">
-        {sections.map((s) => (
-          <FeatureSection key={s.title} s={s} />
+        {sections.map((s, i) => (
+          <FeatureSection key={s.title} s={s} index={i} />
         ))}
       </div>
     </section>

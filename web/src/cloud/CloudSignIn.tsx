@@ -33,7 +33,7 @@ export default function CloudSignIn() {
   }
 
   return (
-    <div className="aurora flex min-h-screen flex-col">
+    <div className="machined aurora flex min-h-screen flex-col">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <Link to="/" className="flex items-center gap-2.5">
           <LogoBadge size={28} />

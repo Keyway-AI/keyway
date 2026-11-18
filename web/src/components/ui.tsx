@@ -7,6 +7,8 @@ import type {
 import { useEffect } from "react";
 import type { Severity } from "../api/types";
 import { severityDot } from "../lib/format";
+import { buttonClass } from "./buttonClass";
+import type { ButtonVariant, ButtonSize } from "./buttonClass";
 
 /* ── Card ─────────────────────────────────────────────────────────────── */
 
@@ -138,23 +140,6 @@ export function Td({ children, className = "" }: { children?: ReactNode; classNa
 
 /* ── Button ───────────────────────────────────────────────────────────── */
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-type ButtonSize = "sm" | "md";
-
-const buttonBase =
-  "inline-flex select-none items-center justify-center gap-2 rounded-md border font-medium tracking-tight transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45";
-
-const buttonVariants: Record<ButtonVariant, string> = {
-  primary: "border-transparent bg-accent text-accent-fg hover:bg-accent-strong shadow-xs",
-  secondary: "border-border bg-surface text-text hover:bg-surface-2 shadow-xs",
-  ghost: "border-transparent bg-transparent text-muted hover:bg-surface-2 hover:text-text",
-  danger: "border-transparent bg-critical text-white hover:brightness-95 shadow-xs",
-};
-
-const buttonSizes: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-caption",
-  md: "h-10 px-4 text-body",
-};
 
 export function Button({
   variant = "secondary",
@@ -173,7 +158,7 @@ export function Button({
     <button
       {...props}
       disabled={disabled || loading}
-      className={`${buttonBase} ${buttonSizes[size]} ${buttonVariants[variant]} ${className}`}
+      className={buttonClass(variant, size, className)}
     >
       {loading && (
         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />

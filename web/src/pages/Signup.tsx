@@ -36,6 +36,7 @@ export default function Signup() {
   }
 
   return (
+    <div className="machined min-h-screen">
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-5 py-10 sm:py-16">
       <BrandMark />
       <div className="mt-10">
@@ -89,6 +90,7 @@ export default function Signup() {
           </Link>
         </p>
       </div>
+    </div>
     </div>
   );
 }

@@ -12,25 +12,76 @@ import type { AgentFinding } from "../api/types";
  * It is the same logic `keyway agent inspect` / `POST /v1/agent/inspect` run.
  */
 
-// A deliberately-flawed agent token: alg=none, an omnibus scope, no audience,
-// no expiry — four real findings, so the widget shows its teeth on first load.
-function flawedSample(): string {
-  const b64 = (o: unknown) =>
-    btoa(JSON.stringify(o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const header = { alg: "none", typ: "JWT" };
-  const claims = {
-    iss: "https://issuer.example",
-    sub: "agent-7",
-    scope: "admin:* files:read",
-    iat: Math.floor(Date.now() / 1000),
-  };
-  return `${b64(header)}.${b64(claims)}.`;
-}
-
 const AUDIENCE = "https://mcp.example/api";
 
+const now = () => Math.floor(Date.now() / 1000);
+const b64u = (o: unknown) =>
+  btoa(JSON.stringify(o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const jwt = (header: unknown, claims: unknown) => `${b64u(header)}.${b64u(claims)}.`;
+
+/**
+ * Three real agent-token scenarios the visitor can click through and watch the
+ * checks react to — the tool does the talking. Each is a genuine JWT the
+ * client-side analysis reads; the tokens are crafted so the findings are exact.
+ */
+type Scenario = { key: string; label: string; note: string; build: () => string };
+const SCENARIOS: Scenario[] = [
+  {
+    key: "overscoped",
+    label: "Over-scoped",
+    note: "4 findings",
+    // alg=none, omnibus scope, no audience, no expiry — shows its teeth on arrival.
+    build: () =>
+      jwt(
+        { alg: "none", typ: "JWT" },
+        { iss: "https://issuer.example", sub: "agent-7", scope: "admin:* files:read", iat: now() },
+      ),
+  },
+  {
+    key: "passthrough",
+    label: "Passthrough",
+    note: "1 critical",
+    // Well-formed, but bound to a different resource — the marquee MCP bug: a
+    // token minted for payments, replayed against the MCP server.
+    build: () =>
+      jwt(
+        { alg: "RS256", typ: "JWT", kid: "k1" },
+        {
+          iss: "https://issuer.example",
+          sub: "agent-7",
+          aud: "https://payments.internal/api",
+          act: { sub: "svc-gateway" },
+          scope: "files:read",
+          iat: now(),
+          exp: now() + 3600,
+        },
+      ),
+  },
+  {
+    key: "clean",
+    label: "Clean",
+    note: "passes",
+    // Bound to this resource, a verifiable delegation chain, least-privilege
+    // scope, a real expiry — the green state, so it isn't just a red-flag machine.
+    build: () =>
+      jwt(
+        { alg: "RS256", typ: "JWT", kid: "k1" },
+        {
+          iss: "https://issuer.example",
+          sub: "agent-7",
+          aud: [AUDIENCE],
+          act: { sub: "user-42" },
+          scope: "files:read calendar:read",
+          iat: now(),
+          exp: now() + 900,
+        },
+      ),
+  },
+];
+
 export function TokenInspector() {
-  const [token, setToken] = useState(flawedSample);
+  const [token, setToken] = useState(SCENARIOS[0].build);
+  const [active, setActive] = useState<string>(SCENARIOS[0].key);
   const [findings, setFindings] = useState<AgentFinding[] | null>(null);
   const [scanning, setScanning] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,6 +139,7 @@ export function TokenInspector() {
       <textarea
         value={token}
         onChange={(e) => {
+          setActive("");
           setToken(e.target.value);
           inspect(e.target.value);
         }}
@@ -97,23 +149,33 @@ export function TokenInspector() {
         className="w-full resize-none rounded-lg border border-border bg-surface-2 p-3 font-mono text-[0.72rem] leading-relaxed text-text outline-none transition placeholder:text-faint focus:border-accent"
       />
 
-      <div className="mt-2.5 flex items-center gap-2">
+      <div className="mt-2.5 flex items-center gap-1.5">
+        <span className="mr-0.5 text-micro text-faint">Try</span>
+        {SCENARIOS.map((s) => (
+          <button
+            key={s.key}
+            onClick={() => {
+              const t = s.build();
+              setActive(s.key);
+              setToken(t);
+              inspect(t, true);
+            }}
+            title={`${s.label} — ${s.note}`}
+            className={`rounded-pill border px-2.5 py-1 text-micro font-medium transition ${
+              active === s.key
+                ? "border-accent bg-accent-soft text-accent"
+                : "border-border bg-surface text-muted hover:bg-surface-2 hover:text-text"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
         <button
           onClick={() => inspect(token, true)}
           disabled={!token.trim() || scanning}
-          className="glow-accent inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-md bg-accent px-4 text-caption font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.99] disabled:opacity-50"
+          className="ml-auto inline-flex h-7 items-center justify-center rounded-md bg-accent px-3 text-micro font-semibold text-accent-fg transition hover:bg-accent-strong active:scale-[0.98] disabled:opacity-50"
         >
-          {scanning ? "Analyzing…" : "Inspect token"}
-        </button>
-        <button
-          onClick={() => {
-            const s = flawedSample();
-            setToken(s);
-            inspect(s, true);
-          }}
-          className="h-9 rounded-md border border-border bg-surface px-3 text-caption font-medium text-muted transition hover:bg-surface-2 hover:text-text"
-        >
-          Load sample
+          {scanning ? "Analyzing…" : "Inspect"}
         </button>
       </div>
 
@@ -129,16 +191,17 @@ export function TokenInspector() {
       {!scanning && findings !== null && (
         <div className="mt-3 border-t border-border/70 pt-3">
           {findings.length === 0 ? (
-            <div className="flex items-center gap-2 text-caption text-low">
+            <div className="finding-in flex items-center gap-2 rounded-lg bg-low/10 px-2.5 py-2 text-caption font-medium text-low">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m5 12 5 5L20 7" />
               </svg>
-              No findings — this token passes the checks Keyway runs.
+              No findings — this token passes every agent-auth check.
             </div>
           ) : (
             <>
-              <div className="mb-2 text-micro font-semibold uppercase tracking-wider text-faint">
-                {findings.length} finding{findings.length === 1 ? "" : "s"} · checked against {AUDIENCE}
+              <div className="mb-2 text-micro font-medium text-faint">
+                {findings.length} finding{findings.length === 1 ? "" : "s"} · checked against{" "}
+                <span className="font-mono">{AUDIENCE}</span>
               </div>
               <ul className="space-y-1.5">
                 {findings.map((f, i) => (

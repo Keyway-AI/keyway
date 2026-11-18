@@ -45,12 +45,12 @@ const OPTIONS: { value: Theme; icon: () => React.ReactElement; label: string }[]
 // Light/dark/system switch. Persists to localStorage and toggles `.dark` on
 // <html>; a matching inline script in index.html applies it before first paint.
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    setTheme((localStorage.getItem(KEY) as Theme) ?? "light");
+    setTheme((localStorage.getItem(KEY) as Theme) ?? "dark");
   }, []);
 
   function select(next: Theme) {

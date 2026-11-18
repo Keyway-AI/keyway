@@ -222,9 +222,9 @@ export function MarketingFooter() {
   );
 }
 
-export function MarketingShell({ children }: { children: ReactNode }) {
+export function MarketingShell({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className="min-h-screen">
+    <div className={`machined min-h-screen ${className}`}>
       <MarketingNav />
       {children}
       <MarketingFooter />

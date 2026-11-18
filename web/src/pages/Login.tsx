@@ -12,7 +12,7 @@ import { Button, Field, Input } from "../components/ui";
  */
 function AuthPanel({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="machined flex min-h-screen">
       {/* brand panel */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-accent p-10 text-accent-fg lg:flex">
         <div

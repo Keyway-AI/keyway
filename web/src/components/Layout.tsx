@@ -131,7 +131,7 @@ export default function Layout() {
   }, [drawerOpen]);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="machined flex min-h-screen">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface md:flex">
         <div className="px-5 py-5">

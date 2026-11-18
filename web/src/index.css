@@ -160,6 +160,103 @@
   }
 }
 
+/*
+ * ── Machined / Keyway direction ──────────────────────────────────────────
+ * A scoped palette: dark graphite + warm steel surfaces, one machined-brass
+ * accent, an engineered display face. Because every utility reads the color
+ * tokens as CSS variables, overriding them here recolors the whole subtree —
+ * nav, cards and the live inspector adopt the look with no per-component edits.
+ * Severity colors stay semantic (green = pass, red = fail), never the accent.
+ */
+/* Light-machined (the base): warm steel + a contrast-safe bronze accent. */
+.machined {
+  --color-bg: #f7f6f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #ecebe5;
+  --color-elevated: #ffffff;
+
+  --color-border: #e4e2db;
+  --color-border-strong: #d0cec5;
+
+  --color-text: #1b1a14;
+  --color-muted: #5d5b52;
+  --color-faint: #8a887d;
+
+  --color-accent: #8a6912; /* bronze — AA on white (≈5:1) */
+  --color-accent-strong: #725710;
+  --color-accent-fg: #ffffff;
+  --color-accent-soft: #f1e9d4;
+  --color-brand: #8a6912;
+  --color-brand-strong: #725710;
+
+  --color-critical: #c62f35;
+  --color-high: #bb5f12;
+  --color-medium: #9a760f;
+  --color-low: #2a8f5f; /* pass */
+  --color-info: #8a887d;
+
+  --shadow-xs: 0 1px 2px rgba(24, 23, 18, 0.05);
+  --shadow-sm: 0 1px 3px rgba(24, 23, 18, 0.06), 0 1px 2px rgba(24, 23, 18, 0.05);
+  --shadow-md: 0 8px 24px -8px rgba(24, 23, 18, 0.14);
+  --shadow-lg: 0 24px 56px -16px rgba(24, 23, 18, 0.22);
+
+  color-scheme: light;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+/* Dark-machined (under the theme toggle): graphite + bright brass. */
+.dark .machined {
+  --color-bg: #121311;
+  --color-surface: #1a1b19;
+  --color-surface-2: #212220;
+  --color-elevated: #1e1f1c;
+
+  --color-border: #2c2d29;
+  --color-border-strong: #3d3e38;
+
+  --color-text: #ecebe4;
+  --color-muted: #a3a299;
+  --color-faint: #70706a;
+
+  --color-accent: #caa24c; /* machined brass */
+  --color-accent-strong: #ddb45e;
+  --color-accent-fg: #17120a; /* dark ink on brass */
+  --color-accent-soft: #241f12;
+  --color-brand: #caa24c;
+  --color-brand-strong: #ddb45e;
+
+  --color-critical: #ff5c61;
+  --color-high: #ff8a3d;
+  --color-medium: #f2c14e;
+  --color-low: #46c98a; /* pass */
+  --color-info: #8e8e97;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 12px 34px -12px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 30px 64px -18px rgba(0, 0, 0, 0.8);
+
+  color-scheme: dark;
+}
+/* Engineered display face, tight tracking — only in the machined scope. */
+.machined .display,
+.machined h1,
+.machined h2,
+.machined h3 {
+  font-family: "Space Grotesk", var(--font-sans);
+  letter-spacing: -0.02em;
+}
+.machined .display {
+  font-weight: 600;
+}
+/* Depth on dark comes from surface steps, not colored glow. */
+.machined .glow-accent {
+  box-shadow: none;
+}
+.machined .grid-ground::after {
+  opacity: 0.5;
+}
+
 /* Utility: the small uppercase label ("eyebrow"). */
 .eyebrow {
   font-size: var(--text-micro);

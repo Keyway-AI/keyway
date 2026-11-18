@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { SettingsModal } from "./Settings";
 import { useHealthProbe } from "../lib/health";
-import { ThemeToggle } from "./ThemeToggle";
 import { LogoBadge } from "./Logo";
 import {
   IconAgent,
@@ -101,7 +100,6 @@ function SidebarBody({ onNavigate, onSettings }: { onNavigate?: () => void; onSe
         ))}
       </nav>
       <div className="flex flex-col gap-3 border-t border-border px-3 py-4">
-        <ThemeToggle />
         <button
           onClick={onSettings}
           className="flex items-center gap-3 rounded-md px-3 py-2 text-body font-medium text-muted transition hover:bg-surface-2 hover:text-text"
@@ -131,7 +129,7 @@ export default function Layout() {
   }, [drawerOpen]);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="machined flex min-h-screen">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface md:flex">
         <div className="px-5 py-5">

@@ -251,10 +251,6 @@ written up as a [**whitepaper**](docs/whitepaper.md) and a series of arXiv-style
 [research notes](docs/research/) (contract discovery, drift classification,
 adversarial verification, agent-auth). The on-site hub is at `/research`.
 
-The agent-auth systematization is **peer-reviewed**: *SoK: Authorization for
-Autonomous Agents* was accepted at **WAITI 2026** (AI-Trust Workshop, co-located
-with ACSAC 2026, Los Angeles).
-
 And it's validated against **real, documented incidents** — `alg=none`
 ([CVE-2022-23540](https://nvd.nist.gov/vuln/detail/CVE-2022-23540)), RS256→HS256
 confusion ([CVE-2022-23541](https://nvd.nist.gov/vuln/detail/CVE-2022-23541)), and

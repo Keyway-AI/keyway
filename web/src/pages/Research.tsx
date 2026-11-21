@@ -72,32 +72,6 @@ export default function Research() {
         }
       />
 
-      {/* peer-reviewed acceptance — the real credibility signal */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-          <a
-            href={`${REPO}/docs/research/04-agent-auth.md`}
-            className="lift group flex flex-col gap-4 rounded-xl border border-accent/30 bg-accent-soft/50 p-6 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
-          >
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                <span className="rounded-pill border border-accent/40 px-2 py-0.5 text-micro font-semibold uppercase tracking-wide text-accent">
-                  Peer-reviewed
-                </span>
-                <span className="font-mono text-micro text-muted">WAITI 2026 · AI-Trust Workshop @ ACSAC</span>
-              </div>
-              <h2 className="mt-2.5 text-h3 font-semibold tracking-tight">SoK: Authorization for Autonomous Agents</h2>
-              <p className="mt-1.5 max-w-2xl text-caption text-muted">
-                The agent-auth systematization behind Keyway, accepted at the WAITI 2026 workshop, co-located with ACSAC 2026 in Los Angeles.
-              </p>
-            </div>
-            <span className="shrink-0 whitespace-nowrap text-body font-medium text-accent transition group-hover:translate-x-0.5">
-              Read the SoK &rarr;
-            </span>
-          </a>
-        </div>
-      </section>
-
       {/* reproduced results */}
       <section className="border-b border-border bg-surface-2/30">
         <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">

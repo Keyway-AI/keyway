@@ -61,7 +61,7 @@ export function DiffMock() {
               {r.sign}
             </span>
             <span className="flex-1 truncate">{r.text}</span>
-            {r.note && <span className="text-[10px] font-sans text-muted">{r.note}</span>}
+            {r.note && <span className="text-[11px] font-sans text-muted">{r.note}</span>}
           </div>
         ))}
       </div>
@@ -98,8 +98,8 @@ export function HarnessMock() {
               {r.ok ? "✓" : "✗"}
             </span>
             <span className="min-w-0 flex-1 truncate text-caption text-text">{r.attack}</span>
-            <span className="shrink-0 font-mono text-[10px] text-faint">{r.threat}</span>
-            <span className={`shrink-0 text-[10px] font-medium ${r.ok ? "text-low" : "text-critical"}`}>
+            <span className="shrink-0 font-mono text-[11px] text-faint">{r.threat}</span>
+            <span className={`shrink-0 text-[11px] font-medium ${r.ok ? "text-low" : "text-critical"}`}>
               {r.ok ? "rejected" : "accepted"}
             </span>
           </div>
@@ -135,7 +135,7 @@ export function BlastMock() {
             >
               {r.impact}
             </span>
-            <span className="truncate text-[10px] text-faint">{r.why}</span>
+            <span className="truncate text-[11px] text-faint">{r.why}</span>
           </div>
         ))}
       </div>
@@ -177,7 +177,7 @@ export function CoverageMock() {
             </div>
             <div className="mt-1.5 flex items-center gap-2">
               <Bar pct={d.pct} tone={d.tone} />
-              <span className="w-8 text-right text-[10px] font-semibold tabular-nums text-muted">{d.pct}%</span>
+              <span className="w-8 text-right text-[11px] font-semibold tabular-nums text-muted">{d.pct}%</span>
             </div>
           </div>
         ))}
@@ -187,7 +187,7 @@ export function CoverageMock() {
         <div className="grid grid-cols-2 gap-x-4 gap-y-2">
           {cats.map((c) => (
             <div key={c.name} className="flex items-center gap-2">
-              <span className="w-24 shrink-0 truncate text-[10px] text-muted">{c.name}</span>
+              <span className="w-24 shrink-0 truncate text-[11px] text-muted">{c.name}</span>
               <Bar pct={c.pct} tone="bg-border-strong" />
             </div>
           ))}
@@ -207,7 +207,7 @@ export function AgentMock() {
   ];
   return (
     <MockFrame label="agent inspect · mcp-token">
-      <div className="rounded-lg border border-border bg-surface-2/50 px-3 py-2 font-mono text-[10px] text-faint">
+      <div className="rounded-lg border border-border bg-surface-2/50 px-3 py-2 font-mono text-[11px] text-faint">
         eyJhbGciOiJSUzI1NiIsImtpZCI6…<span className="text-muted">.claims.</span>…sig
       </div>
       <div className="mt-3 space-y-1.5">
@@ -216,10 +216,10 @@ export function AgentMock() {
             <span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${sevDot[f.tone]}`} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] font-semibold text-muted">{f.id}</span>
+                <span className="font-mono text-[11px] font-semibold text-muted">{f.id}</span>
                 <span className="truncate text-caption text-text">{f.title}</span>
               </div>
-              <div className="truncate font-mono text-[10px] text-faint">{f.detail}</div>
+              <div className="truncate font-mono text-[11px] text-faint">{f.detail}</div>
             </div>
           </div>
         ))}

@@ -246,7 +246,7 @@ function FeatureSection({ s, index }: { s: Section; index: number }) {
           <span className="h-px w-8 bg-border-strong" />
           <span className="eyebrow">{s.eyebrow}</span>
         </div>
-        <h3 className="mt-3 text-h2 font-semibold tracking-tight">{s.title}</h3>
+        <h2 className="mt-3 text-h2 font-semibold tracking-tight">{s.title}</h2>
         <p className="mt-2.5 max-w-sm text-body text-muted">{s.line}</p>
       </Reveal>
       <Reveal delay={90} className={s.flip ? "lg:order-1" : ""}>

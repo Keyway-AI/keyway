@@ -47,13 +47,13 @@ function FindingRow({ f }: { f: Finding }) {
       <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-muted">
         <span className="font-mono">{f.event.field}</span>
         {attr && attr.kind !== "unattributed" && (
-          <Pill className="font-mono text-[10px]">
+          <Pill className="font-mono text-[11px]">
             by {attr.actor || attr.kind}
             {attr.ref ? ` · ${attr.ref.slice(0, 10)}` : ""}
           </Pill>
         )}
         {f.event.evidence.slice(0, 2).map((e) => (
-          <Pill key={e} className="font-mono text-[10px]">
+          <Pill key={e} className="font-mono text-[11px]">
             {e}
           </Pill>
         ))}

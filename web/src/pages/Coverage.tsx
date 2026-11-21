@@ -139,7 +139,7 @@ export default function Coverage() {
                       {t.detectors.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {t.detectors.map((det) => (
-                            <Pill key={det} className="font-mono text-[10px] text-low">
+                            <Pill key={det} className="font-mono text-[11px] text-low">
                               {det}
                             </Pill>
                           ))}

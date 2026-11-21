@@ -211,14 +211,14 @@ export function TokenInspector() {
                     style={{ animationDelay: `${i * 70}ms` }}
                   >
                     <span
-                      className={`mt-0.5 shrink-0 rounded-pill border px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase ${severityColor[f.severity]}`}
+                      className={`mt-0.5 shrink-0 rounded-pill border px-1.5 py-0.5 text-[11px] font-semibold uppercase ${severityColor[f.severity]}`}
                     >
                       {f.severity}
                     </span>
                     <div className="min-w-0">
                       <span className="text-caption text-text">{f.message}</span>
                       {f.threat_id !== "—" && (
-                        <span className="ml-1.5 font-mono text-[0.65rem] text-faint">{f.threat_id}</span>
+                        <span className="ml-1.5 font-mono text-[11px] text-faint">{f.threat_id}</span>
                       )}
                     </div>
                   </li>

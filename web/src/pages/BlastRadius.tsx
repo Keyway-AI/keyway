@@ -48,7 +48,7 @@ function VerdictGroup({
             </div>
             <div className="flex flex-col items-end gap-1">
               {a.evidence.map((e) => (
-                <Pill key={e} className="font-mono text-[10px]">
+                <Pill key={e} className="font-mono text-[11px]">
                   {e}
                 </Pill>
               ))}

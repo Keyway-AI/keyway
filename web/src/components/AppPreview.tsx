@@ -47,7 +47,7 @@ export function AppPreview() {
         <span className="h-2.5 w-2.5 rounded-full bg-border-strong" />
         <span className="h-2.5 w-2.5 rounded-full bg-border-strong" />
         <span className="h-2.5 w-2.5 rounded-full bg-border-strong" />
-        <div className="ml-3 hidden h-5 flex-1 items-center gap-1.5 rounded-md bg-surface px-2.5 text-[10px] text-faint sm:flex">
+        <div className="ml-3 hidden h-5 flex-1 items-center gap-1.5 rounded-md bg-surface px-2.5 text-[11px] text-faint sm:flex">
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-low">
             <path d="M7 11V8a5 5 0 0 1 10 0v3" strokeLinecap="round" />
             <rect x="5" y="11" width="14" height="9" rx="2" />
@@ -74,7 +74,7 @@ export function AppPreview() {
               {n.label}
             </div>
           ))}
-          <div className="mt-auto flex items-center gap-2 px-2 pt-3 text-[10px] text-muted">
+          <div className="mt-auto flex items-center gap-2 px-2 pt-3 text-[11px] text-muted">
             <span className="h-1.5 w-1.5 rounded-full bg-low" />
             Connected
           </div>
@@ -82,7 +82,7 @@ export function AppPreview() {
         <div className="min-w-0 flex-1 p-4">
           <div className="flex items-center justify-between">
             <div className="text-[1.15rem] font-semibold tracking-tight">Dashboard</div>
-            <span className="hidden rounded-md bg-accent px-2.5 py-1 text-[10px] font-semibold text-accent-fg sm:block">
+            <span className="hidden rounded-md bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-fg sm:block">
               Take snapshot
             </span>
           </div>
@@ -108,7 +108,7 @@ export function AppPreview() {
                   <li key={f.label} className="flex items-center gap-2.5 border-b border-border/60 px-3 py-2 last:border-0">
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${sevColor[f.sev]}`} />
                     <span className="min-w-0 flex-1 truncate text-caption text-text">{f.label}</span>
-                    <span className="hidden shrink-0 text-[10px] text-faint sm:block">{f.svc}</span>
+                    <span className="hidden shrink-0 text-[11px] text-faint sm:block">{f.svc}</span>
                   </li>
                 ))}
               </ul>
@@ -121,7 +121,7 @@ export function AppPreview() {
                   { n: "Agent", pct: 40, tone: "bg-medium" },
                 ].map((d) => (
                   <div key={d.n} className="mb-2 last:mb-0">
-                    <div className="flex justify-between text-[10px] text-muted">
+                    <div className="flex justify-between text-[11px] text-muted">
                       <span>{d.n}</span>
                       <span className="tabular-nums">{d.pct}%</span>
                     </div>
@@ -135,7 +135,7 @@ export function AppPreview() {
                 <div className="eyebrow mb-2">Latest harness run</div>
                 <div className="space-y-1">
                   {harness.map((h) => (
-                    <div key={h.a} className="flex items-center gap-2 text-[10px]">
+                    <div key={h.a} className="flex items-center gap-2 text-[11px]">
                       <span className={h.ok ? "text-low" : "text-critical"}>{h.ok ? "✓" : "✗"}</span>
                       <span className="flex-1 truncate text-muted">{h.a}</span>
                       <span className={h.ok ? "text-low" : "text-critical"}>{h.ok ? "rejected" : "accepted"}</span>

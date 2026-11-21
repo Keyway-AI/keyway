@@ -120,8 +120,16 @@ fetching whole chart trees so `helm template` has its values context.
 
 1. **No human validation.** The independent-parse proxy above is a signal, not
    gold-standard ground truth. The claims-recall gap must be adjudicated by hand.
-2. **Partial corpus, selection bias.** 428 repos, public only, one rate-limited
-   crawl — not the target 10³–10⁴, and public config skews to samples/OSS.
+2. **Selection bias, characterised.** The corpus is **2,967 public GitHub repos**
+   (605 distinct JWT-validating configs after dedup + example-exclusion), grown by a
+   rate-limited `search/code` crawl — now in the 10³ range. Two biases remain and are
+   named rather than hidden: (a) **source bias** — public GitHub over-represents
+   samples, demos and OSS versus private production meshes; (b) **shape bias** — the
+   crawl queries Istio RequestAuthentication/AuthorizationPolicy and Envoy `jwt_authn`,
+   so gateways and OIDC-client configs outside those shapes are out of frame. Mitigating
+   evidence that the figures are not a small-sample artifact: as the corpus grew
+   530→605 configs the five prevalences each moved ≤2 points (P1 53.4→50.9%,
+   P2 80.9→82.3%, P3 100→100%, P4 13.2→13.6%, P5 0→0%).
 3. **P3 = "not pinned in config" ≠ "vulnerable."** Almost certainly the verifying
    library's default — the static-vs-runtime gap (RQ4), not a 100% vuln rate. This
    is now *quantified*: each run reports a static/runtime frontier — how many check

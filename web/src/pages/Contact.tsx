@@ -69,8 +69,8 @@ const channels: Channel[] = [
   {
     title: "Email us",
     body: "Partnerships, the cloud waitlist, or anything private.",
-    action: "hello@keyway.dev",
-    href: "mailto:hello@keyway.dev?subject=Keyway",
+    action: "hello@keywayhq.com",
+    href: "mailto:hello@keywayhq.com?subject=Keyway",
     icon: MailIcon,
   },
 ];

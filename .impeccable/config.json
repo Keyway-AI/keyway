@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "space grotesk",
+        "createdAt": "2026-11-21T07:52:59.037Z",
+        "reason": "user confirmed: approved the Machined/Keyway direction with Space Grotesk as the engineered display face (sign-off: 'Yes — roll it out')"
+      }
+    ]
+  }
+}

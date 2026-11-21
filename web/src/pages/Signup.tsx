@@ -6,14 +6,14 @@ import { Button } from "../components/ui";
 const steps = [
   {
     n: "1",
-    title: "Run it — zero config",
+    title: "Run it: zero config",
     body: "One container with the web app embedded. Boots on an in-memory store, no database needed. From source, use “make demo”.",
     code: "docker run -p 8080:8080 ghcr.io/keyway-ai/keyway",
   },
   {
     n: "2",
     title: "Open the dashboard",
-    body: "The UI loads on a real example dataset — explore the discovered inventory, coverage, blast radius and the agent inspector.",
+    body: "The UI loads on a real example dataset. Explore the discovered inventory, coverage, blast radius and the agent inspector.",
     code: "open http://localhost:8080",
   },
   {
@@ -43,7 +43,7 @@ export default function Signup() {
         <span className="eyebrow">Get started</span>
         <h1 className="mt-2 text-h1 font-semibold tracking-tight">Keyway is self-hosted, and free.</h1>
         <p className="mt-2 max-w-xl text-body-lg text-muted">
-          No account to create — run your own instance and connect to it. It takes about a minute.
+          No account to create. Run your own instance and connect to it. It takes about a minute.
         </p>
       </div>
 

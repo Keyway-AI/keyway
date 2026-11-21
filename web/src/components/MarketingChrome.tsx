@@ -211,7 +211,7 @@ export function MarketingFooter() {
           ))}
         </div>
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-caption text-faint sm:flex-row">
-          <span>© {"2026"} Keyway — open source, Apache 2.0 licensed.</span>
+          <span>© {"2026"} Keyway. Open source, Apache 2.0 licensed.</span>
           <div className="flex items-center gap-4">
             <Link to="/privacy" className="transition hover:text-text">Privacy</Link>
             <Link to="/terms" className="transition hover:text-text">Terms</Link>

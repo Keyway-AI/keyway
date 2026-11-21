@@ -184,7 +184,7 @@ function Thesis() {
             Keyway <span className="text-accent">proves</span> it.
           </h2>
           <p className="mx-auto mt-4 max-w-md text-body-lg text-muted">
-            Auth correctness is a property of what&apos;s running — the part static tools can&apos;t see.
+            Auth correctness is a property of what&apos;s running, the part static tools can&apos;t see.
           </p>
         </Reveal>
       </div>
@@ -211,7 +211,7 @@ const sections: Section[] = [
   {
     eyebrow: "Adversarial testing",
     title: "Attack your own endpoints.",
-    line: "Real forged tokens — alg=none, key confusion, jku injection — fired at staging.",
+    line: "Real forged tokens (alg=none, key confusion, jku injection), fired at staging.",
     mock: HarnessMock,
     flip: true,
   },
@@ -275,7 +275,7 @@ const gridFeatures = [
   { icon: IconProbes, title: "Attacked, generatively", body: "alg=none, key confusion, jku injection and forged claims, fired at your endpoints." },
   { icon: IconBlast, title: "Blast radius", body: "See exactly which consumers break on a rotation, with a safe grace window." },
   { icon: IconCoverage, title: "Coverage, kept honest", body: "Measured against RFC 8725, OWASP and real CVEs. Every gap cited." },
-  { icon: IconAgent, title: "Agent auth, verified", body: "MCP passthrough, missing delegation, over-scoped tokens — the layer nobody tests." },
+  { icon: IconAgent, title: "Agent auth, verified", body: "MCP passthrough, missing delegation, over-scoped tokens: the layer nobody tests." },
 ];
 
 export function FeatureGrid() {

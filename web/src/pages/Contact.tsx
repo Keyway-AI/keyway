@@ -81,7 +81,7 @@ export default function Contact() {
       <PageHero
         eyebrow="Contact"
         title="Get in touch."
-        line="Built in the open. Every channel below reaches a real maintainer — no sales team, no form to nowhere."
+        line="Built in the open. Every channel below reaches a real maintainer. No sales team, no form to nowhere."
       />
       <section className="px-5 py-16 sm:px-8 sm:py-20">
         <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">

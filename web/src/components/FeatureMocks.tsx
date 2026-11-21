@@ -201,7 +201,7 @@ export function CoverageMock() {
 export function AgentMock() {
   const findings = [
     { id: "MCP-01", tone: "critical", title: "Token audience is not this server", detail: "aud: auth0-mgmt" },
-    { id: "DEL-01", tone: "high", title: "No act claim — delegation unverifiable", detail: "on-behalf-of" },
+    { id: "DEL-01", tone: "high", title: "No act claim: delegation unverifiable", detail: "on-behalf-of" },
     { id: "SCOPE-01", tone: "high", title: "Over-scoped: files:* granted", detail: "uses files:read" },
     { id: "SCOPE-02", tone: "medium", title: "Token never expires", detail: "no exp" },
   ];

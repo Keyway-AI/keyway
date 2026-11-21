@@ -74,7 +74,7 @@ export default function Findings() {
   return (
     <Page
       title="Findings"
-      subtitle="What changed about who can log into your services — in plain English, grouped by service and prioritised by risk."
+      subtitle="What changed about who can log into your services, in plain English, grouped by service and prioritised by risk."
     >
       {/* Severity overview — click to filter. */}
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -130,7 +130,7 @@ export default function Findings() {
             {loading
               ? "Analysing changes…"
               : findings.length === 0
-                ? "No findings — every service's token contract is unchanged since the baseline."
+                ? "No findings. Every service's token contract is unchanged since the baseline."
                 : "No findings match this severity."}
           </Empty>
         </Card>

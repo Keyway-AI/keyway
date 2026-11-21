@@ -56,7 +56,7 @@ export default function Probes() {
       setResults(res.results);
       setRunId(res.run_id);
       const failed = res.results.filter((r) => !r.passed).length;
-      if (failed > 0) toast.error(`${failed} probe(s) failed — see findings below`);
+      if (failed > 0) toast.error(`${failed} probe(s) failed. See findings below`);
       else toast.success(`All ${res.results.length} probes passed`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Probe run failed");
@@ -178,7 +178,7 @@ export default function Probes() {
                             {r.passed ? (
                               <span className="text-low">✓ rejected as expected</span>
                             ) : (
-                              <span className="text-critical">✕ accepted — vulnerable</span>
+                              <span className="text-critical">✕ accepted: vulnerable</span>
                             )}
                           </Td>
                           <Td className="font-mono text-xs">{r.status_code}</Td>

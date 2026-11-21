@@ -196,7 +196,7 @@ function NewProjectModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
         {kind === "github" ? (
           <>
-            <Field label="Repository" hint="owner/name — Keyway reads its config with your GitHub access.">
+            <Field label="Repository" hint="owner/name. Keyway reads its config with your GitHub access.">
               <Input value={repo} onChange={(e) => setRepo(e.target.value)} placeholder="acme/payments" />
             </Field>
             <div className="grid grid-cols-2 gap-3">
@@ -209,7 +209,7 @@ function NewProjectModal({ onClose, onCreated }: { onClose: () => void; onCreate
             </div>
           </>
         ) : (
-          <Field label="Config files" hint="YAML manifests — AuthorizationPolicy, RequestAuthentication, Envoy JWT filters, OIDC clients.">
+          <Field label="Config files" hint="YAML manifests: AuthorizationPolicy, RequestAuthentication, Envoy JWT filters, OIDC clients.">
             <div className="rounded-md border border-dashed border-border-strong bg-surface-2 p-4 text-center">
               <input
                 ref={fileInput}

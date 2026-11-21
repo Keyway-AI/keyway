@@ -239,7 +239,7 @@ function ConnectCIPanel({ projectId }: { projectId: string }) {
           <>
             <CopyRow value={token} mono />
             <p className="mt-1.5 text-micro text-high">
-              Copy it now — it won't be shown again. Store it as a CI secret (KEYWAY_TOKEN).
+              Copy it now. It won't be shown again. Store it as a CI secret (KEYWAY_TOKEN).
             </p>
           </>
         ) : (
@@ -320,7 +320,7 @@ function AnalysisView({ analysis }: { analysis: Analysis }) {
         <StatTile
           label="Drift"
           value={analysis.change_count}
-          hint={analysis.is_baseline ? "baseline — nothing to compare" : "changes vs previous"}
+          hint={analysis.is_baseline ? "baseline, nothing to compare" : "changes vs previous"}
           accent={analysis.change_count > 0 ? "text-high" : "text-text"}
         />
       </div>
@@ -328,7 +328,7 @@ function AnalysisView({ analysis }: { analysis: Analysis }) {
       {!analysis.is_baseline && (
         <Card title="Drift since previous analysis">
           {changes.length === 0 ? (
-            <Empty>No changes — the contract held.</Empty>
+            <Empty>No changes. The contract held.</Empty>
           ) : (
             <ul className="divide-y divide-border/70">
               {changes.map((c, i) => (

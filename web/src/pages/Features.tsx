@@ -13,7 +13,7 @@ export default function Features() {
             Prove your auth is correct.<br className="hidden sm:block" /> Everything else assumes it.
           </>
         }
-        line="From discovering token contracts to attacking your own endpoints — for services and AI agents."
+        line="From discovering token contracts to attacking your own endpoints, for services and AI agents."
         actions={
           <>
             <Link to="/signup" className={buttonClass("primary", "lg")}>

@@ -251,6 +251,10 @@ written up as a [**whitepaper**](docs/whitepaper.md) and a series of arXiv-style
 [research notes](docs/research/) (contract discovery, drift classification,
 adversarial verification, agent-auth). The on-site hub is at `/research`.
 
+The agent-auth work was **selected for a lightning talk** at **AIDC 2026** — the
+Agentic-AI workshop co-located with ACSAC 2026 (Los Angeles): *Attack Your Own
+Agent's Authorization Before an Attacker Does*.
+
 And it's validated against **real, documented incidents** — `alg=none`
 ([CVE-2022-23540](https://nvd.nist.gov/vuln/detail/CVE-2022-23540)), RS256→HS256
 confusion ([CVE-2022-23541](https://nvd.nist.gov/vuln/detail/CVE-2022-23541)), and

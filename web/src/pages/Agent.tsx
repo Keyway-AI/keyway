@@ -66,7 +66,7 @@ export default function Agent() {
   return (
     <Page
       title="Agent token inspector"
-      subtitle="Statically check an agent / MCP / on-behalf-of token against the agent-auth invariants — audience binding, delegation, scope minimization, and expiry. No signature verification; just the token's own hygiene."
+      subtitle="Check an agent, MCP, or on-behalf-of token against the agent-auth invariants: audience binding, delegation, scope minimization, and expiry. No signatures are verified, only the token's own hygiene."
     >
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1fr]">
         <Card title="Token">
@@ -90,7 +90,7 @@ export default function Agent() {
                 className="w-full resize-y rounded-md border border-border bg-surface-2 px-3.5 py-2.5 font-mono text-caption text-text outline-none transition placeholder:text-faint hover:border-border-strong focus:border-accent"
               />
             </div>
-            <Field label="Expected audience (resource URI)" hint="RFC 8707/9728 — the token's aud must be bound to this.">
+            <Field label="Expected audience (resource URI)" hint="RFC 8707/9728: the token's aud must be bound to this.">
               <Input value={audience} onChange={(e) => setAudience(e.target.value)} className="font-mono" />
             </Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

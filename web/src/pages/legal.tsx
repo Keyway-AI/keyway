@@ -14,7 +14,7 @@ function LegalShell({ title, updated, children }: { title: string; updated: stri
     <MarketingShell>
       <section className="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
         <div className="rounded-lg border border-high/30 bg-high/5 px-4 py-3 text-caption text-muted">
-          <strong className="text-text">Draft — not yet in effect.</strong> This template reflects the
+          <strong className="text-text">Draft: not yet in effect.</strong> This template reflects the
           site&apos;s current data practices, but the bracketed fields and legal review are still pending.
           It is not legal advice.
         </div>
@@ -59,7 +59,7 @@ export function Privacy() {
 
       <div>
         <H>How we use it</H>
-        <p className="mt-2">Only to provide and secure the service — authenticate you, run the analysis you request, and keep your history. [Add any other specific uses.]</p>
+        <p className="mt-2">Only to provide and secure the service: authenticate you, run the analysis you request, and keep your history. [Add any other specific uses.]</p>
       </div>
 
       <div>

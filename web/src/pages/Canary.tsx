@@ -46,7 +46,7 @@ export default function Canary() {
     setAnnouncing(true);
     try {
       const key = await api.canaryAnnounce(issuerId, alg);
-      toast.success(`Announced ${key.kid} (${key.alg}) — not yet signing`);
+      toast.success(`Announced ${key.kid} (${key.alg}), not yet signing`);
       setAnnounceOpen(false);
       status.reload();
       issuers.reload();
@@ -226,7 +226,7 @@ function PickupPanel({ issuer, announcedKid }: { issuer?: IssuerInfo; announcedK
         <Link to="/app/probes" className="font-medium text-accent hover:underline">
           probe cycle
         </Link>{" "}
-        over time — the grace window comes from the announce→pickup latency.
+        over time. The grace window comes from the announce→pickup latency.
       </p>
       <ul className="space-y-2">
         {probeable.map((c) => (

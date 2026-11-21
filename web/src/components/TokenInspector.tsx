@@ -145,7 +145,7 @@ export function TokenInspector() {
         }}
         spellCheck={false}
         rows={3}
-        placeholder="Paste a JWT or agent token — header.payload.signature"
+        placeholder="Paste a JWT or agent token (header.payload.signature)"
         className="w-full resize-none rounded-lg border border-border bg-surface-2 p-3 font-mono text-[0.72rem] leading-relaxed text-text outline-none transition placeholder:text-faint focus:border-accent"
       />
 
@@ -160,7 +160,7 @@ export function TokenInspector() {
               setToken(t);
               inspect(t, true);
             }}
-            title={`${s.label} — ${s.note}`}
+            title={`${s.label}: ${s.note}`}
             className={`rounded-pill border px-2.5 py-1 text-micro font-medium transition ${
               active === s.key
                 ? "border-accent bg-accent-soft text-accent"
@@ -195,7 +195,7 @@ export function TokenInspector() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m5 12 5 5L20 7" />
               </svg>
-              No findings — this token passes every agent-auth check.
+              No findings. This token passes every agent-auth check.
             </div>
           ) : (
             <>
@@ -211,14 +211,14 @@ export function TokenInspector() {
                     style={{ animationDelay: `${i * 70}ms` }}
                   >
                     <span
-                      className={`mt-0.5 shrink-0 rounded-pill border px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase ${severityColor[f.severity]}`}
+                      className={`mt-0.5 shrink-0 rounded-pill border px-1.5 py-0.5 text-[11px] font-semibold uppercase ${severityColor[f.severity]}`}
                     >
                       {f.severity}
                     </span>
                     <div className="min-w-0">
                       <span className="text-caption text-text">{f.message}</span>
                       {f.threat_id !== "—" && (
-                        <span className="ml-1.5 font-mono text-[0.65rem] text-faint">{f.threat_id}</span>
+                        <span className="ml-1.5 font-mono text-[11px] text-faint">{f.threat_id}</span>
                       )}
                     </div>
                   </li>

@@ -48,7 +48,7 @@ function VerdictGroup({
             </div>
             <div className="flex flex-col items-end gap-1">
               {a.evidence.map((e) => (
-                <Pill key={e} className="font-mono text-[10px]">
+                <Pill key={e} className="font-mono text-[11px]">
                   {e}
                 </Pill>
               ))}
@@ -122,7 +122,7 @@ export default function BlastRadius() {
   return (
     <Page
       title="Blast radius"
-      subtitle="Model a proposed change and see who breaks, who's ready, and the safe grace period — before you ship it."
+      subtitle="Model a proposed change and see who breaks, who's ready, and the safe grace period, before you ship it."
     >
       {needsIssuer && !hasIssuer && !issuers.loading && <IssuerNotice action="Modeling a key rotation" />}
 
@@ -210,7 +210,7 @@ export default function BlastRadius() {
             )}
             {unknown.length > 0 && (
               <p className="mt-2 text-xs text-medium">
-                {unknown.length} consumer(s) unknown — treat the grace period as a lower bound.
+                {unknown.length} consumer(s) unknown. Treat the grace period as a lower bound.
               </p>
             )}
           </Card>

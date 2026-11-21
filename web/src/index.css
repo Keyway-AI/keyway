@@ -180,7 +180,7 @@
 
   --color-text: #1b1a14;
   --color-muted: #5d5b52;
-  --color-faint: #8a887d;
+  --color-faint: #6c6b61; /* AA 4.5:1 on light surfaces */
 
   --color-accent: #8a6912; /* bronze — AA on white (≈5:1) */
   --color-accent-strong: #725710;
@@ -216,7 +216,7 @@
 
   --color-text: #ecebe4;
   --color-muted: #a3a299;
-  --color-faint: #70706a;
+  --color-faint: #959489; /* AA 4.5:1 on dark surfaces */
 
   --color-accent: #caa24c; /* machined brass */
   --color-accent-strong: #ddb45e;

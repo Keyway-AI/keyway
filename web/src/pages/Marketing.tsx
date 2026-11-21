@@ -145,6 +145,14 @@ function Proof() {
             ))}
           </div>
         </Reveal>
+        <Reveal delay={120}>
+          <p className="mt-5 text-center text-caption text-muted">
+            Every number is reproducible from the repo.{" "}
+            <Link to="/research" className="font-medium text-accent hover:underline">
+              Read the whitepaper and the methods &rarr;
+            </Link>
+          </p>
+        </Reveal>
       </div>
     </section>
   );
@@ -184,7 +192,7 @@ function Thesis() {
             Keyway <span className="text-accent">proves</span> it.
           </h2>
           <p className="mx-auto mt-4 max-w-md text-body-lg text-muted">
-            Auth correctness is a property of what&apos;s running — the part static tools can&apos;t see.
+            Auth correctness is a property of what&apos;s running, the part static tools can&apos;t see.
           </p>
         </Reveal>
       </div>
@@ -211,7 +219,7 @@ const sections: Section[] = [
   {
     eyebrow: "Adversarial testing",
     title: "Attack your own endpoints.",
-    line: "Real forged tokens — alg=none, key confusion, jku injection — fired at staging.",
+    line: "Real forged tokens (alg=none, key confusion, jku injection), fired at staging.",
     mock: HarnessMock,
     flip: true,
   },
@@ -246,7 +254,7 @@ function FeatureSection({ s, index }: { s: Section; index: number }) {
           <span className="h-px w-8 bg-border-strong" />
           <span className="eyebrow">{s.eyebrow}</span>
         </div>
-        <h3 className="mt-3 text-h2 font-semibold tracking-tight">{s.title}</h3>
+        <h2 className="mt-3 text-h2 font-semibold tracking-tight">{s.title}</h2>
         <p className="mt-2.5 max-w-sm text-body text-muted">{s.line}</p>
       </Reveal>
       <Reveal delay={90} className={s.flip ? "lg:order-1" : ""}>
@@ -275,7 +283,7 @@ const gridFeatures = [
   { icon: IconProbes, title: "Attacked, generatively", body: "alg=none, key confusion, jku injection and forged claims, fired at your endpoints." },
   { icon: IconBlast, title: "Blast radius", body: "See exactly which consumers break on a rotation, with a safe grace window." },
   { icon: IconCoverage, title: "Coverage, kept honest", body: "Measured against RFC 8725, OWASP and real CVEs. Every gap cited." },
-  { icon: IconAgent, title: "Agent auth, verified", body: "MCP passthrough, missing delegation, over-scoped tokens — the layer nobody tests." },
+  { icon: IconAgent, title: "Agent auth, verified", body: "MCP passthrough, missing delegation, over-scoped tokens: the layer nobody tests." },
 ];
 
 export function FeatureGrid() {

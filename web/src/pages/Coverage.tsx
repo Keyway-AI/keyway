@@ -56,7 +56,7 @@ export default function Coverage() {
   return (
     <Page
       title="Threat coverage"
-      subtitle="Detection measured against the documented universe of JWT and agent-auth threats — RFC 8725, the MCP spec, OWASP, CVEs — not a corpus we wrote. Every gap is named."
+      subtitle="Detection measured against the documented universe of JWT and agent-auth threats (RFC 8725, the MCP spec, OWASP, CVEs), not a corpus we wrote. Every gap is named."
     >
       {!d ? (
         <Card>
@@ -139,13 +139,13 @@ export default function Coverage() {
                       {t.detectors.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {t.detectors.map((det) => (
-                            <Pill key={det} className="font-mono text-[10px] text-low">
+                            <Pill key={det} className="font-mono text-[11px] text-low">
                               {det}
                             </Pill>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-caption text-faint">— gap</span>
+                        <span className="text-caption text-faint">gap</span>
                       )}
                     </Td>
                   </tr>

@@ -71,7 +71,7 @@ export default function Changes() {
                     </Td>
                     <Td>
                       {c.evidence.map((e) => (
-                        <Pill key={e} className="mr-1 font-mono text-[10px]">
+                        <Pill key={e} className="mr-1 font-mono text-[11px]">
                           {e}
                         </Pill>
                       ))}

@@ -14,43 +14,43 @@ const notes = [
   {
     n: "01",
     title: "Deriving auth contracts from configuration",
-    blurb: "How discovery recovers the consumer inventory — with per-field provenance and a library-defaults DB — from Istio, Envoy, K8s, and OIDC config.",
+    blurb: "How discovery recovers the consumer inventory from Istio, Envoy, K8s, and OIDC config, with per-field provenance and a library-defaults DB.",
     href: `${REPO}/docs/research/01-contract-discovery.md`,
   },
   {
     n: "02",
     title: "Zero-false-alarm drift classification",
-    blurb: "A fixed rule table classifies semantic drift (widened / narrowed). 100% recall / 0% false alarms on 800 pairs — and how mutation testing keeps that honest.",
+    blurb: "A fixed rule table classifies semantic drift (widened / narrowed). 100% recall / 0% false alarms on 800 pairs, and how mutation testing keeps that honest.",
     href: `${REPO}/docs/research/02-drift-classification.md`,
   },
   {
     n: "03",
     title: "Adversarially verifying JWT verifiers",
-    blurb: "Minting real attack tokens (alg=none, key confusion, jku/kid injection) and firing them at a staging verifier — deny-by-default, with a hard production guard.",
+    blurb: "Minting real attack tokens (alg=none, key confusion, jku/kid injection) and firing them at a staging verifier: deny-by-default, with a hard production guard.",
     href: `${REPO}/docs/research/03-adversarial-verification.md`,
   },
   {
     n: "04",
     title: "Verifying AI-agent authorization",
-    blurb: "Applying the contract model to MCP/OAuth agent tokens: audience binding, delegation, scope, expiry — cited to spec, with coverage stated honestly.",
+    blurb: "Applying the contract model to MCP/OAuth agent tokens: audience binding, delegation, scope, and expiry, each cited to spec, with coverage stated honestly.",
     href: `${REPO}/docs/research/04-agent-auth.md`,
   },
 ];
 
 const supporting = [
-  { label: "Benchmark — how accurate is it?", href: `${REPO}/BENCHMARK.md` },
+  { label: "Benchmark: how accurate is it?", href: `${REPO}/BENCHMARK.md` },
   { label: "Benchmark methodology", href: `${REPO}/docs/benchmark.md` },
-  { label: "Integrity — is 100% overfit?", href: `${REPO}/docs/benchmark-integrity.md` },
+  { label: "Integrity: is 100% overfit?", href: `${REPO}/docs/benchmark-integrity.md` },
   { label: "Threat coverage (the denominator)", href: `${REPO}/docs/threat-coverage.md` },
   { label: "Real-world CVE / incident validation", href: `${REPO}/docs/realworld-validation.md` },
   { label: "Architecture", href: `${REPO}/ARCHITECTURE.md` },
 ];
 
 const stats = [
-  { n: "100% / 0%", l: "recall / false-alarm rate — gated corpus (J = 1.0)" },
+  { n: "100% / 0%", l: "recall / false-alarm rate, gated corpus (J = 1.0)" },
   { n: "0.75", l: "Youden J on held-out adversarial cases" },
   { n: "24", l: "mutants, 100% killed (2 provably equivalent)" },
-  { n: "27 / 50", l: "cited threats covered — every gap named" },
+  { n: "27 / 50", l: "cited threats covered, every gap named" },
 ];
 
 export default function Research() {
@@ -154,7 +154,7 @@ keyway threats coverage   # the 27/50 coverage table`}</code>
             <h2 className="mt-2 text-h1 font-semibold tracking-tight display">The receipts.</h2>
             <p className="mt-3 text-body-lg text-muted">
               The methodology, the integrity stress-tests, the cited threat taxonomy, and the
-              real-world CVE validation — all in the repo.
+              real-world CVE validation, all in the repo.
             </p>
           </div>
           <div className="mx-auto mt-10 max-w-2xl divide-y divide-border rounded-xl border border-border bg-surface shadow-xs">

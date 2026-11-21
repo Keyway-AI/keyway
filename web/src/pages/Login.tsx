@@ -28,7 +28,7 @@ function AuthPanel({ title, subtitle, children }: { title: string; subtitle: str
         </Link>
         <div className="relative">
           <h2 className="max-w-sm text-h2 font-semibold leading-tight tracking-tight">
-            Know your token contracts hold — before they break.
+            Know your token contracts hold before they break.
           </h2>
           <p className="mt-3 max-w-sm text-body-lg text-accent-fg/80">
             Verify and adversarially test JWT and agent-auth, for classic services and AI agents alike.

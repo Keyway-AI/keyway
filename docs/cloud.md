@@ -21,7 +21,7 @@ KEYWAY_CLOUD_DEV_LOGIN=1 go run ./cmd/keyway-cloud     # :8090
 # with GitHub sign-in:
 GITHUB_CLIENT_ID=... GITHUB_CLIENT_SECRET=... \
 KEYWAY_CLOUD_BASE_URL=https://cloud.example.com \
-KEYWAY_CLOUD_FRONTEND_URL=https://keyway-azure.vercel.app \
+KEYWAY_CLOUD_FRONTEND_URL=https://keywayhq.com \
 go run ./cmd/keyway-cloud
 ```
 

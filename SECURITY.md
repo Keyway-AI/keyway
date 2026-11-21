@@ -32,7 +32,7 @@ Until v1.0.0, only the latest `main` receives security fixes.
 
 **Please do not open a public GitHub issue for security vulnerabilities.**
 
-Email **security@keyway.dev** with:
+Email **security@keywayhq.com** with:
 
 - a description of the issue and its impact,
 - steps to reproduce (a minimal scenario in `bench/corpus/` format is ideal),

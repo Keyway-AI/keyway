@@ -67,7 +67,7 @@ export default function CloudSignIn() {
                 </div>
               ) : (
                 <div className="mb-4 rounded-md border border-border bg-surface-2 px-3 py-2.5 text-caption text-muted">
-                  Keyway Cloud is in private preview — the hosted version is on the way. You can run the full tool
+                  Keyway Cloud is in private preview. The hosted version is on the way. You can run the full tool
                   yourself today.
                 </div>
               ))}
@@ -115,7 +115,7 @@ export default function CloudSignIn() {
             </div>
 
             <p className="mt-6 text-caption leading-relaxed text-muted">
-              Cloud runs the <span className="font-medium text-text">static</span> half of Keyway — discovery,
+              Cloud runs the <span className="font-medium text-text">static</span> half of Keyway: discovery,
               contract drift, and threat coverage on the repos you connect. Live probing and canary keys stay in
               your own environment, so Keyway never handles your signing keys.
             </p>

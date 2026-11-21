@@ -145,6 +145,14 @@ function Proof() {
             ))}
           </div>
         </Reveal>
+        <Reveal delay={120}>
+          <p className="mt-5 text-center text-caption text-muted">
+            Every number is reproducible from the repo.{" "}
+            <Link to="/research" className="font-medium text-accent hover:underline">
+              Read the whitepaper and the methods &rarr;
+            </Link>
+          </p>
+        </Reveal>
       </div>
     </section>
   );

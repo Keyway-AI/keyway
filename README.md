@@ -4,7 +4,7 @@
 
 **Know which consumers will break _before_ you rotate a signing key, change an issuer, or drop a claim.**
 
-### [keywayhq.com](https://keywayhq.com) &nbsp;·&nbsp; [Docs](https://github.com/Keyway-AI/keyway/tree/main/docs) &nbsp;·&nbsp; [Install](#install)
+### [keywayhq.com](https://keywayhq.com) &nbsp;·&nbsp; [Whitepaper](docs/whitepaper.md) &nbsp;·&nbsp; [Research & methods](docs/research/) &nbsp;·&nbsp; [Docs](https://github.com/Keyway-AI/keyway/tree/main/docs) &nbsp;·&nbsp; [Install](#install)
 
 [![Website](https://img.shields.io/badge/website-keywayhq.com-0a8f5f)](https://keywayhq.com)
 [![CI](https://github.com/Keyway-AI/keyway/actions/workflows/ci.yml/badge.svg)](https://github.com/Keyway-AI/keyway/actions/workflows/ci.yml)

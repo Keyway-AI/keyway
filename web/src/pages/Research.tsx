@@ -133,12 +133,12 @@ keyway threats coverage   # the 27/50 coverage table`}</code>
                 href={note.href}
                 className="lift group flex gap-4 rounded-xl border border-border bg-surface p-6 shadow-xs hover:border-border-strong"
               >
-                <span className="text-h2 font-semibold tabular-nums text-accent/40 transition group-hover:text-accent">
+                <span className="text-h2 font-semibold tabular-nums text-accent/70 transition group-hover:text-accent">
                   {note.n}
                 </span>
                 <div>
                   <h3 className="text-[1.05rem] font-semibold tracking-tight">{note.title}</h3>
-                  <p className="mt-1.5 text-caption text-muted">{note.blurb}</p>
+                  <p className="mt-1.5 text-balance text-caption text-muted">{note.blurb}</p>
                 </div>
               </a>
             ))}
